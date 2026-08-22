@@ -1,13 +1,6 @@
-import React from 'react'
-import Homepage from './(website)/Home/Homepage'
+import React from "react"
+import Homepage from "./(website)/Home/Homepage"
 
-
-
-function page() {
-  return (
-    <Homepage/>
-   
-  )
+export default function Page() {
+  return <Homepage />
 }
-
-export default page

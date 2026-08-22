@@ -1,80 +1,75 @@
 "use client"
-import { useState } from 'react';
+
+import { useState } from "react"
+import Link from "next/link"
+import { ArrowRight, Database, Eye, EyeOff, Lock, Mail, Sparkles } from "lucide-react"
 
 export default function Login() {
-  // 1. Store form input state
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-  
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+    email: "",
+    password: "",
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  // 2. Handle input changes dynamically
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }));
-  };
+    }))
+  }
 
-  // 3. Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    
-    // Basic validation
+    e.preventDefault()
+    setError("")
+
     if (!formData.email || !formData.password) {
-      setError('Please fill in all fields.');
-      return;
+      setError("Please fill in both email and password.")
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      // Simulate API Login Request
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log('Logging in with:', formData);
-      alert('Login successful!');
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      window.location.href = "/Dashboard"
     } catch (err) {
-      setError('Invalid email or password.');
+      setError("Invalid email or password.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-md border border-gray-100">
+    <div className="flex min-h-[calc(100vh-4.5rem)] items-center justify-center bg-[#f7f8f5] px-4 py-12">
+      <div className="w-full max-w-md space-y-6 rounded-2xl border border-[#dfe7df] bg-white p-8 shadow-sm sm:p-10">
         
-        {/* Header */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-            Welcome back
+          <Link href="/" className="inline-flex size-12 items-center justify-center rounded-2xl bg-[#1f2d24] text-[#71c897] shadow-xs">
+            <Sparkles className="size-6" />
+          </Link>
+          <h2 className="mt-4 text-2xl font-semibold tracking-tight text-[#1f2d24]">
+            Welcome Back
           </h2>
-          <p className="mt-2 text-sm text-gray-500">
-            Please enter your details to sign in
+          <p className="mt-1 text-sm text-[#6c7c72]">
+            Sign in to access your PostgreSQL query workspace
           </p>
         </div>
 
-        {/* Error Alert Panel */}
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-100 animate-pulse">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">
             {error}
           </div>
         )}
 
-        {/* Form Element */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address
-              </label>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="email" className="block text-xs font-semibold text-[#324538]">
+              Email Address
+            </label>
+            <div className="relative mt-1.5">
               <input
                 id="email"
                 name="email"
@@ -83,80 +78,80 @@ export default function Login() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all"
-                placeholder="you@example.com"
+                className="block w-full rounded-xl border border-[#dce5dd] bg-[#fbfdfb] px-3.5 py-2.5 pl-10 text-sm text-[#1f2d24] outline-none transition placeholder:text-[#9aa79e] focus:border-[#4ca873] focus:ring-3 focus:ring-[#4ca873]/10"
+                placeholder="name@company.com"
               />
+              <Mail className="pointer-events-none absolute left-3.5 top-3 size-4 text-[#8a9b90]" />
             </div>
+          </div>
 
-            {/* Password Field */}
-            <div>
-              <div className="flex justify-between items-center">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <a href="#" className="text-xs font-medium text-blue-600 hover:text-blue-500">
-                  Forgot password?
-                </a>
-              </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <label htmlFor="password" className="block text-xs font-semibold text-[#324538]">
+                Password
+              </label>
+              <a href="#" className="text-xs font-medium text-[#2b724c] hover:underline">
+                Forgot password?
+              </a>
+            </div>
+            <div className="relative mt-1.5">
               <input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all"
+                className="block w-full rounded-xl border border-[#dce5dd] bg-[#fbfdfb] px-3.5 py-2.5 pl-10 pr-10 text-sm text-[#1f2d24] outline-none transition placeholder:text-[#9aa79e] focus:border-[#4ca873] focus:ring-3 focus:ring-[#4ca873]/10"
                 placeholder="••••••••"
               />
+              <Lock className="pointer-events-none absolute left-3.5 top-3 size-4 text-[#8a9b90]" />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3 text-[#8a9b90] hover:text-[#1f2d24]"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
             </div>
           </div>
 
-          {/* Form Extras */}
-          <div className="flex items-center">
-            <input
-              id="remember-me"
-              name="remember-me"
-              type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600 select-none">
-              Remember me for 30 days
+          <div className="flex items-center justify-between pt-1">
+            <label className="flex items-center gap-2 text-xs text-[#58695e]">
+              <input
+                type="checkbox"
+                className="size-4 rounded border-[#ccd8ce] text-[#246944] focus:ring-[#4ca873]"
+              />
+              Remember my session
             </label>
           </div>
 
-          {/* Submit Action Button */}
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-sm
-                ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-            >
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Signing in...
-                </div>
-              ) : (
-                'Sign In'
-              )}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1f2d24] py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#314f3b] disabled:opacity-60"
+          >
+            {isLoading ? (
+              <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <>
+                Sign In to Workspace
+                <ArrowRight className="size-4 text-[#71c897]" />
+              </>
+            )}
+          </button>
         </form>
 
-        {/* Footer Prompt */}
-        <p className="text-center text-sm text-gray-500 mt-4">
-          Don't have an account?{' '}
-          <a href="#" className="font-semibold text-blue-600 hover:text-blue-500">
-            Sign up for free
-          </a>
+        <p className="text-center text-xs text-[#6e7f74]">
+          Don&apos;t have an account?{" "}
+          <Link href="/Register" className="font-semibold text-[#246944] hover:underline">
+            Create an account
+          </Link>
         </p>
 
       </div>
     </div>
-  );
+  )
 }

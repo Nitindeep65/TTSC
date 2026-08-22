@@ -1,44 +1,126 @@
 "use client"
-import React from 'react'
-import { useState } from 'react'
+
+import { useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { ArrowRight, Database, Menu, MessageSquareText, Sparkles, Terminal, X } from "lucide-react"
+
+const navLinks = [
+  { name: "Overview", href: "/" },
+  { name: "Query Tester", href: "/Dashboard" },
+  { name: "Interactive Chat", href: "/Dashboard/chat" },
+  { name: "Testimonials", href: "/#testimonials" },
+]
 
 function Navbar() {
-    const menuItems=[
-    { name:'About' , href:'/'},
-    { name:'Testimonials' ,  href:'/'},
-    { name:'CTA' , href :'/'},
-    { name:'Login/Signup' , href :'/Login'},
-    { name:'Dashboard' , href :'/Dashboard'},
-    ];
-    const[isOpen , setISOPEN]=useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname()
+
+  const closeMenu = () => setIsOpen(false)
+
   return (
-    <nav className="bg-white shadow-sm w-full relative z-50 border-b border-gray-100">
-    <div className='flex flex-col items-center'>TTSE (TEXT TO SQL ENGINE)</div>
-    <button 
-    onClick={()=>{setISOPEN(!isOpen)}}
-    className='w-10 h-10 flex-col flex items-right justify-items-end gap-1.5 bg-accent focus:outline-none hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200' ></button>
-    <div 
-        className={`absolute top-full left-0 w-full bg-white border-b border-gray-200 shadow-xl transition-all duration-300 ease-out
-          ${isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4'}`}
-      >
-        <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {menuItems.map((item, index) => (
-            <a 
-              key={index} 
-              href={item.href} 
-              className="group p-4 rounded-xl hover:bg-blue-50/50 transition-colors duration-200 border border-transparent hover:border-blue-100"
-              onClick={() => setIsOpen(false)}
-            >
-              <span className="block text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+    <nav className="sticky top-0 z-50 border-b border-[#e3e8e2] bg-[#fbfdfb]/90 backdrop-blur-md transition-all">
+      <div className="mx-auto flex h-18 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link href="/" onClick={closeMenu} className="group flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-sm ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-105">
+            <Sparkles className="size-5" />
+          </span>
+          <span className="flex flex-col leading-none">
+            <span className="text-base font-semibold tracking-tight text-[#1f2d24]">Text to SQL</span>
+            <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#4ca873]">AI Query Engine</span>
+          </span>
+        </Link>
+
+        <div className="hidden items-center gap-1.5 md:flex">
+          {navLinks.map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`rounded-lg px-3.5 py-2 text-sm font-medium transition-all ${
+                  isActive
+                    ? "bg-[#eaf5ed] font-semibold text-[#226343]"
+                    : "text-[#5b6a60] hover:bg-[#edf4ee] hover:text-[#1f2d24]"
+                }`}
+              >
                 {item.name}
-              </span>
-              <span className="block text-xs text-gray-400 mt-1">
-                Go to layout panel
-              </span>
-            </a>
-          ))}
+              </Link>
+            )
+          })}
+          
+          <span className="mx-2.5 h-5 w-px bg-[#dfe6df]" />
+
+          <Link
+            href="/Dashboard/chat"
+            className="flex items-center gap-2 rounded-lg border border-[#cfddd0] bg-white px-4 py-2 text-sm font-medium text-[#2d4334] shadow-xs transition hover:border-[#4ca873] hover:bg-[#f3f9f4]"
+          >
+            <MessageSquareText className="size-4 text-[#4ca873]" />
+            Live Chat
+          </Link>
+
+          <Link
+            href="/Dashboard"
+            className="ml-1 flex items-center gap-2 rounded-lg bg-[#1f2d24] px-4.5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#2e4736] hover:shadow-md"
+          >
+            Workspace
+            <ArrowRight className="size-3.5 text-[#71c897]" />
+          </Link>
         </div>
-    </div>
+
+        <button
+          type="button"
+          aria-expanded={isOpen}
+          aria-label="Toggle navigation menu"
+          onClick={() => setIsOpen((open) => !open)}
+          className="flex size-10 items-center justify-center rounded-xl border border-[#dfe6df] bg-white text-[#1f2d24] shadow-xs transition hover:bg-[#f1f6f2] md:hidden"
+        >
+          {isOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+        </button>
+      </div>
+
+      <div
+        className={`border-t border-[#e3e8e2] bg-[#fbfdfb] px-4 py-4 transition-all duration-200 md:hidden ${
+          isOpen ? "block max-h-96 opacity-100" : "hidden max-h-0 opacity-0"
+        }`}
+      >
+        <div className="mx-auto flex max-w-7xl flex-col gap-1.5">
+          {navLinks.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              onClick={closeMenu}
+              className={`rounded-lg px-3.5 py-2.5 text-sm font-medium ${
+                pathname === item.href
+                  ? "bg-[#eaf5ed] font-semibold text-[#226343]"
+                  : "text-[#5b6a60] hover:bg-[#edf4ee] hover:text-[#1f2d24]"
+              }`}
+            >
+              {item.name}
+            </Link>
+          ))}
+          <div className="my-2 h-px bg-[#e3e8e2]" />
+          <Link
+            href="/Dashboard/chat"
+            onClick={closeMenu}
+            className="flex items-center justify-between rounded-lg border border-[#cfddd0] bg-white px-3.5 py-2.5 text-sm font-medium text-[#2d4334]"
+          >
+            <span className="flex items-center gap-2">
+              <MessageSquareText className="size-4 text-[#4ca873]" />
+              Live Chat Assistant
+            </span>
+            <ArrowRight className="size-4 text-[#728078]" />
+          </Link>
+          <Link
+            href="/Dashboard"
+            onClick={closeMenu}
+            className="flex items-center justify-center gap-2 rounded-lg bg-[#1f2d24] px-4 py-2.5 text-sm font-semibold text-white"
+          >
+            Open Workspace
+            <ArrowRight className="size-4 text-[#71c897]" />
+          </Link>
+        </div>
+      </div>
     </nav>
   )
 }
