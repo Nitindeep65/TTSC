@@ -37,6 +37,9 @@ import {
 } from "lucide-react"
 import axios from "axios"
 import { useDatabase } from "@/lib/databaseContext"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
 
 const starterPrompts = [
   {
@@ -345,63 +348,62 @@ export default function Chatbox() {
   }
 
   return (
-    <main className="relative flex h-[calc(100vh-4rem)] w-full overflow-hidden bg-[#f7f8f5]">
+    <main className="relative flex h-[calc(100vh-4rem)] w-full overflow-hidden bg-background">
       
       {/* Full-Screen ChatGPT-Style Chat Area */}
       <section className="flex flex-1 flex-col h-full min-w-0 overflow-hidden">
         
         {/* Sleek Minimal Top Subheader */}
-        <div className="flex h-12 shrink-0 items-center justify-between border-b border-[#e5ebe4] bg-white/80 px-4 sm:px-6 backdrop-blur-xs">
+        <div className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-white/80 px-4 sm:px-6 backdrop-blur-xs">
           <div className="flex items-center gap-2 text-xs">
-            <span className="flex items-center gap-1.5 font-semibold text-[#1f2d24]">
+            <Badge variant="emerald" className="gap-1.5 font-semibold text-xs py-0.5">
               <span className="size-2 rounded-full bg-[#4ca873] animate-pulse" />
               Llama-3.1 70B Engine
-            </span>
+            </Badge>
             <span className="text-[#a1b0a6]">•</span>
-            <span className="text-[#5f7065] truncate max-w-[200px] sm:max-w-xs">
+            <span className="text-[#5f7065] truncate max-w-[200px] sm:max-w-xs font-medium">
               {dbInfo ? `Live DB: ${dbInfo.host}` : "Demo Schema Grounded"}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             {!dbInfo && (
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-1 rounded-lg border border-[#cbe1d2] bg-[#f0f9f3] px-2.5 py-1 text-xs font-semibold text-[#1d6338] shadow-2xs transition hover:bg-[#e4f4ea]"
+                className="gap-1 text-xs"
               >
                 <Cloud className="size-3 text-[#3aa363]" />
                 <span className="hidden sm:inline">Connect Cloud DB</span>
                 <span className="sm:hidden">Connect DB</span>
-              </button>
+              </Button>
             )}
 
             {messages.length > 0 && (
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleClearChat}
-                className="inline-flex items-center gap-1 rounded-lg border border-[#dfe7df] bg-white px-2 py-1 text-xs font-medium text-[#5a6b60] shadow-2xs transition hover:bg-[#f1f6f2]"
+                className="gap-1 text-xs"
                 title="Clear conversation"
               >
                 <Trash2 className="size-3 text-[#708277]" />
                 <span className="hidden sm:inline">Clear Chat</span>
-              </button>
+              </Button>
             )}
 
             {/* Toggle Live Schema Helper Sidebar Button */}
-            <button
-              type="button"
+            <Button
+              variant={isHelperOpen ? "secondary" : "outline"}
+              size="sm"
               onClick={() => setIsHelperOpen(!isHelperOpen)}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold shadow-2xs transition ${
-                isHelperOpen
-                  ? "border-[#216b44] bg-[#eef7f1] text-[#1e6138]"
-                  : "border-[#cfd9cf] bg-white text-[#47574d] hover:bg-[#f1f6f2]"
-              }`}
+              className="gap-1.5 text-xs transition-all duration-150"
               title={isHelperOpen ? "Collapse Live Schema Helper" : "Expand Live Schema Helper"}
             >
-              {isHelperOpen ? <PanelRightClose className="size-3.5" /> : <PanelRightOpen className="size-3.5" />}
-              <span className="hidden md:inline">Live Schema Helper</span>
-            </button>
+              {isHelperOpen ? <PanelRightClose className="size-3.5 text-[#246944]" /> : <PanelRightOpen className="size-3.5" />}
+              <span className="hidden md:inline font-semibold">Live Schema Helper</span>
+            </Button>
           </div>
         </div>
 
@@ -411,8 +413,8 @@ export default function Chatbox() {
             
             {/* Empty State / Welcome Screen */}
             {messages.length === 0 ? (
-              <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-                <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-[#1f2d24] text-[#71c897] shadow-sm">
+              <div className="flex min-h-[60vh] flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-[#1f2d24] text-[#71c897] shadow-sm hover:scale-105 transition-transform">
                   <Sparkles className="size-7" />
                 </div>
                 
@@ -441,16 +443,15 @@ export default function Chatbox() {
 
                   <div className="grid gap-2.5 sm:grid-cols-2">
                     {starterPrompts.map((prompt, idx) => (
-                      <button
+                      <Card
                         key={idx}
-                        type="button"
                         onClick={() => handleSendMessage(prompt.text)}
-                        className="group flex flex-col justify-between rounded-xl border border-[#dfe8df] bg-white p-3.5 text-left transition hover:border-[#79b790] hover:bg-[#f3f9f4] shadow-2xs"
+                        className="group flex flex-col justify-between p-3.5 text-left cursor-pointer hover-lift hover:border-[#79b790] hover:bg-[#f3f9f4]"
                       >
                         <div>
-                          <span className="inline-block rounded bg-[#edf5ef] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#246b45]">
+                          <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-wider text-[#246b45]">
                             {prompt.type}
-                          </span>
+                          </Badge>
                           <p className="mt-1.5 font-medium text-xs text-[#1f2d24] group-hover:text-[#185333]">
                             "{prompt.text}"
                           </p>
@@ -458,7 +459,7 @@ export default function Chatbox() {
                         <p className="mt-2 text-[11px] text-[#718277]">
                           {prompt.desc}
                         </p>
-                      </button>
+                      </Card>
                     ))}
                   </div>
                 </div>
@@ -467,7 +468,7 @@ export default function Chatbox() {
               messages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`flex gap-3 sm:gap-4 ${
+                  className={`flex gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-2 duration-200 ${
                     msg.role === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
@@ -480,7 +481,7 @@ export default function Chatbox() {
                   <div className="max-w-2xl sm:max-w-3xl space-y-2">
                     {/* User Message Bubble */}
                     {msg.role === "user" ? (
-                      <div className="rounded-2xl rounded-tr-xs bg-[#1f2d24] px-4.5 py-3 text-sm leading-relaxed text-white shadow-xs">
+                      <div className="rounded-2xl rounded-tr-xs bg-[#1f2d24] px-4.5 py-3 text-sm leading-relaxed text-white shadow-xs font-medium">
                         {msg.content}
                       </div>
                     ) : msg.status === "needs_clarification" ? (
@@ -496,7 +497,7 @@ export default function Chatbox() {
                       </div>
                     ) : msg.status === "complete" ? (
                       /* Complete SQL Result Card */
-                      <div className="space-y-3.5 rounded-2xl rounded-tl-xs border border-[#dce8de] bg-white p-5 text-sm shadow-xs">
+                      <Card className="space-y-3.5 rounded-2xl rounded-tl-xs p-5 shadow-xs">
                         {msg.message && (
                           <div className="flex items-center gap-2 font-semibold text-[#1f2d24]">
                             <ShieldCheck className="size-4 text-[#358655]" />
@@ -516,12 +517,13 @@ export default function Chatbox() {
                               Tables:
                             </span>
                             {msg.tables.map((t) => (
-                              <span
+                              <Badge
                                 key={t}
-                                className="rounded-md border border-[#cbe0d0] bg-[#eef7f1] px-2 py-0.5 font-mono text-[11px] font-medium text-[#205d3c]"
+                                variant="secondary"
+                                className="font-mono text-[11px] font-medium text-[#205d3c]"
                               >
                                 {t}
-                              </span>
+                              </Badge>
                             ))}
                           </div>
                         )}
@@ -535,11 +537,12 @@ export default function Chatbox() {
                               </span>
                               
                               <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
+                                <Button
+                                  variant="emerald"
+                                  size="sm"
                                   onClick={() => handleExecuteLive(msg.sql_query, idx)}
                                   disabled={executingIndex === idx}
-                                  className="flex items-center gap-1 rounded bg-[#276e44] px-2.5 py-1 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#348e58] disabled:opacity-50"
+                                  className="h-7 text-xs font-semibold"
                                 >
                                   {executingIndex === idx ? (
                                     <>
@@ -552,12 +555,13 @@ export default function Chatbox() {
                                       <span>{connectionUri ? "Run on DB" : "Connect DB & Run"}</span>
                                     </>
                                   )}
-                                </button>
+                                </Button>
 
-                                <button
-                                  type="button"
+                                <Button
+                                  variant="darkGhost"
+                                  size="sm"
                                   onClick={() => handleCopySQL(msg.sql_query, idx)}
-                                  className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-[#d7f1df] transition hover:bg-white/10"
+                                  className="h-7 text-xs"
                                 >
                                   {copiedIndex === idx ? (
                                     <>
@@ -570,7 +574,7 @@ export default function Chatbox() {
                                       <span>Copy SQL</span>
                                     </>
                                   )}
-                                </button>
+                                </Button>
                               </div>
                             </div>
 
@@ -635,7 +639,7 @@ export default function Chatbox() {
                             )}
                           </div>
                         )}
-                      </div>
+                      </Card>
                     ) : (
                       <div className="rounded-2xl rounded-tl-xs border border-red-200 bg-red-50 p-4 text-xs text-red-700">
                         {msg.content}
@@ -661,11 +665,11 @@ export default function Chatbox() {
             )}
 
             {isLoading && (
-              <div className="flex gap-3 sm:gap-4">
+              <div className="flex gap-3 sm:gap-4 animate-in fade-in duration-200">
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897]">
                   <Bot className="size-4" />
                 </div>
-                <div className="flex items-center gap-2 rounded-2xl rounded-tl-xs border border-[#dfe7df] bg-white px-4 py-3 text-xs text-[#63746a] shadow-xs">
+                <div className="flex items-center gap-2 rounded-2xl rounded-tl-xs border border-border bg-white px-4 py-3 text-xs text-[#63746a] shadow-xs">
                   <span className="size-3 animate-spin rounded-full border-2 border-[#4ca873] border-t-transparent" />
                   Reasoning over schema constraints, parameters &amp; rules...
                 </div>
@@ -677,9 +681,9 @@ export default function Chatbox() {
         </div>
 
         {/* ChatGPT-Style Centered Floating Bottom Input Dock */}
-        <div className="shrink-0 bg-gradient-to-t from-[#f7f8f5] via-[#f7f8f5] to-transparent px-4 pb-4 sm:pb-6 pt-2">
+        <div className="shrink-0 bg-gradient-to-t from-background via-background to-transparent px-4 pb-4 sm:pb-6 pt-2">
           <div className="mx-auto max-w-3xl sm:max-w-4xl">
-            <div className="relative rounded-2xl border border-[#cfd9cf] bg-white p-2 shadow-sm focus-within:border-[#4ca873] focus-within:ring-4 focus-within:ring-[#4ca873]/10">
+            <div className="relative rounded-2xl border border-input bg-white p-2 shadow-sm focus-within:border-[#4ca873] focus-within:ring-4 focus-within:ring-[#4ca873]/10 transition-all duration-150">
               <textarea
                 ref={textareaRef}
                 value={inputText}
@@ -697,15 +701,17 @@ export default function Chatbox() {
                   <span>Enter to submit</span>
                 </div>
 
-                <button
+                <Button
                   type="button"
+                  variant="default"
+                  size="iconSm"
                   onClick={() => handleSendMessage()}
                   disabled={!inputText.trim() || isLoading}
-                  className="flex size-8 items-center justify-center rounded-xl bg-[#1f2d24] text-white shadow-xs transition hover:bg-[#34533f] disabled:opacity-40"
+                  className="rounded-xl shadow-xs"
                   aria-label="Send message"
                 >
                   <ArrowUp className="size-4" />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -719,10 +725,10 @@ export default function Chatbox() {
 
       {/* Full-Height Collapsible Live Schema Helper Panel */}
       {isHelperOpen && (
-        <aside className="w-80 xl:w-96 shrink-0 border-l border-[#dfe7df] bg-white h-full overflow-y-auto flex flex-col animate-in slide-in-from-right-10 duration-200 shadow-xs">
+        <aside className="w-80 xl:w-96 shrink-0 border-l border-border bg-white h-full overflow-y-auto flex flex-col animate-in slide-in-from-right-10 duration-200 shadow-xs">
           
           {/* Helper Header */}
-          <div className="sticky top-0 z-10 border-b border-[#e9efe9] bg-white/95 px-4 py-3.5 backdrop-blur-xs flex items-center justify-between">
+          <div className="sticky top-0 z-10 border-b border-border bg-white/95 px-4 py-3.5 backdrop-blur-xs flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <Database className="size-4 text-[#216b44]" />
@@ -736,25 +742,29 @@ export default function Chatbox() {
             </div>
 
             <div className="flex items-center gap-1">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={toggleCollapseAll}
-                className="rounded bg-[#f0f5f1] px-2 py-1 text-[10px] font-semibold text-[#30533d] transition hover:bg-[#e1ede3]"
+                className="h-7 text-[10px] font-semibold"
                 title="Toggle expand/collapse all tables"
               >
                 {schemaTables.every((t) => collapsedTables[t.table_name || t.table])
                   ? "Expand All"
                   : "Collapse All"}
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="iconSm"
                 onClick={() => setIsHelperOpen(false)}
-                className="rounded p-1 text-[#6e8074] hover:bg-[#f1f6f2] hover:text-[#1f2d24]"
+                className="h-7 w-7 text-[#6e8074]"
                 title="Close Schema Helper"
               >
                 <PanelRightClose className="size-4" />
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -766,15 +776,15 @@ export default function Chatbox() {
               const cols = item.columns || []
 
               return (
-                <div
+                <Card
                   key={tableName}
-                  className="rounded-xl border border-[#e4ebe5] bg-[#f9fbf9] transition-all"
+                  className="rounded-xl border-border bg-[#f9fbf9] transition-all p-0 overflow-hidden"
                 >
                   {/* Clickable Table Header (Accordion Trigger) */}
                   <button
                     type="button"
                     onClick={() => toggleTableCollapse(tableName)}
-                    className="flex w-full items-center justify-between p-2.5 text-left transition hover:bg-[#f1f6f2] rounded-xl"
+                    className="flex w-full items-center justify-between p-2.5 text-left transition hover:bg-[#f1f6f2]"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       {isCollapsed ? (
@@ -795,15 +805,15 @@ export default function Chatbox() {
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                      <span className="rounded bg-[#eaf3ec] px-1.5 py-0.5 font-mono text-[10px] font-medium text-[#205e3b]">
+                      <Badge variant="secondary" className="font-mono text-[10px] font-medium text-[#205e3b]">
                         {cols.length} cols
-                      </span>
+                      </Badge>
                     </div>
                   </button>
 
                   {/* Collapsible Column Details */}
                   {!isCollapsed && (
-                    <div className="border-t border-[#e8efe9] px-2.5 pb-2.5 pt-2 space-y-1">
+                    <div className="border-t border-border px-2.5 pb-2.5 pt-2 space-y-1 bg-white">
                       {cols.map((col) => {
                         const colName = typeof col === "string" ? col : col.name
                         const colType = typeof col === "string" ? "TEXT" : col.type
@@ -813,7 +823,7 @@ export default function Chatbox() {
                         return (
                           <div
                             key={colName}
-                            className="flex items-center justify-between rounded-lg border border-[#e1e9e2] bg-white px-2 py-1 font-mono text-[10px] shadow-3xs"
+                            className="flex items-center justify-between rounded-lg border border-border bg-[#fbfdfb] px-2 py-1 font-mono text-[10px] shadow-3xs"
                           >
                             <span className="flex items-center gap-1 font-medium text-[#2d4336] truncate">
                               {isPk && (
@@ -829,29 +839,30 @@ export default function Chatbox() {
                               )}
                               <span className="truncate">{colName}</span>
                             </span>
-                            <span className="rounded bg-[#f0f4f1] px-1.5 py-0.5 text-[9px] text-[#55695e] shrink-0 ml-1">
+                            <Badge variant="outline" className="px-1.5 py-0.5 text-[9px] text-[#55695e] shrink-0 ml-1">
                               {colType}
-                            </span>
+                            </Badge>
                           </div>
                         )
                       })}
                     </div>
                   )}
-                </div>
+                </Card>
               )
             })}
           </div>
 
           {/* Bottom Connect / Switch DB Button */}
-          <div className="border-t border-[#e9efe9] p-3 bg-[#fbfdfb]">
-            <button
-              type="button"
+          <div className="border-t border-border p-3 bg-[#fbfdfb]">
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setIsModalOpen(true)}
-              className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-[#c3ded0] bg-white py-2 text-xs font-semibold text-[#1e6138] shadow-2xs hover:bg-[#edf7f1] transition"
+              className="w-full gap-1.5 text-xs font-semibold text-[#1e6138] hover:bg-[#edf7f1]"
             >
               <Cloud className="size-3.5 text-[#3aa363]" />
               <span>{dbInfo ? "Switch Cloud Database" : "Connect Your Cloud DB"}</span>
-            </button>
+            </Button>
           </div>
 
         </aside>

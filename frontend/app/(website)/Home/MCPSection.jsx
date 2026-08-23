@@ -22,6 +22,9 @@ import {
   Workflow,
   Zap,
 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
 
 const mcpHighlights = [
   {
@@ -82,7 +85,7 @@ export default function MCPSection() {
   const currentCode = activeTab === "config" ? sampleMcpConfig : sampleToolCall
 
   return (
-    <section className="relative overflow-hidden border-b border-[#e3e8e2] bg-[#fbfdfb] px-4 py-20 sm:px-6 lg:px-8 lg:py-24" id="mcp">
+    <section className="relative overflow-hidden border-b border-border bg-[#fbfdfb] px-4 py-20 sm:px-6 lg:px-8 lg:py-24" id="mcp">
       {/* Background Accent */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,rgba(76,168,115,0.12),transparent_40%),radial-gradient(circle_at_85%_75%,rgba(31,45,36,0.06),transparent_40%)]" />
 
@@ -90,10 +93,10 @@ export default function MCPSection() {
         
         {/* Header */}
         <div className="mx-auto max-w-3xl text-center space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#cfe0d2] bg-[#edf7ef] px-3.5 py-1 text-xs font-semibold text-[#206642]">
+          <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold">
             <Radio className="size-3.5 text-[#3aa363] animate-pulse" />
             <span>Model Context Protocol (MCP) Standard</span>
-          </div>
+          </Badge>
 
           <h2 className="text-3xl font-semibold tracking-tight text-[#17241c] sm:text-4xl">
             Built on the open Model Context Protocol.
@@ -108,11 +111,11 @@ export default function MCPSection() {
         <div className="mt-16 grid gap-10 lg:grid-cols-2 lg:items-center">
           
           {/* Left: 3 Core Pillars */}
-          <div className="space-y-6">
+          <div className="space-y-5">
             {mcpHighlights.map((item, idx) => (
-              <div
+              <Card
                 key={idx}
-                className="flex items-start gap-4 rounded-2xl border border-[#e2ebe3] bg-white p-5 shadow-2xs transition-all hover:border-[#71c897]/80 hover:shadow-md"
+                className="flex items-start gap-4 p-5 hover-lift hover:border-[#71c897]/80 hover:shadow-md"
               >
                 <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
                   <item.icon className="size-5.5" />
@@ -122,30 +125,30 @@ export default function MCPSection() {
                     <h3 className="text-sm sm:text-base font-semibold text-[#17241c]">
                       {item.title}
                     </h3>
-                    <span className="rounded bg-[#edf6f0] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#246b45]">
+                    <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-wider">
                       {item.badge}
-                    </span>
+                    </Badge>
                   </div>
                   <p className="text-xs sm:text-sm text-[#5f7065] leading-relaxed">
                     {item.desc}
                   </p>
                 </div>
-              </div>
+              </Card>
             ))}
 
-            <div className="rounded-2xl border border-[#d5e7d9] bg-[#edf8f1] p-4 text-xs text-[#1e6138] flex items-center justify-between">
+            <div className="rounded-2xl border border-[#d5e7d9] bg-[#edf8f1] p-4 text-xs text-[#1e6138] flex items-center justify-between shadow-2xs">
               <div className="flex items-center gap-2 font-medium">
                 <CheckCircle2 className="size-4 text-[#3aa363]" />
                 <span>Compatible with Claude Desktop, Cursor &amp; Custom MCP Clients</span>
               </div>
-              <span className="rounded bg-white px-2 py-0.5 font-mono text-[10px] font-bold text-[#206642]">
+              <Badge variant="emerald" className="font-mono text-[10px] bg-white text-[#206642]">
                 v1.0 MCP
-              </span>
+              </Badge>
             </div>
           </div>
 
           {/* Right: Interactive MCP Code & Protocol Inspector */}
-          <div className="overflow-hidden rounded-2xl border border-[#27382d] bg-[#141f18] shadow-2xl">
+          <div className="overflow-hidden rounded-2xl border border-[#27382d] bg-[#141f18] shadow-2xl transition-all duration-300">
             
             {/* Header Tabs */}
             <div className="flex items-center justify-between border-b border-white/10 bg-[#0f1712] px-4 py-2.5">
@@ -153,9 +156,9 @@ export default function MCPSection() {
                 <button
                   type="button"
                   onClick={() => setActiveTab("config")}
-                  className={`rounded-lg px-3 py-1 font-mono text-[11px] font-medium transition ${
+                  className={`rounded-lg px-3 py-1 font-mono text-[11px] font-medium transition-all duration-150 ${
                     activeTab === "config"
-                      ? "bg-[#1f2d24] text-[#71c897] border border-[#35523f]"
+                      ? "bg-[#1f2d24] text-[#71c897] border border-[#35523f] shadow-xs"
                       : "text-[#86a894] hover:text-white"
                   }`}
                 >
@@ -164,9 +167,9 @@ export default function MCPSection() {
                 <button
                   type="button"
                   onClick={() => setActiveTab("tool")}
-                  className={`rounded-lg px-3 py-1 font-mono text-[11px] font-medium transition ${
+                  className={`rounded-lg px-3 py-1 font-mono text-[11px] font-medium transition-all duration-150 ${
                     activeTab === "tool"
-                      ? "bg-[#1f2d24] text-[#71c897] border border-[#35523f]"
+                      ? "bg-[#1f2d24] text-[#71c897] border border-[#35523f] shadow-xs"
                       : "text-[#86a894] hover:text-white"
                   }`}
                 >
@@ -174,14 +177,16 @@ export default function MCPSection() {
                 </button>
               </div>
 
-              <button
+              <Button
                 type="button"
+                variant="darkGhost"
+                size="sm"
                 onClick={() => handleCopyCode(currentCode)}
-                className="flex items-center gap-1 rounded bg-white/10 px-2 py-1 text-[11px] text-[#d7f1df] hover:bg-white/20 transition"
+                className="h-7 gap-1 text-[11px] text-[#d7f1df]"
               >
                 {isCopied ? <Check className="size-3 text-[#4ca873]" /> : <Copy className="size-3" />}
                 <span>{isCopied ? "Copied" : "Copy"}</span>
-              </button>
+              </Button>
             </div>
 
             {/* Code Body */}

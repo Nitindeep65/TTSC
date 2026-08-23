@@ -1,6 +1,8 @@
 'use client'
 
 import { MessageSquareQuote, Star, ShieldCheck, Sparkles, CheckCircle2 } from "lucide-react"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 const testimonials = [
   {
@@ -31,14 +33,14 @@ const testimonials = [
 
 export default function Testimonial() {
   return (
-    <section id="testimonials" className="border-b border-[#e3e8e2] bg-[#fbfdfb] px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+    <section id="testimonials" className="border-b border-border bg-[#fbfdfb] px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
       <div className="mx-auto max-w-7xl">
         
         {/* Header */}
         <div className="mx-auto max-w-3xl text-center space-y-3">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#246b45]">
+          <Badge variant="emerald" className="px-3.5 py-1 text-xs font-bold uppercase tracking-[0.14em]">
             Engineered For Precision
-          </p>
+          </Badge>
           <h2 className="text-3xl font-semibold tracking-tight text-[#17241c] sm:text-4xl">
             Trusted by modern data &amp; engineering teams.
           </h2>
@@ -50,9 +52,9 @@ export default function Testimonial() {
         {/* Testimonials Grid */}
         <div className="mt-14 grid gap-6 md:grid-cols-3">
           {testimonials.map((item, idx) => (
-            <article
+            <Card
               key={idx}
-              className="flex flex-col justify-between rounded-2xl border border-[#dfe7df] bg-white p-7 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-[#71c897]/70 hover:shadow-md"
+              className="flex flex-col justify-between p-7 hover-lift hover:border-[#71c897]/80 hover:shadow-md"
             >
               <div>
                 <div className="flex items-center gap-1 text-[#d98b2c]">
@@ -75,11 +77,11 @@ export default function Testimonial() {
                     <p className="text-[11px] text-[#6d7e74]">{item.role}</p>
                   </div>
                 </div>
-                <span className="hidden sm:inline-block rounded bg-[#edf6f0] px-2 py-0.5 text-[9px] font-bold text-[#206642]">
+                <Badge variant="secondary" className="hidden sm:inline-flex text-[9px] font-bold">
                   {item.company}
-                </span>
+                </Badge>
               </div>
-            </article>
+            </Card>
           ))}
         </div>
 

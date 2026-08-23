@@ -39,6 +39,8 @@ import {
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useDatabase } from "@/lib/databaseContext"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 
 export function AppSidebar() {
   const pathname = usePathname()
@@ -67,12 +69,12 @@ export function AppSidebar() {
   ]
 
   return (
-    <Sidebar className="border-r border-[#dfe7df] bg-[#fbfdfb]">
+    <Sidebar className="border-r border-border bg-[#fbfdfb]">
       
       {/* Brand Header */}
-      <SidebarHeader className="border-b border-[#dfe7df] px-4 py-4">
+      <SidebarHeader className="border-b border-border px-4 py-4">
         <Link href="/" className="group flex items-center gap-3 font-semibold tracking-tight">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs transition-transform group-hover:scale-105">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs transition-transform duration-200 group-hover:scale-105">
             <Sparkles className="size-4.5" />
           </span>
           <div>
@@ -101,7 +103,7 @@ export function AppSidebar() {
                       render={<Link href={item.href} />}
                       tooltip={item.label}
                       isActive={isActive}
-                      className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                      className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-150 ${
                         isActive
                           ? "bg-[#1f2d24] text-white shadow-xs"
                           : "text-[#394a3f] hover:bg-[#eef4ef]"
@@ -130,7 +132,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Cloud Database Connector Widget (Replaces Schema Helper on Left) */}
+        {/* Cloud Database Connector Widget */}
         <SidebarGroup className="px-2.5 py-2">
           <SidebarGroupLabel className="px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#819287]">
             Cloud DB Connector
@@ -139,15 +141,15 @@ export function AppSidebar() {
             <div className="px-1 pt-1">
               {dbInfo ? (
                 /* Connected State Card */
-                <div className="rounded-xl border border-[#cbe1d2] bg-[#f0faf3] p-3 shadow-2xs space-y-2.5">
+                <div className="rounded-xl border border-[#cbe1d2] bg-[#f0faf3] p-3 shadow-2xs space-y-2.5 transition-all">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-[#1f663c]">
                       <span className="size-2 rounded-full bg-[#3ba565] animate-pulse" />
                       <span>Live Connected</span>
                     </div>
-                    <span className="rounded bg-[#d5ecd9] px-1.5 py-0.5 text-[9px] font-bold text-[#1a5a33] uppercase">
+                    <Badge variant="emerald" className="text-[9px] font-bold uppercase px-1.5 py-0 bg-white">
                       Postgres
-                    </span>
+                    </Badge>
                   </div>
 
                   <div className="space-y-1 font-mono text-[11px] text-[#30503d]">
@@ -166,25 +168,29 @@ export function AppSidebar() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-[#d8ebdd]">
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => setIsModalOpen(true)}
-                      className="rounded-lg border border-[#c3ded0] bg-white px-2 py-1 text-[10px] font-semibold text-[#226841] hover:bg-[#e4f3ea] text-center shadow-3xs"
+                      className="h-7 text-[10px] font-semibold text-[#226841] bg-white hover:bg-[#e4f3ea]"
                     >
                       Switch DB
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="destructive"
+                      size="sm"
                       onClick={disconnectDatabase}
-                      className="rounded-lg border border-red-200 bg-white px-2 py-1 text-[10px] font-semibold text-red-600 hover:bg-red-50 text-center shadow-3xs"
+                      className="h-7 text-[10px] font-semibold"
                     >
                       Disconnect
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (
                 /* Unconnected State Promo Card */
-                <div className="rounded-xl border border-[#dce8de] bg-white p-3.5 shadow-2xs space-y-2.5">
+                <div className="rounded-xl border border-border bg-white p-3.5 shadow-2xs space-y-2.5 transition-all">
                   <div className="flex items-center gap-2">
                     <div className="flex size-7 items-center justify-center rounded-lg bg-[#1f2d24] text-[#71c897]">
                       <Cloud className="size-3.5" />
@@ -199,14 +205,16 @@ export function AppSidebar() {
                     Hook your live PostgreSQL connection to ground queries in your live tables and schema constraints.
                   </p>
 
-                  <button
+                  <Button
                     type="button"
+                    variant="default"
+                    size="sm"
                     onClick={() => setIsModalOpen(true)}
-                    className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-[#1f2d24] py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-[#2d4937] transition"
+                    className="w-full gap-1.5 text-xs font-semibold"
                   >
                     <Plug className="size-3 text-[#71c897]" />
                     <span>Connect Live DB</span>
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -224,7 +232,7 @@ export function AppSidebar() {
                 <Link
                   key={idx}
                   href="/Dashboard/chat"
-                  className="flex items-center justify-between rounded-lg border border-transparent p-2 text-xs font-medium text-[#3b4e42] transition hover:border-[#dfe8df] hover:bg-white hover:shadow-2xs"
+                  className="flex items-center justify-between rounded-lg border border-transparent p-2 text-xs font-medium text-[#3b4e42] transition-all hover:border-border hover:bg-white hover:shadow-2xs"
                 >
                   <span className="truncate">{item.title}</span>
                   <ChevronRight className="size-3 text-[#87998e] shrink-0" />
@@ -236,7 +244,7 @@ export function AppSidebar() {
 
         {/* Safety & Compliance Badge */}
         <SidebarGroup className="px-2.5 py-2">
-          <div className="rounded-xl border border-[#e1e9e2] bg-[#f8fbf8] p-3 text-[11px] text-[#55675c] space-y-1.5">
+          <div className="rounded-xl border border-border bg-[#f8fbf8] p-3 text-[11px] text-[#55675c] space-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold text-[#226b44]">
               <ShieldCheck className="size-3.5" />
               <span>Production Safety</span>
@@ -252,7 +260,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       {/* Sidebar Footer */}
-      <SidebarFooter className="border-t border-[#dfe7df] bg-[#f8fbf8] p-3">
+      <SidebarFooter className="border-t border-border bg-[#f8fbf8] p-3">
         <SidebarMenu className="gap-1">
           <SidebarMenuItem>
             <SidebarMenuButton render={<Link href="/" />} tooltip="Return to Landing">

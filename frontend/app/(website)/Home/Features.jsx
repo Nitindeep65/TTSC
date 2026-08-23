@@ -20,6 +20,8 @@ import {
   TableProperties,
   Zap,
 } from "lucide-react"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 const featureList = [
   {
@@ -58,15 +60,15 @@ const featureList = [
 
 export default function Features() {
   return (
-    <section className="border-b border-[#e3e8e2] bg-white px-4 py-20 sm:px-6 lg:px-8 lg:py-24" id="features">
+    <section className="border-b border-border bg-white px-4 py-20 sm:px-6 lg:px-8 lg:py-24" id="features">
       <div className="mx-auto max-w-7xl">
         
         {/* Header */}
         <div className="mx-auto max-w-3xl text-center space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#d2e2d5] bg-[#edf7f0] px-3.5 py-1 text-xs font-semibold text-[#206642]">
+          <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold">
             <Sparkles className="size-3.5 text-[#3aa363]" />
             <span>Engineered for Production PostgreSQL</span>
-          </div>
+          </Badge>
 
           <h2 className="text-3xl font-semibold tracking-tight text-[#17241c] sm:text-4xl">
             The Text-to-SQL engine that doesn't guess.
@@ -80,18 +82,18 @@ export default function Features() {
         {/* Feature Cards Grid */}
         <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {featureList.map((f, idx) => (
-            <div
+            <Card
               key={idx}
-              className="group relative flex flex-col justify-between rounded-2xl border border-[#e2eae2] bg-[#fbfdfb] p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[#71c897]/70 hover:bg-white hover:shadow-lg hover:shadow-[#1f2d24]/5"
+              className="group relative flex flex-col justify-between p-6 hover-lift hover:border-[#71c897]/80 hover:shadow-lg hover:shadow-[#1f2d24]/5"
             >
               <div>
-                <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs group-hover:scale-105 transition-transform">
+                <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs group-hover:scale-110 transition-transform duration-200">
                   <f.icon className="size-5.5" />
                 </div>
 
-                <span className="inline-block rounded-full bg-[#edf6f0] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#246b45] mb-2">
+                <Badge variant="secondary" className="mb-2.5 text-[10px] uppercase font-bold tracking-wider">
                   {f.badge}
-                </span>
+                </Badge>
 
                 <h3 className="text-base font-semibold text-[#17241c] tracking-tight">
                   {f.title}
@@ -106,7 +108,7 @@ export default function Features() {
                 <CheckCircle2 className="size-3.5 text-[#3ba565]" />
                 <span>{f.highlight}</span>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
 

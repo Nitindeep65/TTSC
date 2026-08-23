@@ -2,6 +2,8 @@
 
 import Link from "next/link"
 import { ArrowRight, Cloud, Database, MessageSquareText, ShieldCheck, Sparkles, Terminal } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 export default function CTA() {
   return (
@@ -13,10 +15,10 @@ export default function CTA() {
       <div className="relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-10 md:flex-row md:items-center">
         
         <div className="max-w-2xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3.5 py-1 text-xs font-semibold text-[#8ed8a8] backdrop-blur-sm">
+          <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold text-[#8ed8a8] border-white/15 bg-white/5 backdrop-blur-sm">
             <Sparkles className="size-3.5 text-[#71c897]" />
             <span>Ready for Production Data</span>
-          </div>
+          </Badge>
 
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl leading-tight">
             Connect your cloud database. <br />
@@ -42,21 +44,27 @@ export default function CTA() {
         </div>
 
         <div className="flex flex-col gap-3.5 sm:flex-row shrink-0">
-          <Link
-            href="/Dashboard/chat"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#4ca873] px-6 py-4 text-sm font-bold text-[#0c1a12] shadow-xl shadow-[#4ca873]/25 transition hover:bg-[#5fc089] hover:scale-[1.02]"
-          >
-            <MessageSquareText className="size-4.5" />
-            <span>Launch Live Chat</span>
-            <ArrowRight className="size-4" />
+          <Link href="/Dashboard/chat">
+            <Button
+              variant="primary"
+              size="lg"
+              className="gap-2.5 px-7 py-4 text-sm font-bold shadow-xl shadow-[#4ca873]/25 hover:scale-[1.03] transition-all duration-200"
+            >
+              <MessageSquareText className="size-4.5" />
+              <span>Launch Live Chat</span>
+              <ArrowRight className="size-4" />
+            </Button>
           </Link>
 
-          <Link
-            href="/Dashboard"
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 py-4 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/10"
-          >
-            <Terminal className="size-4.5 text-[#71c897]" />
-            <span>Query Workspace</span>
+          <Link href="/Dashboard">
+            <Button
+              variant="outline"
+              size="lg"
+              className="gap-2.5 border-white/20 bg-white/5 px-7 py-4 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:scale-[1.03] transition-all duration-200"
+            >
+              <Terminal className="size-4.5 text-[#71c897]" />
+              <span>Query Workspace</span>
+            </Button>
           </Link>
         </div>
 

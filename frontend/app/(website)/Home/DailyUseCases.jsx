@@ -19,6 +19,8 @@ import {
   Users,
   Zap,
 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
 
 const useCases = [
   {
@@ -57,15 +59,15 @@ const useCases = [
 
 export default function DailyUseCases() {
   return (
-    <section className="border-b border-[#e3e8e2] bg-[#f7f8f5] px-4 py-20 sm:px-6 lg:px-8 lg:py-24" id="use-cases">
+    <section className="border-b border-border bg-background px-4 py-20 sm:px-6 lg:px-8 lg:py-24" id="use-cases">
       <div className="mx-auto max-w-7xl">
         
         {/* Header */}
         <div className="mx-auto max-w-3xl text-center space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#d2e2d5] bg-[#edf7f0] px-3.5 py-1 text-xs font-semibold text-[#206642]">
+          <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold">
             <Sparkles className="size-3.5 text-[#3aa363]" />
             <span>Everyday Production Workflows</span>
-          </div>
+          </Badge>
 
           <h2 className="text-3xl font-semibold tracking-tight text-[#17241c] sm:text-4xl">
             Built for everyday team queries.
@@ -79,25 +81,25 @@ export default function DailyUseCases() {
         {/* Use Cases Grid */}
         <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {useCases.map((uc, idx) => (
-            <div
+            <Card
               key={idx}
-              className="flex flex-col justify-between rounded-2xl border border-[#dfe7df] bg-white p-6 shadow-2xs transition-all duration-200 hover:-translate-y-1 hover:border-[#71c897] hover:shadow-md"
+              className="flex flex-col justify-between p-6 hover-lift hover:border-[#71c897] hover:shadow-md"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex size-10 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
                     <uc.icon className="size-5" />
                   </div>
-                  <span className="rounded-full bg-[#edf6f0] px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#246b45]">
+                  <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-wider">
                     {uc.badge}
-                  </span>
+                  </Badge>
                 </div>
 
                 <h3 className="text-sm font-semibold text-[#17241c]">
                   {uc.title}
                 </h3>
 
-                <div className="rounded-xl border border-[#e5ece6] bg-[#f8fbf8] p-3 text-xs font-mono text-[#253f2f] leading-relaxed">
+                <div className="rounded-xl border border-border bg-[#f8fbf8] p-3 text-xs font-mono text-[#253f2f] leading-relaxed shadow-3xs">
                   "{uc.prompt}"
                 </div>
 
@@ -106,16 +108,16 @@ export default function DailyUseCases() {
                 </p>
               </div>
 
-              <div className="mt-6 pt-3.5 border-t border-[#eaf0eb]">
+              <div className="mt-6 pt-3.5 border-t border-border">
                 <Link
                   href="/Dashboard/chat"
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#206642] hover:text-[#13492c] transition group"
                 >
                   <span>Try in Chat</span>
-                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                  <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-1" />
                 </Link>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
 

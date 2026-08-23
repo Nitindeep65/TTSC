@@ -10,45 +10,42 @@ import {
   Cloud,
   Code2,
   Copy,
-  Cpu,
   Database,
   HelpCircle,
-  Layers,
   Menu,
   MessageSquareText,
-  Network,
-  Play,
   Radio,
   Server,
   ShieldCheck,
   Sparkles,
-  Table2,
   Terminal,
-  Workflow,
   X,
   Zap,
 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
 
 export default function Hero() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
-    <section className="relative overflow-hidden border-b border-[#e3e8e2] bg-[#f7f8f5]" id="about">
+    <section className="relative overflow-hidden border-b border-border bg-background" id="about">
       {/* Background Subtle Gradients */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,rgba(113,178,133,0.18),transparent_40%),radial-gradient(circle_at_10%_85%,rgba(211,157,76,0.10),transparent_35%)]" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5ebe4_1px,transparent_1px),linear-gradient(to_bottom,#e5ebe4_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)] opacity-30" />
 
       {/* --- HERO NAVBAR --- */}
       <div className="relative z-20 mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 sm:pt-6 lg:px-8">
-        <nav className="flex items-center justify-between rounded-2xl border border-[#dfe7df]/80 bg-white/75 px-4 py-3 shadow-xs backdrop-blur-md sm:px-6">
+        <nav className="flex items-center justify-between rounded-2xl border border-border/80 bg-white/80 px-4 py-2.5 shadow-xs backdrop-blur-md transition-all duration-200 sm:px-6">
           
           {/* Logo & Brand */}
           <Link href="/" className="group flex items-center gap-2.5 font-semibold tracking-tight">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs transition-transform group-hover:scale-105">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs transition-transform duration-200 group-hover:scale-105">
               <Sparkles className="size-4.5" />
             </span>
             <div>
-              <span className="block text-sm font-bold text-[#17241c]">Text to SQL</span>
+              <span className="block text-sm font-bold text-[#17241c] font-sans">Text to SQL</span>
               <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-[#3aa363]">
                 MCP Postgres Studio
               </span>
@@ -76,49 +73,47 @@ export default function Hero() {
           </div>
 
           {/* Right Action CTAs */}
-          <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/Login"
-              className="px-3 py-1.5 text-xs font-semibold text-[#304738] transition hover:text-[#17241c]"
-            >
-              Sign In
+          <div className="hidden md:flex items-center gap-2.5">
+            <Link href="/Login">
+              <Button variant="ghost" size="sm" className="font-semibold text-xs">
+                Sign In
+              </Button>
             </Link>
 
-            <Link
-              href="/Dashboard/chat"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#1f2d24] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#314f3b] hover:shadow-md"
-            >
-              <MessageSquareText className="size-3.5 text-[#71c897]" />
-              <span>Launch Studio</span>
-              <ArrowRight className="size-3 text-[#71c897]" />
+            <Link href="/Dashboard/chat">
+              <Button variant="default" size="sm" className="gap-1.5 font-semibold text-xs shadow-sm hover:shadow-md">
+                <MessageSquareText className="size-3.5 text-[#71c897]" />
+                <span>Launch Studio</span>
+                <ArrowRight className="size-3 text-[#71c897]" />
+              </Button>
             </Link>
           </div>
 
           {/* Mobile Hamburger Button */}
           <div className="md:hidden flex items-center gap-2">
-            <Link
-              href="/Dashboard/chat"
-              className="inline-flex items-center gap-1 rounded-lg bg-[#1f2d24] px-3 py-1.5 text-[11px] font-semibold text-white"
-            >
-              <span>Chat</span>
-              <ArrowRight className="size-3" />
+            <Link href="/Dashboard/chat">
+              <Button variant="default" size="sm" className="h-8 px-2.5 text-xs">
+                <span>Chat</span>
+                <ArrowRight className="size-3" />
+              </Button>
             </Link>
 
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="iconSm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex size-8.5 items-center justify-center rounded-lg border border-[#dce5dd] bg-white text-[#304738] hover:bg-[#f2f7f3]"
               aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
-            </button>
+            </Button>
           </div>
 
         </nav>
 
         {/* Mobile Dropdown Menu */}
         {isMobileMenuOpen && (
-          <div className="mt-2 rounded-2xl border border-[#dfe7df] bg-white p-4 shadow-lg md:hidden animate-in fade-in slide-in-from-top-2 duration-150 space-y-3">
+          <div className="mt-2 rounded-2xl border border-border bg-white p-4 shadow-lg md:hidden animate-in fade-in slide-in-from-top-2 duration-200 space-y-3">
             <div className="flex flex-col space-y-2 text-xs font-medium text-[#3b4e43]">
               <a
                 href="#about"
@@ -171,14 +166,12 @@ export default function Hero() {
               </Link>
             </div>
 
-            <div className="border-t border-[#edf2ee] pt-2">
-              <Link
-                href="/Dashboard/chat"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 w-full rounded-xl bg-[#1f2d24] py-2.5 text-xs font-semibold text-white"
-              >
-                <MessageSquareText className="size-4 text-[#71c897]" />
-                <span>Open Interactive Chat</span>
+            <div className="border-t border-border pt-2">
+              <Link href="/Dashboard/chat" onClick={() => setIsMobileMenuOpen(false)}>
+                <Button variant="default" className="w-full gap-2 text-xs">
+                  <MessageSquareText className="size-4 text-[#71c897]" />
+                  <span>Open Interactive Chat</span>
+                </Button>
               </Link>
             </div>
           </div>
@@ -189,13 +182,13 @@ export default function Hero() {
       <div className="relative mx-auto grid min-h-[680px] w-full max-w-7xl items-center gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-16">
         
         {/* Left Column: Headline & Value Prop */}
-        <div className="max-w-2xl space-y-6">
+        <div className="max-w-2xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#cfe0d2] bg-white/80 px-3.5 py-1.5 text-xs font-semibold text-[#206642] shadow-2xs backdrop-blur-xs">
+          <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold shadow-2xs backdrop-blur-xs">
             <span className="flex size-2 rounded-full bg-[#4ca873] animate-pulse" />
-            <Sparkles className="size-3.5 text-[#4ca873]" />
+            <Sparkles className="size-3.5 text-[#3aa363]" />
             <span>MCP Native • Cloud PostgreSQL Engine</span>
-          </div>
+          </Badge>
 
           <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight text-[#17241c] sm:text-5xl lg:text-6xl">
             Ask in plain English. <br />
@@ -210,43 +203,41 @@ export default function Hero() {
 
           {/* Action CTAs */}
           <div className="flex flex-col gap-3.5 sm:flex-row pt-2">
-            <Link
-              href="/Dashboard/chat"
-              className="inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#1f2d24] px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#1f2d24]/15 transition hover:bg-[#314e3b] hover:shadow-xl"
-            >
-              <MessageSquareText className="size-4.5 text-[#71c897]" />
-              <span>Launch Interactive Chat</span>
-              <ArrowRight className="size-4 text-[#71c897]" />
+            <Link href="/Dashboard/chat">
+              <Button variant="default" size="lg" className="w-full sm:w-auto gap-2.5 font-semibold text-sm shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-200">
+                <MessageSquareText className="size-4.5 text-[#71c897]" />
+                <span>Launch Interactive Chat</span>
+                <ArrowRight className="size-4 text-[#71c897]" />
+              </Button>
             </Link>
 
-            <Link
-              href="/Dashboard"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#cfddd0] bg-white px-6 py-3.5 text-sm font-semibold text-[#243a2c] shadow-2xs transition hover:border-[#79b790] hover:bg-[#f2f8f3]"
-            >
-              <Terminal className="size-4.5 text-[#3aa363]" />
-              <span>Query Compiler Workspace</span>
+            <Link href="/Dashboard">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto gap-2 font-semibold text-sm hover:scale-[1.02] transition-all duration-200">
+                <Terminal className="size-4.5 text-[#3aa363]" />
+                <span>Query Compiler Workspace</span>
+              </Button>
             </Link>
           </div>
 
           {/* Cloud Database Supported Badges */}
-          <div className="pt-4 border-t border-[#e2e8e2]">
+          <div className="pt-4 border-t border-border">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7d9084] mb-3">
               Native Cloud Database Support via MCP
             </p>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-semibold text-[#304838]">
-              <span className="flex items-center gap-1.5 rounded-lg border border-[#d6e4d9] bg-white px-3 py-1.5 shadow-3xs">
+              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 shadow-3xs transition-transform hover:scale-105">
                 <span className="size-2 rounded-full bg-[#3ecf8e]" />
                 Supabase
               </span>
-              <span className="flex items-center gap-1.5 rounded-lg border border-[#d6e4d9] bg-white px-3 py-1.5 shadow-3xs">
+              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 shadow-3xs transition-transform hover:scale-105">
                 <span className="size-2 rounded-full bg-[#00e599]" />
                 Neon Serverless
               </span>
-              <span className="flex items-center gap-1.5 rounded-lg border border-[#d6e4d9] bg-white px-3 py-1.5 shadow-3xs">
+              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 shadow-3xs transition-transform hover:scale-105">
                 <span className="size-2 rounded-full bg-[#ff9900]" />
                 AWS RDS
               </span>
-              <span className="flex items-center gap-1.5 rounded-lg border border-[#d6e4d9] bg-white px-3 py-1.5 shadow-3xs">
+              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 shadow-3xs transition-transform hover:scale-105">
                 <Database className="size-3.5 text-[#336791]" />
                 Custom PostgreSQL
               </span>
@@ -272,23 +263,23 @@ export default function Hero() {
         </div>
 
         {/* Right Column: Interactive Conversational Demo Simulation */}
-        <div className="relative mx-auto w-full max-w-[560px] lg:ml-auto">
+        <div className="relative mx-auto w-full max-w-[560px] lg:ml-auto animate-in fade-in slide-in-from-right-4 duration-500">
           <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-tr from-[#89cca0]/30 to-[#d4ecd9]/30 blur-2xl" />
           
-          <div className="relative overflow-hidden rounded-2xl border border-[#d7e1d8] bg-white shadow-[0_24px_60px_-28px_rgba(25,40,30,0.30)]">
+          <Card className="relative overflow-hidden rounded-2xl border-border bg-white shadow-[0_24px_60px_-28px_rgba(25,40,30,0.25)] hover-lift">
             
             {/* Demo Header */}
-            <div className="flex items-center justify-between border-b border-[#e8ebe6] bg-[#fbfdfb] px-4 sm:px-5 py-3">
+            <div className="flex items-center justify-between border-b border-border bg-[#fbfdfb] px-4 sm:px-5 py-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-[#1f2d24]">
                 <span className="flex size-6 items-center justify-center rounded-lg bg-[#1f2d24] text-[#71c897]">
                   <Database className="size-3.5" />
                 </span>
                 <span>MCP Schema Context: E-Commerce RDS</span>
               </div>
-              <span className="flex items-center gap-1.5 rounded-full bg-[#edf7ef] px-2.5 py-0.5 text-[11px] font-semibold text-[#246b45]">
+              <Badge variant="success" className="gap-1.5 font-mono text-[10px]">
                 <span className="size-1.5 rounded-full bg-[#4ca873] animate-pulse" />
                 MCP Streamed
-              </span>
+              </Badge>
             </div>
 
             {/* Conversation Flow */}
@@ -296,7 +287,7 @@ export default function Hero() {
               
               {/* Turn 1: User Request */}
               <div className="flex gap-2.5 justify-end">
-                <div className="rounded-xl rounded-tr-xs bg-[#1f2d24] px-3.5 py-2.5 text-white shadow-2xs max-w-[85%]">
+                <div className="rounded-xl rounded-tr-xs bg-[#1f2d24] px-3.5 py-2.5 text-white shadow-2xs max-w-[85%] font-medium">
                   Show top customers by spend with completed orders in 2024
                 </div>
               </div>
@@ -319,7 +310,7 @@ export default function Hero() {
 
               {/* Turn 3: User Follow-up */}
               <div className="flex gap-2.5 justify-end">
-                <div className="rounded-xl rounded-tr-xs bg-[#1f2d24] px-3.5 py-2.5 text-white shadow-2xs">
+                <div className="rounded-xl rounded-tr-xs bg-[#1f2d24] px-3.5 py-2.5 text-white shadow-2xs font-medium">
                   Top 5 customers from order_items total
                 </div>
               </div>
@@ -329,7 +320,7 @@ export default function Hero() {
                 <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#1f2d24] text-[#71c897] shadow-3xs">
                   <Bot className="size-3.5" />
                 </div>
-                <div className="w-full space-y-2 rounded-xl rounded-tl-xs border border-[#d6e4d9] bg-[#fbfdfb] p-3.5 shadow-2xs">
+                <div className="w-full space-y-2 rounded-xl rounded-tl-xs border border-border bg-[#fbfdfb] p-3.5 shadow-2xs">
                   <div className="flex items-center gap-1.5 font-semibold text-[#1e6138] text-[11px]">
                     <ShieldCheck className="size-3.5 text-[#3aa363]" />
                     <span>MCP Safe SQL Compiled</span>
@@ -360,7 +351,7 @@ LIMIT 5;`}</code>
 
             </div>
 
-          </div>
+          </Card>
         </div>
 
       </div>
