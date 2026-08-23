@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/venv/
+venv/
+ENV/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Node & Next.js
+node_modules/
+frontend/node_modules/
+.next/
+frontend/.next/
+out/
+frontend/out/
+.DS_Store
+*.log

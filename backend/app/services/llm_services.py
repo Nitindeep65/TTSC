@@ -1,55 +1,291 @@
 import os
+import re
 import json
+import logging
+from typing import Optional, List, Dict, Any
 from openai import OpenAI
-from app.Models.schema import ClarificationResponse
+from app.Models.schema import (
+    ClarificationResponse,
+    ExtractedSQLData,
+    SchemaInfoResponse,
+    TableInfo,
+    ColumnInfo,
+)
 from dotenv import load_dotenv
 
 load_dotenv()
 
-client = OpenAI(
-    base_url="https://integrate.api.nvidia.com/v1",
-    api_key=os.getenv("NVIDIA_API_KEY")
-)
+logger = logging.getLogger(__name__)
 
-DATABASE_SCHEMA = """
-Available tables & schemas:
-- users(id, name, email, role, created_at)
-- orders(id, user_id, total_amount, status, created_at)
-- order_items(id, order_id, product_id, quantity, unit_price)
-- products(id, name, category, stock_quantity, price)
+# Cloud PostgreSQL Live Database Schema Definition
+LIVE_DATABASE_SCHEMA_SQL = """-- Cloud PostgreSQL Schema (Supabase / Neon / AWS RDS)
+
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(100),
+    role VARCHAR(50) DEFAULT 'customer', -- 'customer', 'admin', 'merchant'
+    is_active BOOLEAN DEFAULT TRUE,
+    metadata JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ
+);
+
+CREATE TABLE products (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    price NUMERIC(10, 2) NOT NULL,
+    stock_quantity INTEGER NOT NULL DEFAULT 0,
+    attributes JSONB,
+    is_available BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    total_amount NUMERIC(12, 2) NOT NULL,
+    status VARCHAR(50) NOT NULL, -- 'pending', 'processing', 'completed', 'cancelled', 'refunded'
+    shipping_address JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ
+);
+
+CREATE TABLE order_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID NOT NULL REFERENCES orders(id),
+    product_id UUID NOT NULL REFERENCES products(id),
+    quantity INTEGER NOT NULL,
+    unit_price NUMERIC(10, 2) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE payments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID NOT NULL REFERENCES orders(id),
+    amount NUMERIC(12, 2) NOT NULL,
+    payment_method VARCHAR(50), -- 'credit_card', 'paypal', 'stripe', 'bank_transfer'
+    status VARCHAR(50) NOT NULL, -- 'succeeded', 'pending', 'failed', 'refunded'
+    transaction_ref VARCHAR(100),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
 """
 
-def evaluate_user_intent(user_prompt: str, session_history: list) -> ClarificationResponse:
-    system_prompt = f"""You are an intelligent, helpful Text-to-SQL Assistant. Your goal is to help users formulate precise PostgreSQL queries from natural language requests.
+STRUCTURED_TABLES_INFO = [
+    TableInfo(
+        table_name="users",
+        description="Registered user accounts and credentials",
+        columns=[
+            ColumnInfo(name="id", type="UUID", is_primary_key=True, description="Unique user identifier"),
+            ColumnInfo(name="email", type="VARCHAR(255)", description="Unique user email"),
+            ColumnInfo(name="name", type="VARCHAR(100)", description="Full user display name"),
+            ColumnInfo(name="role", type="VARCHAR(50)", description="Role: customer, admin, merchant"),
+            ColumnInfo(name="is_active", type="BOOLEAN", description="Active account flag"),
+            ColumnInfo(name="metadata", type="JSONB", description="User profile settings & preferences"),
+            ColumnInfo(name="created_at", type="TIMESTAMPTZ", description="Registration timestamp"),
+            ColumnInfo(name="updated_at", type="TIMESTAMPTZ", description="Last profile update timestamp"),
+        ]
+    ),
+    TableInfo(
+        table_name="products",
+        description="Catalog items available for purchase",
+        columns=[
+            ColumnInfo(name="id", type="UUID", is_primary_key=True, description="Unique product ID"),
+            ColumnInfo(name="name", type="VARCHAR(255)", description="Product title"),
+            ColumnInfo(name="category", type="VARCHAR(100)", description="Product category taxonomy"),
+            ColumnInfo(name="price", type="NUMERIC(10,2)", description="Unit retail price"),
+            ColumnInfo(name="stock_quantity", type="INTEGER", description="Current inventory quantity in stock"),
+            ColumnInfo(name="attributes", type="JSONB", description="Dynamic product specs, tags, dimensions"),
+            ColumnInfo(name="is_available", type="BOOLEAN", description="Availability flag for store display"),
+            ColumnInfo(name="created_at", type="TIMESTAMPTZ", description="Product listing creation timestamp"),
+        ]
+    ),
+    TableInfo(
+        table_name="orders",
+        description="Customer transactions and purchase orders",
+        columns=[
+            ColumnInfo(name="id", type="UUID", is_primary_key=True, description="Unique order ID"),
+            ColumnInfo(name="user_id", type="UUID", is_foreign_key=True, references="users(id)", description="Purchasing user ID"),
+            ColumnInfo(name="total_amount", type="NUMERIC(12,2)", description="Final checkout amount charged"),
+            ColumnInfo(name="status", type="VARCHAR(50)", description="pending, processing, completed, cancelled, refunded"),
+            ColumnInfo(name="shipping_address", type="JSONB", description="Delivery address object"),
+            ColumnInfo(name="created_at", type="TIMESTAMPTZ", description="Order placement timestamp"),
+            ColumnInfo(name="updated_at", type="TIMESTAMPTZ", description="Last status update timestamp"),
+        ]
+    ),
+    TableInfo(
+        table_name="order_items",
+        description="Line items contained within each order",
+        columns=[
+            ColumnInfo(name="id", type="UUID", is_primary_key=True, description="Unique order item ID"),
+            ColumnInfo(name="order_id", type="UUID", is_foreign_key=True, references="orders(id)", description="Parent order reference"),
+            ColumnInfo(name="product_id", type="UUID", is_foreign_key=True, references="products(id)", description="Referenced product"),
+            ColumnInfo(name="quantity", type="INTEGER", description="Units purchased (> 0)"),
+            ColumnInfo(name="unit_price", type="NUMERIC(10,2)", description="Historical unit price at time of purchase"),
+            ColumnInfo(name="created_at", type="TIMESTAMPTZ", description="Line item creation timestamp"),
+        ]
+    ),
+    TableInfo(
+        table_name="payments",
+        description="Payment transactions, methods, and status",
+        columns=[
+            ColumnInfo(name="id", type="UUID", is_primary_key=True, description="Unique payment ID"),
+            ColumnInfo(name="order_id", type="UUID", is_foreign_key=True, references="orders(id)", description="Associated order reference"),
+            ColumnInfo(name="amount", type="NUMERIC(12,2)", description="Transaction amount charged"),
+            ColumnInfo(name="payment_method", type="VARCHAR(50)", description="credit_card, paypal, stripe, bank_transfer"),
+            ColumnInfo(name="status", type="VARCHAR(50)", description="succeeded, pending, failed, refunded"),
+            ColumnInfo(name="transaction_ref", type="VARCHAR(100)", description="External gateway reference ID"),
+            ColumnInfo(name="created_at", type="TIMESTAMPTZ", description="Payment processing timestamp"),
+        ]
+    ),
+]
 
-DATABASE SCHEMA:
-{DATABASE_SCHEMA}
 
-REQUIRED QUERY SPECIFICATIONS:
-1. Target Data: Specific columns or aggregated metrics (SUM, COUNT, AVG, etc.).
-2. Source Entities: Relevant tables from the schema.
-3. Conditions & Constraints: Date ranges, status filters, grouping, or ordering.
+def get_schema_info() -> SchemaInfoResponse:
+    """Returns the live database schema metadata."""
+    return SchemaInfoResponse(
+        database_type="Cloud PostgreSQL (Supabase / Neon / AWS RDS)",
+        tables=STRUCTURED_TABLES_INFO
+    )
 
-RULES:
-1. CONTEXT IS CRUCIAL: Evaluate the latest user message COMBINED with all previous messages in the conversation history.
-2. If previous messages requested a query (e.g., 'top 10 users by spend') and the latest message provides missing details (e.g., 'last 30 days'), merge these parameters into a complete request.
-3. If parameters are still missing or ambiguous across the entire conversation, set "status" to "needs_clarification" and "message" to a concise follow-up question. Set "extracted_data" to null.
-4. Once all required parameters are gathered across the conversation, set "status" to "complete", formulate the optimized SQL query in "extracted_data.sql_query", list the "tables_identified", and provide a 1-2 sentence "explanation".
 
-CRITICAL: Return ONLY valid JSON:
+def get_llm_client() -> OpenAI:
+    api_key = os.getenv("NVIDIA_API_KEY")
+    base_url = os.getenv("Base_url", "https://integrate.api.nvidia.com/v1")
+    return OpenAI(base_url=base_url, api_key=api_key, timeout=30.0)
+
+
+def build_system_prompt(live_schema: Optional[str] = None) -> str:
+    schema_to_use = live_schema if live_schema and live_schema.strip() else LIVE_DATABASE_SCHEMA_SQL
+    
+    return f"""You are an expert Text-to-SQL Clarification and Query Engine specializing in cloud PostgreSQL environments (Supabase, Neon, AWS RDS). 
+
+Your objective is to analyze user requests, evaluate conversational context, clarify ambiguities, and generate safe, optimized, production-ready PostgreSQL queries based strictly on the live schema provided via MCP.
+
+---
+
+### INPUT CONTEXT PROVIDED
+- LIVE DATABASE SCHEMA: Live tables, column names, data types, and constraints retrieved from the connected cloud database.
+{schema_to_use}
+
+---
+
+### CORE EVALUATION RULES
+
+1. SCHEMA GROUNDING (ZERO HALLUCINATION):
+   - Only reference tables and columns explicitly present in the provided schema.
+   - Respect PostgreSQL data types (e.g., UUID, TIMESTAMPTZ, JSONB, NUMERIC). Cast types explicitly when necessary (e.g., column::date or column::text, json_column->>'key').
+   - If the user asks for data stored in columns or tables that do not exist, treat this as an ambiguity and ask for clarification.
+
+2. CLARIFICATION CRITERIA (WHEN TO PAUSE SQL GENERATION):
+   - Set "status" to "needs_clarification" if any of the following are missing or ambiguous:
+     * Time windows or date ranges on cumulative/historical tables (e.g., orders, payments, user registrations).
+     * Status filters on transactional entities (e.g., active vs. inactive, completed vs. pending vs. cancelled).
+     * Ambiguous ranking/aggregation definitions (e.g., "top users" -> by total spend, by order count, or by activity?).
+     * Vague pagination or threshold requirements.
+   - In "message", ask a concise, targeted question addressing the missing parameters. Set "extracted_data" to null.
+
+3. COMPLETION CRITERIA (WHEN TO GENERATE SQL):
+   - Set "status" to "complete" ONLY when all required filters, joins, aggregations, and metrics are clearly specified across the conversation history.
+   - In "message", provide a brief, professional confirmation.
+
+4. CLOUD POSTGRESQL SAFETY & PERFORMANCE CONSTRAINTS:
+   - READ-ONLY ENFORCEMENT: Output ONLY `SELECT` statements. Never generate `INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `TRUNCATE`, or administrative statements.
+   - RESOURCE PROTECTION: Always apply an explicit `LIMIT` (default to 50 if unspecified) on open-ended list queries to prevent cloud egress and memory spikes.
+   - OPTIMIZED JOINS: Utilize indexed foreign keys for joins where indicated. Use `ILIKE` for case-insensitive text search.
+
+---
+
+### STRICT JSON OUTPUT FORMAT
+Respond ONLY with a valid, raw JSON object matching this schema (no markdown formatting, no backticks, no code fences):
+
 {{
   "status": "needs_clarification" | "complete",
-  "message": "Acknowledgment or follow-up question",
+  "message": "Direct acknowledgment and specific clarification question, OR friendly confirmation message",
   "extracted_data": {{
-    "sql_query": "SELECT ...",
-    "tables_identified": ["table_name"],
-    "explanation": "..."
+    "sql_query": "SELECT ... FROM ... WHERE ...;",
+    "tables_identified": ["table_name_1", "table_name_2"],
+    "explanation": "1-2 sentence plain-English explanation of joins, filters, aggregations, and limits applied."
   }} | null
 }}"""
 
+
+def sanitize_and_parse_json(raw_text: str) -> Dict[str, Any]:
+    """Cleans markdown wrappers, extracts JSON object, and parses securely."""
+    text = raw_text.strip()
+    
+    # Remove markdown code block fences if present
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+        text = re.sub(r"\s*```$", "", text)
+        text = text.strip()
+        
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Attempt regex extraction of outermost JSON object
+        match = re.search(r"\{.*\}", text, re.DOTALL)
+        if match:
+            return json.loads(match.group(0))
+        raise
+
+
+def validate_and_enforce_sql_safety(sql_query: str) -> str:
+    """Enforces read-only PostgreSQL execution and safety constraints."""
+    query = sql_query.strip()
+    
+    # Disallow destructive/modifying SQL keywords
+    disallowed_patterns = [
+        r"\bINSERT\s+INTO\b",
+        r"\bUPDATE\s+\w+\s+SET\b",
+        r"\bDELETE\s+FROM\b",
+        r"\bDROP\s+(?:TABLE|DATABASE|INDEX|VIEW|SCHEMA)\b",
+        r"\bALTER\s+(?:TABLE|DATABASE|INDEX|VIEW|SCHEMA)\b",
+        r"\bTRUNCATE\b",
+        r"\bGRANT\b",
+        r"\bREVOKE\b",
+        r"\bEXEC\b",
+        r"\bEXECUTE\b",
+    ]
+    
+    for pattern in disallowed_patterns:
+        if re.search(pattern, query, re.IGNORECASE):
+            raise ValueError(f"Dangerous operation detected in generated query matching '{pattern}'. Only SELECT queries are permitted.")
+            
+    # Query must begin with SELECT or WITH
+    if not (re.match(r"^\s*(?:SELECT|WITH)\b", query, re.IGNORECASE)):
+        raise ValueError("Generated query is not a valid SELECT statement.")
+        
+    # Enforce LIMIT on list queries if not already present and not an aggregation-only without GROUP BY
+    is_pure_scalar_agg = bool(re.search(r"^\s*SELECT\s+(?:COUNT|SUM|AVG|MIN|MAX)\(", query, re.IGNORECASE) and not re.search(r"\bGROUP\s+BY\b", query, re.IGNORECASE))
+    
+    if not is_pure_scalar_agg and not re.search(r"\bLIMIT\s+\d+\b", query, re.IGNORECASE):
+        # If query ends with semicolon, insert LIMIT before semicolon
+        if query.endswith(";"):
+            query = query[:-1].rstrip() + " LIMIT 50;"
+        else:
+            query = query + " LIMIT 50;"
+            
+    return query
+
+
+def evaluate_user_intent(
+    user_prompt: str,
+    session_history: Optional[List[Dict[str, Any]]] = None,
+    live_schema: Optional[str] = None
+) -> ClarificationResponse:
+    """
+    Evaluates conversational context against the cloud PostgreSQL schema,
+    clarifies ambiguities, or produces a complete, validated SQL query.
+    """
+    if session_history is None:
+        session_history = []
+
+    system_prompt = build_system_prompt(live_schema)
     messages = [{"role": "system", "content": system_prompt}]
 
-    # Clean and append conversation history
+    # Reconstruct valid conversation history
     for item in session_history:
         role = item.get("role")
         content = item.get("content")
@@ -59,14 +295,54 @@ CRITICAL: Return ONLY valid JSON:
     # Append current user prompt
     messages.append({"role": "user", "content": user_prompt})
 
-    response = client.chat.completions.create(
-        model="meta/llama-3.1-8b-instruct",
-        messages=messages,
-        temperature=0.1,
-        max_tokens=400,
-        response_format={"type": "json_object"}
-    )
+    client = get_llm_client()
+    model = os.getenv("model", "meta/llama-3.1-70b-instruct")
 
-    raw_json_string = response.choices[0].message.content
-    parsed_data = json.loads(raw_json_string)
-    return ClarificationResponse(**parsed_data)
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=0.1,
+            max_tokens=600,
+            response_format={"type": "json_object"}
+        )
+
+        raw_content = response.choices[0].message.content
+        parsed_data = sanitize_and_parse_json(raw_content)
+
+        # Validate response schema
+        status = parsed_data.get("status", "needs_clarification")
+        message = parsed_data.get("message", "Could you please clarify your request?")
+        extracted_data_raw = parsed_data.get("extracted_data")
+
+        if status == "complete" and extracted_data_raw:
+            sql_query = extracted_data_raw.get("sql_query", "")
+            # Apply safety guardrails and LIMIT enforcement
+            safe_sql = validate_and_enforce_sql_safety(sql_query)
+            tables = extracted_data_raw.get("tables_identified", [])
+            explanation = extracted_data_raw.get("explanation", "")
+
+            extracted_data = ExtractedSQLData(
+                sql_query=safe_sql,
+                tables_identified=tables,
+                explanation=explanation
+            )
+            return ClarificationResponse(
+                status="complete",
+                message=message,
+                extracted_data=extracted_data
+            )
+        else:
+            return ClarificationResponse(
+                status="needs_clarification",
+                message=message,
+                extracted_data=None
+            )
+
+    except Exception as e:
+        logger.error(f"Error during LLM evaluation: {str(e)}", exc_info=True)
+        return ClarificationResponse(
+            status="needs_clarification",
+            message="I'd be glad to help formulate this query. Could you specify any required date ranges, status filters, or metrics to ensure an accurate query?",
+            extracted_data=None
+        )
