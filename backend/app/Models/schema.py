@@ -16,6 +16,7 @@ class ClarificationRequest(BaseModel):
     session_history: List[Dict[str, Any]] = []
     live_schema: Optional[str] = None
     connection_uri: Optional[str] = None
+    db_uri: Optional[str] = None
 
 class ColumnInfo(BaseModel):
     name: str

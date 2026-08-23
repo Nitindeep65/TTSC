@@ -14,10 +14,11 @@ def run_clarification(request: ClarificationRequest):
     clarifies ambiguities or generates production-ready SQL.
     """
     schema_to_use = request.live_schema
-    if not schema_to_use and request.connection_uri:
+    conn_uri = request.connection_uri or request.db_uri
+    if not schema_to_use and conn_uri:
         try:
             from app.services.db_service import introspect_cloud_database
-            _, schema_sql = introspect_cloud_database(request.connection_uri.strip())
+            _, schema_sql = introspect_cloud_database(conn_uri.strip())
             schema_to_use = schema_sql
         except Exception:
             pass
