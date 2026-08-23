@@ -1,8 +1,8 @@
-// QueryCraft Chrome Extension Client Logic
+// QueryCraft - Minimalist Developer Client
 const API_BASE = "http://127.0.0.1:8000"
 
-const STORAGE_KEY_PROFILES = "querycraft_db_profiles_v2"
-const STORAGE_KEY_ACTIVE_ID = "querycraft_active_db_id_v2"
+const STORAGE_KEY_PROFILES = "querycraft_db_profiles_v3"
+const STORAGE_KEY_ACTIVE_ID = "querycraft_active_db_id_v3"
 
 const fallbackDemoSchema = [
   {
@@ -66,16 +66,16 @@ const fallbackDemoSchema = [
 
 const initialDefaultProfile = {
   id: "prof-demo",
-  name: "Demo PostgreSQL",
+  name: "Demo DB",
   uri: "",
   dbInfo: {
-    host: "e-commerce-demo",
+    host: "demo.postgres",
     tables_count: 5,
     tables: fallbackDemoSchema
   }
 }
 
-// Global Extension State
+// Global State
 let profiles = [initialDefaultProfile]
 let activeProfileId = "prof-demo"
 let chatHistory = []
@@ -84,7 +84,7 @@ let isLoading = false
 let collapsedTablesState = {}
 let lastQueryResults = null
 
-// Storage Helper (supports chrome.storage.local & localStorage fallback)
+// Storage Layer
 const storage = {
   get: (keys, callback) => {
     if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
@@ -114,7 +114,7 @@ const storage = {
   }
 }
 
-// DOM Elements
+// DOM References
 const activeDbNameEl = document.getElementById("activeDbName")
 const activeDbBadgeEl = document.getElementById("activeDbBadge")
 const activeDbDotEl = document.getElementById("activeDbDot")
@@ -124,7 +124,6 @@ const dbDropdownMenu = document.getElementById("dbDropdownMenu")
 const dbProfilesList = document.getElementById("dbProfilesList")
 const dbCountBadge = document.getElementById("dbCountBadge")
 const btnAddDbQuick = document.getElementById("btnAddDbQuick")
-const serverStatusPill = document.getElementById("serverStatusPill")
 const serverStatusText = document.getElementById("serverStatusText")
 
 const welcomeState = document.getElementById("welcomeState")
@@ -134,7 +133,7 @@ const btnSendPrompt = document.getElementById("btnSendPrompt")
 const btnResetChat = document.getElementById("btnResetChat")
 const appFooter = document.getElementById("appFooter")
 
-const navTabs = document.querySelectorAll(".nav-tab")
+const navTabs = document.querySelectorAll(".nav-item")
 const tabPanels = {
   chat: document.getElementById("tabChat"),
   schema: document.getElementById("tabSchema"),
@@ -187,15 +186,15 @@ function getActiveProfile() {
 function updateActiveProfileUI() {
   const active = getActiveProfile()
   activeDbNameEl.textContent = active.name
-  welcomeDbNameEl.textContent = active.name
+  if (welcomeDbNameEl) welcomeDbNameEl.textContent = active.name
   
   const tablesCount = active.dbInfo?.tables_count || active.dbInfo?.tables?.length || 5
   activeDbBadgeEl.textContent = `${tablesCount} tbls`
 
   if (active.uri) {
-    activeDbDotEl.classList.add("active")
+    activeDbDotEl.classList.add("live")
   } else {
-    activeDbDotEl.classList.remove("active")
+    activeDbDotEl.classList.remove("live")
   }
 
   renderSchemaExplorer()
@@ -208,25 +207,23 @@ function saveProfilesState() {
   })
 }
 
-// --- BACKEND HEALTH CHECK ---
+// --- HEALTH CHECK ---
 async function checkBackendHealth() {
   try {
-    const res = await fetch(`${API_BASE}/`, { method: "GET", signal: AbortSignal.timeout(2500) })
+    const res = await fetch(`${API_BASE}/`, { method: "GET", signal: AbortSignal.timeout(2000) })
     if (res.ok) {
-      serverStatusPill.className = "server-status-pill online"
-      serverStatusText.textContent = "127.0.0.1"
-      serverStatusPill.title = "FastAPI Backend Online (http://127.0.0.1:8000)"
+      serverStatusText.textContent = "127.0.0.1:8000"
+      serverStatusText.style.color = "#10b981"
     } else {
       throw new Error()
     }
   } catch (e) {
-    serverStatusPill.className = "server-status-pill offline"
-    serverStatusText.textContent = "Offline"
-    serverStatusPill.title = "Backend unreachable at http://127.0.0.1:8000. Ensure uvicorn is running."
+    serverStatusText.textContent = "Backend Offline"
+    serverStatusText.style.color = "#ef4444"
   }
 }
 
-// --- TAB SWITCHING ---
+// --- TAB ROUTING ---
 function switchTab(tabName) {
   activeTab = tabName
   navTabs.forEach((tab) => {
@@ -245,31 +242,22 @@ function switchTab(tabName) {
     }
   })
 
-  // Show/Hide bottom input dock
   if (tabName === "chat") {
     appFooter.classList.remove("hidden")
   } else {
     appFooter.classList.add("hidden")
   }
 
-  if (tabName === "schema") {
-    renderSchemaExplorer()
-  } else if (tabName === "databases") {
-    renderProfilesList()
-  }
+  if (tabName === "schema") renderSchemaExplorer()
+  if (tabName === "databases") renderProfilesList()
 }
 
-// --- EVENT LISTENERS ---
+// --- EVENT BINDINGS ---
 function bindEvents() {
-  // Tabs Navigation
   navTabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const target = tab.getAttribute("data-tab")
-      switchTab(target)
-    })
+    tab.addEventListener("click", () => switchTab(tab.getAttribute("data-tab")))
   })
 
-  // Dropdown Switcher
   dbSwitcherTrigger.addEventListener("click", (e) => {
     e.stopPropagation()
     dbDropdownMenu.classList.toggle("hidden")
@@ -287,17 +275,12 @@ function bindEvents() {
     inputProfileName.focus()
   })
 
-  // Results Drawer
-  btnCloseResults.addEventListener("click", () => {
-    queryResultsDrawer.classList.add("hidden")
-  })
-
+  btnCloseResults.addEventListener("click", () => queryResultsDrawer.classList.add("hidden"))
   btnExportCsv.addEventListener("click", exportCsvResults)
-
   btnResetChat.addEventListener("click", resetChat)
 
-  // Presets in Add Form
-  document.querySelectorAll(".chip-preset-card").forEach((btn) => {
+  // Presets in Form
+  document.querySelectorAll(".preset-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       inputConnectionUri.value = btn.getAttribute("data-uri")
       inputConnectionUri.focus()
@@ -315,7 +298,7 @@ function bindEvents() {
     }
   })
 
-  // Add DB Form Submit
+  // Add DB Submit
   formAddDb.addEventListener("submit", async (e) => {
     e.preventDefault()
     const name = inputProfileName.value.trim()
@@ -324,7 +307,7 @@ function bindEvents() {
 
     const btnSubmit = document.getElementById("btnConnectProfile")
     btnSubmit.disabled = true
-    btnSubmit.innerHTML = `<span>Connecting &amp; Introspecting...</span>`
+    btnSubmit.textContent = "Connecting..."
 
     try {
       const res = await fetch(`${API_BASE}/api/database/connect`, {
@@ -335,7 +318,7 @@ function bindEvents() {
 
       if (!res.ok) {
         const errJson = await res.json()
-        throw new Error(errJson.detail || "Failed to connect to PostgreSQL database.")
+        throw new Error(errJson.detail || "Connection failed")
       }
 
       const dbData = await res.json()
@@ -356,20 +339,16 @@ function bindEvents() {
       inputConnectionUri.value = ""
       switchTab("chat")
     } catch (err) {
-      alert(`Connection Error: ${err.message}`)
+      alert(`Error: ${err.message}`)
     } finally {
       btnSubmit.disabled = false
-      btnSubmit.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-        <span>Connect &amp; Introspect Schema</span>
-      `
+      btnSubmit.textContent = "Connect & Introspect"
     }
   })
 
   // Schema Search Filter
   inputSchemaSearch.addEventListener("input", (e) => {
-    const query = e.target.value.toLowerCase().trim()
-    renderSchemaExplorer(query)
+    renderSchemaExplorer(e.target.value.toLowerCase().trim())
   })
 
   btnToggleAllTables.addEventListener("click", () => {
@@ -383,7 +362,7 @@ function bindEvents() {
     renderSchemaExplorer(inputSchemaSearch.value.toLowerCase().trim())
   })
 
-  // Input & Submit Handlers
+  // Prompt Submit
   btnSendPrompt.addEventListener("click", () => handleSendPrompt())
 
   userPromptInput.addEventListener("keydown", (e) => {
@@ -393,15 +372,15 @@ function bindEvents() {
     }
   })
 
-  // Quick Starters Chips
-  document.querySelectorAll(".starter-chip").forEach((chip) => {
+  // Starter Prompts
+  document.querySelectorAll(".prompt-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       const prompt = chip.getAttribute("data-prompt")
       if (prompt) handleSendPrompt(prompt)
     })
   })
 
-  // Keyboard Shortcuts: Cmd/Ctrl+K for DB Switcher, Cmd/Ctrl+1,2,3 for tabs, Esc to close drawers
+  // Keyboard Shortcuts
   document.addEventListener("keydown", (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
       e.preventDefault()
@@ -430,50 +409,49 @@ function bindEvents() {
 function renderProfilesList() {
   dbProfilesList.innerHTML = ""
   savedProfilesList.innerHTML = ""
-  dbCountBadge.textContent = `${profiles.length} profiles`
+  dbCountBadge.textContent = profiles.length
   savedCount.textContent = profiles.length
 
   profiles.forEach((p) => {
     const isActive = p.id === activeProfileId
     const tblCount = p.dbInfo?.tables_count || p.dbInfo?.tables?.length || 5
 
-    // 1. Dropdown Item
-    const dropItem = document.createElement("div")
-    dropItem.className = `db-profile-item ${isActive ? "active" : ""}`
-    dropItem.innerHTML = `
-      <div class="db-profile-left">
-        <div class="db-dot ${p.uri ? "active" : ""}"></div>
-        <span class="db-name">${escapeHtml(p.name)}</span>
+    // Popover item
+    const popItem = document.createElement("div")
+    popItem.className = `popover-item ${isActive ? "active" : ""}`
+    popItem.innerHTML = `
+      <div class="popover-item-left">
+        <span class="status-indicator ${p.uri ? "live" : ""}"></span>
+        <span>${escapeHtml(p.name)}</span>
       </div>
-      <span class="db-badge">${tblCount} tbls</span>
+      <span class="tbl-count">${tblCount} tbls</span>
     `
-    dropItem.addEventListener("click", () => {
+    popItem.addEventListener("click", () => {
       activeProfileId = p.id
       saveProfilesState()
       updateActiveProfileUI()
       renderProfilesList()
       dbDropdownMenu.classList.add("hidden")
     })
-    dbProfilesList.appendChild(dropItem)
+    dbProfilesList.appendChild(popItem)
 
-    // 2. Manage Connections Tab Row
-    const savedRow = document.createElement("div")
-    savedRow.className = `saved-profile-row ${isActive ? "active" : ""}`
-    savedRow.innerHTML = `
-      <div class="saved-profile-meta">
-        <span class="saved-profile-title">${escapeHtml(p.name)}</span>
-        <span class="saved-profile-host">${escapeHtml(p.dbInfo?.host || "Demo PostgreSQL")} (${tblCount} tables)</span>
+    // Saved list item in DB tab
+    const savedItem = document.createElement("div")
+    savedItem.className = `saved-db-item ${isActive ? "active" : ""}`
+    savedItem.innerHTML = `
+      <div>
+        <span class="font-medium">${escapeHtml(p.name)}</span>
+        <span class="tbl-count" style="margin-left:6px;">${escapeHtml(p.dbInfo?.host || "demo.postgres")}</span>
       </div>
-      <div class="saved-profile-actions">
-        ${isActive ? '<span class="btn-small active-tag">Active</span>' : `<button type="button" class="btn-small btn-set-active" data-id="${p.id}">Select</button>`}
-        ${profiles.length > 1 ? `<button type="button" class="btn-small delete btn-delete-prof" data-id="${p.id}">✕</button>` : ""}
+      <div class="saved-db-actions">
+        ${isActive ? '<span class="tbl-count" style="color:#10b981; font-weight:600;">Active</span>' : `<button type="button" class="tiny-btn btn-sel-prof" data-id="${p.id}">Select</button>`}
+        ${profiles.length > 1 ? `<button type="button" class="tiny-btn delete btn-del-prof" data-id="${p.id}">✕</button>` : ""}
       </div>
     `
-    savedProfilesList.appendChild(savedRow)
+    savedProfilesList.appendChild(savedItem)
   })
 
-  // Bind Select & Delete in Manage Tab
-  savedProfilesList.querySelectorAll(".btn-set-active").forEach((b) => {
+  savedProfilesList.querySelectorAll(".btn-sel-prof").forEach((b) => {
     b.addEventListener("click", () => {
       activeProfileId = b.getAttribute("data-id")
       saveProfilesState()
@@ -482,10 +460,10 @@ function renderProfilesList() {
     })
   })
 
-  savedProfilesList.querySelectorAll(".btn-delete-prof").forEach((b) => {
+  savedProfilesList.querySelectorAll(".btn-del-prof").forEach((b) => {
     b.addEventListener("click", () => {
       const id = b.getAttribute("data-id")
-      if (confirm("Delete this database connection profile?")) {
+      if (confirm("Delete connection profile?")) {
         profiles = profiles.filter((p) => p.id !== id)
         if (activeProfileId === id) activeProfileId = profiles[0].id
         saveProfilesState()
@@ -515,7 +493,7 @@ function renderSchemaExplorer(filterQuery = "") {
   }
 
   if (filteredTables.length === 0) {
-    schemaTablesContainer.innerHTML = `<div style="text-align:center; padding:24px 0; color:#788a7e; font-size:11px;">No tables or columns match "${escapeHtml(filterQuery)}"</div>`
+    schemaTablesContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#6b7280; font-size:11px;">No tables match "${escapeHtml(filterQuery)}"</div>`
     return
   }
 
@@ -523,7 +501,7 @@ function renderSchemaExplorer(filterQuery = "") {
     const tableName = t.table_name || t.table
     const isCollapsed = !!collapsedTablesState[tableName]
     const card = document.createElement("div")
-    card.className = "table-card"
+    card.className = "table-node"
 
     const cols = t.columns || []
     let colsHtml = cols
@@ -532,35 +510,24 @@ function renderSchemaExplorer(filterQuery = "") {
         const colType = typeof c === "string" ? "TEXT" : c.type
         const isPk = c?.is_primary_key ? "🔑 " : ""
         const isFk = c?.is_foreign_key ? "🔗 " : ""
-
-        // Style type pill
-        let typeClass = "type-pill"
-        const upperType = colType.toUpperCase()
-        if (upperType.includes("UUID")) typeClass += " uuid"
-        else if (upperType.includes("VARCHAR") || upperType.includes("TEXT")) typeClass += " text"
-        else if (upperType.includes("INT") || upperType.includes("NUMERIC")) typeClass += " num"
-        else if (upperType.includes("TIME") || upperType.includes("DATE")) typeClass += " time"
-        else if (upperType.includes("JSON")) typeClass += " json"
-        else if (upperType.includes("BOOL")) typeClass += " bool"
-
         return `
-          <div class="col-item">
-            <span class="col-name-wrap">${isPk}${isFk}${escapeHtml(colName)}</span>
-            <span class="${typeClass}">${escapeHtml(colType)}</span>
+          <div class="column-row">
+            <span>${isPk}${isFk}${escapeHtml(colName)}</span>
+            <span class="col-tag">${escapeHtml(colType)}</span>
           </div>
         `
       })
       .join("")
 
     card.innerHTML = `
-      <div class="table-card-header" data-table="${tableName}">
-        <span>📦 ${escapeHtml(tableName)}</span>
-        <span style="font-size:10px; color:#5e7065; font-weight:600;">${cols.length} cols ${isCollapsed ? "▸" : "▾"}</span>
+      <div class="table-node-header" data-table="${tableName}">
+        <span>${escapeHtml(tableName)}</span>
+        <span class="tbl-count">${cols.length} cols ${isCollapsed ? "▸" : "▾"}</span>
       </div>
-      ${isCollapsed ? "" : `<div class="table-cols">${colsHtml}</div>`}
+      ${isCollapsed ? "" : `<div class="table-columns">${colsHtml}</div>`}
     `
 
-    card.querySelector(".table-card-header").addEventListener("click", () => {
+    card.querySelector(".table-node-header").addEventListener("click", () => {
       collapsedTablesState[tableName] = !collapsedTablesState[tableName]
       renderSchemaExplorer(inputSchemaSearch.value.toLowerCase().trim())
     })
@@ -569,7 +536,7 @@ function renderSchemaExplorer(filterQuery = "") {
   })
 }
 
-// --- CHAT & PROMPT EXECUTION ---
+// --- CHAT STREAM ---
 async function handleSendPrompt(text) {
   const prompt = text || userPromptInput.value.trim()
   if (!prompt || isLoading) return
@@ -578,7 +545,6 @@ async function handleSendPrompt(text) {
   welcomeState.classList.add("hidden")
   messagesFeed.classList.remove("hidden")
 
-  // Append User Message
   appendUserMessage(prompt)
 
   const active = getActiveProfile()
@@ -600,7 +566,6 @@ async function handleSendPrompt(text) {
     payload.live_schema = active.dbInfo.schema_sql
   }
 
-  // Show Loading Spinner
   const loadingEl = appendLoading()
   isLoading = true
   btnSendPrompt.disabled = true
@@ -612,9 +577,7 @@ async function handleSendPrompt(text) {
       body: JSON.stringify(payload)
     })
 
-    if (!res.ok) {
-      throw new Error(`Server returned status ${res.status}`)
-    }
+    if (!res.ok) throw new Error(`Server status ${res.status}`)
 
     const aiData = await res.json()
     loadingEl.remove()
@@ -645,9 +608,7 @@ async function handleSendPrompt(text) {
     }
   } catch (err) {
     loadingEl.remove()
-    appendErrorMessage(
-      `Cannot connect to FastAPI server at ${API_BASE}. Please verify 'uvicorn app.main:app --reload' is running.`
-    )
+    appendErrorMessage(`Unable to connect to backend at ${API_BASE}`)
     checkBackendHealth()
   } finally {
     isLoading = false
@@ -660,7 +621,7 @@ function appendUserMessage(text) {
   chatHistory.push({ role: "user", content: text })
   const row = document.createElement("div")
   row.className = "msg-row user"
-  row.innerHTML = `<div class="msg-bubble-user">${escapeHtml(text)}</div>`
+  row.innerHTML = `<div class="user-bubble">${escapeHtml(text)}</div>`
   messagesFeed.appendChild(row)
   messagesFeed.scrollTop = messagesFeed.scrollHeight
 }
@@ -669,12 +630,9 @@ function appendClarificationMessage(text) {
   const row = document.createElement("div")
   row.className = "msg-row"
   row.innerHTML = `
-    <div class="msg-assistant-wrap">
-      <div class="msg-avatar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
-      </div>
-      <div class="msg-card-clarify">
-        <div class="clarify-tag">
+    <div class="assistant-card">
+      <div class="clarify-box">
+        <div class="clarify-header">
           <span>⚠️ Clarification Required</span>
         </div>
         <p>${escapeHtml(text)}</p>
@@ -689,45 +647,41 @@ function appendCompleteMessage(data) {
   row.className = "msg-row"
 
   const tablesHtml = data.tables && data.tables.length
-    ? `<div style="display:flex; gap:4px; flex-wrap:wrap; font-size:10px;"><strong>Tables:</strong> ${data.tables.map((t) => `<span class="db-badge">${t}</span>`).join("")}</div>`
+    ? `<div style="font-size:10px; color:#6b7280; display:flex; gap:4px;"><strong>Tables:</strong> ${data.tables.map((t) => `<span class="col-tag">${t}</span>`).join("")}</div>`
     : ""
 
   const sqlHtml = data.sql_query
     ? `
-      <div class="sql-container">
-        <div class="sql-topbar">
-          <span>PostgreSQL (Read-Only)</span>
-          <div class="sql-actions">
-            <button type="button" class="btn-sql-action btn-copy-sql">📋 Copy</button>
-            <button type="button" class="btn-sql-action run btn-run-sql">▶ Run on DB</button>
+      <div class="sql-box">
+        <div class="sql-header">
+          <span>POSTGRESQL</span>
+          <div class="sql-buttons">
+            <button type="button" class="sql-btn btn-copy-sql">Copy</button>
+            <button type="button" class="sql-btn run btn-run-sql">Run</button>
           </div>
         </div>
-        <pre class="sql-pre"><code>${escapeHtml(data.sql_query)}</code></pre>
+        <pre class="sql-code"><code>${escapeHtml(data.sql_query)}</code></pre>
       </div>
     `
     : ""
 
   row.innerHTML = `
-    <div class="msg-assistant-wrap" style="width:100%;">
-      <div class="msg-avatar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-      </div>
-      <div class="msg-card-complete" style="width:100%;">
-        ${data.message ? `<div style="font-weight:700; color:#1e6138;">${escapeHtml(data.message)}</div>` : ""}
-        ${data.explanation ? `<p style="color:#5e7065; font-size:11px;">${escapeHtml(data.explanation)}</p>` : ""}
+    <div class="assistant-card">
+      <div class="complete-box">
+        ${data.message ? `<div class="complete-status">${escapeHtml(data.message)}</div>` : ""}
+        ${data.explanation ? `<div class="complete-explanation">${escapeHtml(data.explanation)}</div>` : ""}
         ${tablesHtml}
         ${sqlHtml}
       </div>
     </div>
   `
 
-  // Bind Copy & Run
   if (data.sql_query) {
     const btnCopy = row.querySelector(".btn-copy-sql")
     btnCopy.addEventListener("click", () => {
       navigator.clipboard.writeText(data.sql_query)
-      btnCopy.textContent = "✓ Copied"
-      setTimeout(() => (btnCopy.textContent = "📋 Copy"), 1800)
+      btnCopy.textContent = "Copied"
+      setTimeout(() => (btnCopy.textContent = "Copy"), 1500)
     })
 
     const btnRun = row.querySelector(".btn-run-sql")
@@ -741,11 +695,8 @@ function appendErrorMessage(msg) {
   const row = document.createElement("div")
   row.className = "msg-row"
   row.innerHTML = `
-    <div class="msg-assistant-wrap">
-      <div class="msg-avatar" style="background:#d9383a; color:#fff;">!</div>
-      <div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:10px; padding:8px 10px; font-size:11px; color:#991b1b;">
-        ${escapeHtml(msg)}
-      </div>
+    <div style="width:100%; background:var(--danger-bg); border:1px solid var(--danger-border); border-radius:6px; padding:8px 10px; font-size:11px; color:var(--danger-text);">
+      ${escapeHtml(msg)}
     </div>
   `
   messagesFeed.appendChild(row)
@@ -755,14 +706,9 @@ function appendLoading() {
   const row = document.createElement("div")
   row.className = "msg-row"
   row.innerHTML = `
-    <div class="msg-assistant-wrap">
-      <div class="msg-avatar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle></svg>
-      </div>
-      <div class="loading-box">
-        <div class="spinner"></div>
-        <span>Reasoning over live schema constraints &amp; rules...</span>
-      </div>
+    <div class="loading-indicator">
+      <div class="spin-dot"></div>
+      <span>Reasoning over schema...</span>
     </div>
   `
   messagesFeed.appendChild(row)
@@ -770,17 +716,17 @@ function appendLoading() {
   return row
 }
 
-// --- LIVE QUERY EXECUTION ---
+// --- QUERY RUNNER ---
 async function executeQuery(sql) {
   const active = getActiveProfile()
   if (!active.uri) {
-    alert("No cloud database URI connected to this profile. Switch to 'Connections' tab to add a database connection string.")
+    alert("No connection string attached to this profile. Switch to DBs tab to add one.")
     switchTab("databases")
     return
   }
 
   queryResultsDrawer.classList.remove("hidden")
-  queryResultsContent.innerHTML = `<div class="loading-box"><div class="spinner"></div><span>Executing read-only query on ${escapeHtml(active.name)}...</span></div>`
+  queryResultsContent.innerHTML = `<div class="loading-indicator"><div class="spin-dot"></div><span>Running query on ${escapeHtml(active.name)}...</span></div>`
   resultRowCount.textContent = "Running..."
 
   try {
@@ -796,15 +742,15 @@ async function executeQuery(sql) {
 
     if (!res.ok) {
       const errJson = await res.json()
-      throw new Error(errJson.detail || "Query execution failed.")
+      throw new Error(errJson.detail || "Execution failed")
     }
 
     const data = await res.json()
     lastQueryResults = data
-    resultRowCount.textContent = `${data.row_count} row(s)`
+    resultRowCount.textContent = `${data.row_count} rows`
 
     if (data.rows && data.rows.length > 0) {
-      let tableHtml = `<table class="results-table"><thead><tr>`
+      let tableHtml = `<table class="data-table"><thead><tr>`
       data.columns.forEach((c) => {
         tableHtml += `<th>${escapeHtml(c)}</th>`
       })
@@ -813,7 +759,7 @@ async function executeQuery(sql) {
       data.rows.forEach((row) => {
         tableHtml += `<tr>`
         data.columns.forEach((c) => {
-          const val = row[c] === null ? '<span style="color:#9aa79e; font-style:italic;">null</span>' : escapeHtml(String(row[c]))
+          const val = row[c] === null ? '<span style="color:#6b7280; font-style:italic;">null</span>' : escapeHtml(String(row[c]))
           tableHtml += `<td>${val}</td>`
         })
         tableHtml += `</tr>`
@@ -821,20 +767,17 @@ async function executeQuery(sql) {
       tableHtml += `</tbody></table>`
       queryResultsContent.innerHTML = tableHtml
     } else {
-      queryResultsContent.innerHTML = `<div style="padding:16px; color:#5e7065; font-style:italic; text-align:center;">Query executed successfully. 0 rows returned.</div>`
+      queryResultsContent.innerHTML = `<div style="padding:16px; color:#6b7280; font-size:11px; text-align:center;">Query executed. 0 rows returned.</div>`
     }
   } catch (err) {
     resultRowCount.textContent = "Error"
-    queryResultsContent.innerHTML = `<div style="padding:10px; background:#fee2e2; color:#991b1b; border-radius:6px; font-size:11px;"><strong>Execution Error:</strong> ${escapeHtml(err.message)}</div>`
+    queryResultsContent.innerHTML = `<div style="padding:10px; background:var(--danger-bg); color:var(--danger-text); border-radius:6px; font-size:11px;">${escapeHtml(err.message)}</div>`
   }
 }
 
-// Export CSV Helper
+// CSV Export
 function exportCsvResults() {
-  if (!lastQueryResults || !lastQueryResults.rows || !lastQueryResults.rows.length) {
-    alert("No active query results to export.")
-    return
-  }
+  if (!lastQueryResults || !lastQueryResults.rows || !lastQueryResults.rows.length) return
   const { columns, rows } = lastQueryResults
   let csv = columns.join(",") + "\n"
   rows.forEach((r) => {
@@ -846,8 +789,8 @@ function exportCsvResults() {
   })
 
   navigator.clipboard.writeText(csv)
-  btnExportCsv.textContent = "✓ CSV Copied"
-  setTimeout(() => (btnExportCsv.textContent = "📥 CSV"), 2000)
+  btnExportCsv.textContent = "Copied"
+  setTimeout(() => (btnExportCsv.textContent = "CSV"), 1500)
 }
 
 function resetChat() {
