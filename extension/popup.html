@@ -9,11 +9,11 @@
 <body>
   <div id="app" class="app-container">
     
-    <!-- Top App Header -->
+    <!-- Top Header Bar -->
     <header class="app-header">
       <div class="header-left">
-        <div class="brand-logo">
-          <svg class="icon-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="brand-logo" title="QueryCraft - Text-to-SQL Engine">
+          <svg class="icon-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/>
           </svg>
         </div>
@@ -23,10 +23,10 @@
         </div>
       </div>
 
-      <!-- Database Profile Switcher Dropdown Trigger -->
+      <!-- Center DB Selector Dropdown Trigger -->
       <div class="header-center">
-        <div class="db-switcher" id="dbSwitcherTrigger" title="Switch active database profile (Cmd/Ctrl + K)">
-          <div class="db-dot active" id="activeDbDot"></div>
+        <div class="db-switcher" id="dbSwitcherTrigger" title="Switch active database (Cmd/Ctrl + K)">
+          <span class="db-dot active" id="activeDbDot"></span>
           <span class="db-name" id="activeDbName">Demo PostgreSQL</span>
           <span class="db-badge" id="activeDbBadge">5 tbls</span>
           <svg class="icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -35,24 +35,14 @@
         </div>
       </div>
 
-      <!-- Header Actions -->
+      <!-- Right Header Actions -->
       <div class="header-actions">
-        <button type="button" class="btn-icon" id="btnToggleSchema" title="Toggle Live Schema Inspector">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-          </svg>
-        </button>
+        <div class="server-status-pill online" id="serverStatusPill" title="FastAPI Backend Status (http://127.0.0.1:8000)">
+          <span class="status-dot"></span>
+          <span id="serverStatusText">127.0.0.1</span>
+        </div>
 
-        <button type="button" class="btn-icon" id="btnManageDbs" title="Manage Database Connections">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-        </button>
-
-        <button type="button" class="btn-icon" id="btnResetChat" title="Reset Chat Conversation">
+        <button type="button" class="btn-icon" id="btnResetChat" title="Reset Conversation">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="1 4 1 10 7 10"></polyline>
             <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
@@ -61,72 +51,97 @@
       </div>
     </header>
 
-    <!-- DB Profiles Dropdown Menu -->
+    <!-- Top Navigation Segmented Tabs -->
+    <nav class="nav-segmented">
+      <button type="button" class="nav-tab active" data-tab="chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <span>Chat Studio</span>
+      </button>
+      <button type="button" class="nav-tab" data-tab="schema">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+        <span>Schema Explorer</span>
+      </button>
+      <button type="button" class="nav-tab" data-tab="databases">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+        <span>Connections</span>
+      </button>
+    </nav>
+
+    <!-- DB Profiles Quick Switcher Dropdown Menu -->
     <div class="db-dropdown hidden" id="dbDropdownMenu">
       <div class="dropdown-header">
-        <span>Active Database Profiles</span>
+        <span>Connected Databases</span>
         <span class="badge-count" id="dbCountBadge">1 active</span>
       </div>
       <div class="db-list" id="dbProfilesList">
-        <!-- Dynamically rendered profiles -->
+        <!-- Profiles rendered dynamically -->
       </div>
       <div class="dropdown-footer">
         <button type="button" class="btn-add-db" id="btnAddDbQuick">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          <span>Connect New Database</span>
+          <span>+ Add Database Connection</span>
         </button>
       </div>
     </div>
 
-    <!-- Main Content Area: Chat View -->
-    <main class="chat-main" id="chatMain">
+    <!-- TAB 1: Chat Studio View -->
+    <main class="tab-panel chat-panel active" id="tabChat">
       
       <!-- Welcome Empty State -->
       <div class="welcome-container" id="welcomeState">
         <div class="welcome-badge">
           <span class="pulse-dot"></span>
-          <span>Zero-Hallucination SQL</span>
+          <span>Zero-Hallucination SQL Grounding</span>
         </div>
+        
         <h2 class="welcome-title">Ask your database anything</h2>
+        
         <p class="welcome-desc">
-          Grounded in <strong id="welcomeDbName">Demo PostgreSQL</strong> schema. Ambiguous dates, metrics, and filters are clarified before SQL compilation.
+          Grounded in <strong id="welcomeDbName" class="highlight-db">Demo PostgreSQL</strong>. Ambiguous dates, metrics, and filters are clarified before SQL compilation.
         </p>
 
-        <!-- Quick Starter Prompts -->
-        <div class="starters-grid">
-          <button type="button" class="starter-chip" data-prompt="Show top 5 customers by total spend in 2024">
-            <span class="starter-type">Ambiguous (Clarify)</span>
-            <span class="starter-text">"Show top 5 customers by spend in 2024"</span>
-          </button>
-          <button type="button" class="starter-chip" data-prompt="Find completed orders from the last 7 days with customer names and total amount">
-            <span class="starter-type">Complete Query</span>
-            <span class="starter-text">"Find completed orders from last 7 days"</span>
-          </button>
-          <button type="button" class="starter-chip" data-prompt="List available products with stock quantity below 20 ordered by price ASC">
-            <span class="starter-type">Low Stock</span>
-            <span class="starter-text">"Products with stock below 20"</span>
-          </button>
-          <button type="button" class="starter-chip" data-prompt="Calculate total revenue per payment method in 2024">
-            <span class="starter-type">Aggregation</span>
-            <span class="starter-text">"Total revenue per payment method"</span>
-          </button>
+        <!-- Quick Starter Prompts Chips -->
+        <div class="starters-section">
+          <div class="starters-header">
+            <span>Suggested Business Queries</span>
+            <span class="tip-pill">1-Click Try</span>
+          </div>
+          <div class="starters-grid">
+            <button type="button" class="starter-chip" data-prompt="Show top 5 customers by total spend in 2024">
+              <span class="starter-tag">Ambiguous (Clarify)</span>
+              <span class="starter-text">"Top 5 customers by total spend in 2024"</span>
+            </button>
+            <button type="button" class="starter-chip" data-prompt="Find completed orders from the last 7 days with customer names and total amount">
+              <span class="starter-tag">Multi-Table Join</span>
+              <span class="starter-text">"Completed orders in last 7 days"</span>
+            </button>
+            <button type="button" class="starter-chip" data-prompt="List available products with stock quantity below 20 ordered by price ASC">
+              <span class="starter-tag">Low Inventory</span>
+              <span class="starter-text">"Products with stock below 20"</span>
+            </button>
+            <button type="button" class="starter-chip" data-prompt="Calculate total revenue generated per payment method in 2024">
+              <span class="starter-tag">Aggregation</span>
+              <span class="starter-text">"Revenue by payment method"</span>
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- Messages Feed -->
       <div class="messages-feed hidden" id="messagesFeed">
-        <!-- Messages appended dynamically -->
+        <!-- Conversational cards rendered dynamically -->
       </div>
 
-      <!-- Live Query Execution Result Modal/Drawer -->
+      <!-- Live Query Results Drawer -->
       <div class="query-results-drawer hidden" id="queryResultsDrawer">
         <div class="drawer-header">
           <div class="drawer-title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg>
-            <span>Live Query Result</span>
+            <span>Live Cloud Query Results</span>
           </div>
           <div class="drawer-meta">
-            <span id="resultRowCount">0 rows</span>
+            <span class="count-pill" id="resultRowCount">0 rows</span>
+            <button type="button" class="btn-csv-export" id="btnExportCsv" title="Export Results to CSV">📥 CSV</button>
             <button type="button" class="btn-close-drawer" id="btnCloseResults">✕</button>
           </div>
         </div>
@@ -137,79 +152,93 @@
 
     </main>
 
-    <!-- Schema Peek Drawer -->
-    <div class="schema-drawer hidden" id="schemaDrawer">
-      <div class="schema-header">
-        <div class="schema-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-          </svg>
-          <span>Live Schema Inspector</span>
-        </div>
-        <button type="button" class="btn-close-drawer" id="btnCloseSchema">✕</button>
+    <!-- TAB 2: Schema Explorer View -->
+    <section class="tab-panel schema-panel hidden" id="tabSchema">
+      <div class="schema-search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="inputSchemaSearch" placeholder="Search tables or columns (e.g., users, email, total)..." />
+        <button type="button" class="btn-toggle-all-tables" id="btnToggleAllTables">Expand All</button>
       </div>
+
       <div class="schema-body" id="schemaTablesContainer">
         <!-- Tables rendered dynamically -->
       </div>
-    </div>
+    </section>
 
-    <!-- Manage Database Connections Modal -->
-    <div class="modal-backdrop hidden" id="manageDbsModal">
-      <div class="modal-card">
-        <div class="modal-header">
-          <h3>Manage Databases</h3>
-          <button type="button" class="btn-close-drawer" id="btnCloseManageDbs">✕</button>
+    <!-- TAB 3: Database Connections Manager View -->
+    <section class="tab-panel db-manager-panel hidden" id="tabDatabases">
+      
+      <!-- Connect New Database Card -->
+      <div class="connect-db-card">
+        <div class="card-title-row">
+          <div class="flex-align gap-2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+            <h3>Connect PostgreSQL Database</h3>
+          </div>
+          <span class="badge-tag">Cloud &amp; Local</span>
         </div>
 
-        <div class="modal-body">
+        <form id="formAddDb" class="add-db-form">
           
-          <!-- Add DB Form -->
-          <form id="formAddDb" class="add-db-form">
-            <div class="form-group">
-              <label>Database Profile Name</label>
-              <input type="text" id="inputProfileName" required placeholder="e.g. Supabase Production, Neon Analytics" />
-            </div>
+          <!-- Profile Name Input -->
+          <div class="form-field">
+            <label>Connection Name</label>
+            <input type="text" id="inputProfileName" required placeholder="e.g. Supabase Prod, Neon Analytics, AWS RDS" />
+          </div>
 
-            <div class="form-group">
-              <label>PostgreSQL Connection URI</label>
-              <div class="input-password-wrap">
-                <input type="password" id="inputConnectionUri" required placeholder="postgresql://user:pass@host:5432/dbname" />
-                <button type="button" class="btn-toggle-eye" id="btnToggleUriEye">👁</button>
-              </div>
-            </div>
-
-            <!-- Provider Presets -->
-            <div class="preset-chips">
-              <span>Presets:</span>
-              <button type="button" class="chip-preset" data-uri="postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres">+ Supabase</button>
-              <button type="button" class="chip-preset" data-uri="postgresql://[USER]:[PASSWORD]@ep-[ID].region.aws.neon.tech/neondb?sslmode=require">+ Neon</button>
-              <button type="button" class="chip-preset" data-uri="postgresql://[USER]:[PASSWORD]@[ENDPOINT].rds.amazonaws.com:5432/[DBNAME]">+ AWS RDS</button>
-              <button type="button" class="chip-preset" data-uri="postgresql://postgres:postgres@localhost:5432/postgres">+ Localhost</button>
-            </div>
-
-            <div class="form-actions">
-              <button type="submit" class="btn-primary" id="btnConnectProfile">
-                <span>Connect &amp; Introspect Schema</span>
+          <!-- Provider Preset Selection Chips -->
+          <div class="provider-presets">
+            <label>Provider Templates</label>
+            <div class="preset-grid">
+              <button type="button" class="chip-preset-card" data-uri="postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres">
+                <span class="provider-dot supabase"></span>
+                <span>Supabase</span>
               </button>
-            </div>
-          </form>
-
-          <!-- Saved Profiles List -->
-          <div class="saved-profiles-section">
-            <h4>Saved Profiles (<span id="savedCount">1</span>)</h4>
-            <div class="saved-profiles-list" id="savedProfilesList">
-              <!-- Rendered dynamically -->
+              <button type="button" class="chip-preset-card" data-uri="postgresql://[USER]:[PASSWORD]@ep-[ID].region.aws.neon.tech/neondb?sslmode=require">
+                <span class="provider-dot neon"></span>
+                <span>Neon Serverless</span>
+              </button>
+              <button type="button" class="chip-preset-card" data-uri="postgresql://[USER]:[PASSWORD]@[ENDPOINT].rds.amazonaws.com:5432/[DBNAME]">
+                <span class="provider-dot aws"></span>
+                <span>AWS RDS</span>
+              </button>
+              <button type="button" class="chip-preset-card" data-uri="postgresql://postgres:postgres@localhost:5432/postgres">
+                <span class="provider-dot local"></span>
+                <span>Localhost</span>
+              </button>
             </div>
           </div>
 
+          <!-- Connection String Input -->
+          <div class="form-field">
+            <label>Connection URI</label>
+            <div class="input-password-wrap">
+              <input type="password" id="inputConnectionUri" required placeholder="postgresql://user:pass@host:5432/dbname" />
+              <button type="button" class="btn-toggle-eye" id="btnToggleUriEye" title="Show/Hide Password">👁</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit-db" id="btnConnectProfile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            <span>Connect &amp; Introspect Schema</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Saved Databases List -->
+      <div class="saved-dbs-section">
+        <div class="saved-dbs-header">
+          <span>Saved Connections (<span id="savedCount">1</span>)</span>
+        </div>
+        <div class="saved-profiles-list" id="savedProfilesList">
+          <!-- Rendered dynamically -->
         </div>
       </div>
-    </div>
 
-    <!-- Bottom Input Floating Dock -->
-    <footer class="app-footer">
+    </section>
+
+    <!-- Bottom Input Floating Dock (Visible on Chat Tab) -->
+    <footer class="app-footer" id="appFooter">
       <div class="input-dock">
         <textarea 
           id="userPromptInput" 
@@ -225,6 +254,7 @@
       </div>
       <div class="footer-tip">
         <span>Enter to submit • Shift+Enter for newline</span>
+        <span class="shortcut-tip">Cmd+K: Switch DB</span>
       </div>
     </footer>
 
