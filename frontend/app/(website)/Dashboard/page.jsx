@@ -4,28 +4,36 @@ import { useState } from "react"
 import {
   ArrowUp,
   Check,
+  CheckCircle2,
+  Cloud,
   Code2,
   Copy,
   Database,
   HelpCircle,
+  Loader2,
   MessageSquareText,
+  Play,
   Sparkles,
+  Table2,
   TableProperties,
   Terminal,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import axios from "axios"
+import { useDatabase } from "@/lib/databaseContext"
 
 const sqlExamples = [
   "Show top 5 customers by total order spend in 2024",
-  "List products with stock quantity less than 15 ordered by price",
-  "Find all orders with 'completed' status and amount greater than 200",
-  "Calculate total revenue generated per product category",
+  "List available products with stock quantity less than 15 ordered by price",
+  "Find all orders with 'completed' status and amount greater than 200 in last 30 days",
+  "Calculate total revenue generated per product category in 2024",
   "Find users who registered in the last 30 days but haven't placed an order",
 ]
 
-function Dashboard() {
+export default function Dashboard() {
+  const { dbInfo, connectionUri, setIsModalOpen, executeLiveQuery } = useDatabase()
+
   const [query, setQuery] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [hasResult, setHasResult] = useState(false)
@@ -33,6 +41,10 @@ function Dashboard() {
   const [apiResponse, setApiResponse] = useState(null)
   const [errorMessage, setErrorMessage] = useState("")
   const [activeTab, setActiveTab] = useState("formatted")
+
+  // Live execution state
+  const [isExecutingLive, setIsExecutingLive] = useState(false)
+  const [liveResult, setLiveResult] = useState(null)
 
   const handleGenerate = async (customPrompt) => {
     const promptToSend = typeof customPrompt === "string" ? customPrompt : query
@@ -45,12 +57,22 @@ function Dashboard() {
     setIsGenerating(true)
     setHasResult(false)
     setErrorMessage("")
+    setLiveResult(null)
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/clarification/", {
+      const payload = {
         user_prompt: promptToSend.trim(),
         session_history: [],
-      })
+      }
+
+      if (dbInfo?.schema_sql) {
+        payload.live_schema = dbInfo.schema_sql
+      }
+      if (connectionUri) {
+        payload.connection_uri = connectionUri
+      }
+
+      const response = await axios.post("http://127.0.0.1:8000/api/clarification/", payload)
 
       setApiResponse(response.data)
       setHasResult(true)
@@ -71,12 +93,56 @@ function Dashboard() {
     window.setTimeout(() => setIsCopied(false), 1800)
   }
 
+  const handleRunOnDatabase = async (sql) => {
+    if (!connectionUri) {
+      setIsModalOpen(true)
+      return
+    }
+
+    setIsExecutingLive(true)
+    try {
+      const result = await executeLiveQuery(sql)
+      setLiveResult({
+        success: true,
+        columns: result.columns,
+        rows: result.rows,
+        rowCount: result.row_count,
+      })
+    } catch (err) {
+      setLiveResult({
+        success: false,
+        error: err.response?.data?.detail || err.message,
+      })
+    } finally {
+      setIsExecutingLive(false)
+    }
+  }
+
   const extractedData = apiResponse?.extracted_data
 
   return (
     <main className="flex-1 bg-[#f7f8f5]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         
+        {/* Banner if connected to cloud DB */}
+        {dbInfo && (
+          <div className="flex items-center justify-between rounded-xl border border-[#cbe3d2] bg-[#f0faf3] px-4 py-2.5 text-xs text-[#1e6138]">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="size-4 text-[#3ba565]" />
+              <span>
+                <strong>Cloud DB Connected:</strong> {dbInfo.host} ({dbInfo.database}) — {dbInfo.tables_count} live tables introspected.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+              className="text-xs font-semibold text-[#1a5732] underline hover:text-[#124024]"
+            >
+              Manage DB
+            </button>
+          </div>
+        )}
+
         <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-[#d2e2d5] bg-[#edf7f0] px-3 py-1 text-xs font-semibold text-[#256a44]">
@@ -87,11 +153,22 @@ function Dashboard() {
               Natural Language Query Compiler
             </h1>
             <p className="mt-1 text-sm text-[#66776d]">
-              Test single-turn prompts against the PostgreSQL database schema.
+              {dbInfo ? `Grounded in your live PostgreSQL schema on ${dbInfo.host}.` : "Test single-turn prompts against the Cloud PostgreSQL schema."}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
+            {!dbInfo && (
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[#bde2cb] bg-[#eef8f2] px-3 py-2 text-xs font-semibold text-[#1a5b33] shadow-2xs transition hover:bg-[#e1f3e7]"
+              >
+                <Cloud className="size-3.5 text-[#30975a]" />
+                <span>Connect Cloud DB</span>
+              </button>
+            )}
+
             <Link
               href="/Dashboard/chat"
               className="inline-flex items-center gap-2 rounded-xl bg-[#1f2d24] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2f4837]"
@@ -116,7 +193,7 @@ function Dashboard() {
                   handleGenerate()
                 }
               }}
-              placeholder="Ask a question about users, orders, order_items, or products (e.g. 'Show total sales by category in June')..."
+              placeholder="Ask a question about your database (e.g. 'Show total sales by product category in 2024')..."
               rows={4}
               className="w-full resize-none rounded-xl border border-[#dfe7df] bg-[#fbfdfb] px-4 py-3.5 pr-14 text-sm leading-relaxed text-[#1f2d24] outline-none transition placeholder:text-[#9aa59d] focus:border-[#4ca873] focus:ring-4 focus:ring-[#4ca873]/10"
             />
@@ -175,7 +252,7 @@ function Dashboard() {
           ) : isGenerating ? (
             <div className="flex min-h-64 flex-col items-center justify-center gap-3 px-6 py-14 text-sm text-[#5c6e63]">
               <span className="size-6 animate-spin rounded-full border-2 border-[#4ca873] border-t-transparent" />
-              <p className="font-medium">Evaluating user intent with Llama-3.1-8B...</p>
+              <p className="font-medium">Evaluating user intent against Cloud PostgreSQL schema...</p>
             </div>
           ) : errorMessage ? (
             <div className="p-6">
@@ -299,34 +376,125 @@ function Dashboard() {
                       {extractedData.tables_identified?.length > 0 && (
                         <div>
                           <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#718278]">
-                            Tables Identified
+                            Tables Referenced
                           </p>
-                          <div className="mt-1.5 flex flex-wrap gap-2">
-                            {extractedData.tables_identified.map((tbl) => (
+                          <div className="mt-1.5 flex flex-wrap gap-1.5">
+                            {extractedData.tables_identified.map((table) => (
                               <span
-                                key={tbl}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-[#cfddd0] bg-[#eef6f0] px-2.5 py-1 font-mono text-xs font-medium text-[#226340]"
+                                key={table}
+                                className="rounded-md border border-[#cbe0d0] bg-[#eef7f1] px-2.5 py-1 font-mono text-xs font-medium text-[#205d3c]"
                               >
-                                <Database className="size-3 text-[#4ca873]" />
-                                {tbl}
+                                {table}
                               </span>
                             ))}
                           </div>
                         </div>
                       )}
 
-                      <div>
-                        <div className="mb-2 flex items-center justify-between">
-                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#718278]">
-                            Compiled PostgreSQL Statement
-                          </p>
+                      {extractedData.sql_query && (
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#718278]">
+                              Generated PostgreSQL Query
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRunOnDatabase(extractedData.sql_query)}
+                              disabled={isExecutingLive}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-[#216b44] px-3 py-1.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#2c8757] disabled:opacity-50"
+                            >
+                              {isExecutingLive ? (
+                                <>
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                  <span>Executing on DB...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="size-3.5" />
+                                  <span>{connectionUri ? "Run on Cloud DB" : "Connect DB & Run"}</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+
+                          <div className="overflow-hidden rounded-xl border border-[#27382d] bg-[#17231c]">
+                            <div className="flex items-center justify-between border-b border-white/10 bg-[#121c16] px-4 py-2 text-xs text-[#86a894]">
+                              <span className="flex items-center gap-1.5 font-mono">
+                                <Code2 className="size-3.5 text-[#4ca873]" />
+                                PostgreSQL (Read-Only)
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopy(extractedData.sql_query)}
+                                className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-[#d7f1df] transition hover:bg-white/10"
+                              >
+                                {isCopied ? <Check className="size-3 text-[#4ca873]" /> : <Copy className="size-3" />}
+                                {isCopied ? "Copied" : "Copy"}
+                              </button>
+                            </div>
+                            <pre className="overflow-x-auto p-4 font-mono text-xs leading-relaxed text-[#d7f1df]">
+                              <code>{extractedData.sql_query}</code>
+                            </pre>
+                          </div>
                         </div>
-                        <div className="overflow-hidden rounded-xl border border-[#2b3c31] bg-[#17231c] p-4 shadow-inner">
-                          <pre className="overflow-x-auto font-mono text-xs leading-relaxed text-[#d7f1df]">
-                            <code>{extractedData.sql_query}</code>
-                          </pre>
+                      )}
+
+                      {/* Live query results table if executed */}
+                      {liveResult && (
+                        <div className="rounded-xl border border-[#d2e2d6] bg-white p-4 shadow-xs">
+                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#eaf0eb]">
+                            <div className="flex items-center gap-2">
+                              <Table2 className="size-4 text-[#206642]" />
+                              <span className="text-xs font-bold text-[#1f2d24]">
+                                Live Cloud Query Execution Result
+                              </span>
+                            </div>
+                            <span className="text-xs text-[#55695e]">
+                              {liveResult.rowCount} row(s) returned
+                            </span>
+                          </div>
+
+                          {liveResult.success ? (
+                            liveResult.rows?.length > 0 ? (
+                              <div className="max-h-72 overflow-auto rounded-lg border border-[#e1e9e2]">
+                                <table className="w-full text-left font-mono text-xs">
+                                  <thead className="sticky top-0 bg-[#f4f7f5] text-[#2d4838]">
+                                    <tr>
+                                      {liveResult.columns.map((col) => (
+                                        <th key={col} className="p-2.5 font-bold border-b border-[#e1e9e2]">
+                                          {col}
+                                        </th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-[#edf2ee]">
+                                    {liveResult.rows.map((row, rIdx) => (
+                                      <tr key={rIdx} className="hover:bg-[#f9fbf9]">
+                                        {liveResult.columns.map((col) => (
+                                          <td key={col} className="p-2.5 text-[#35483d] whitespace-nowrap">
+                                            {row[col] === null ? (
+                                              <span className="italic text-gray-400">null</span>
+                                            ) : (
+                                              String(row[col])
+                                            )}
+                                          </td>
+                                        ))}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-[#6e8075] italic">Query executed successfully, 0 rows returned.</p>
+                            )
+                          ) : (
+                            <div className="text-xs text-red-700 bg-red-50 p-3 rounded-lg border border-red-200">
+                              <strong>Execution Error:</strong> {liveResult.error}
+                            </div>
+                          )}
                         </div>
-                      </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -334,9 +502,8 @@ function Dashboard() {
             </div>
           )}
         </section>
+
       </div>
     </main>
   )
 }
-
-export default Dashboard
