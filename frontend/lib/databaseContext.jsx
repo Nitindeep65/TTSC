@@ -3,7 +3,24 @@
 import React, { createContext, useContext, useState, useEffect } from "react"
 import axios from "axios"
 
+const defaultInitialWorkspace = {
+  id: "ws-default",
+  name: "E-Commerce Main",
+  environment: "Production",
+  color: "#3aa363",
+  connectionUri: "",
+  dbInfo: null,
+  createdAt: new Date().toISOString(),
+}
+
 const DatabaseContext = createContext({
+  workspaces: [defaultInitialWorkspace],
+  activeWorkspaceId: "ws-default",
+  activeWorkspace: defaultInitialWorkspace,
+  setActiveWorkspaceId: () => {},
+  createWorkspace: async () => {},
+  updateWorkspace: () => {},
+  deleteWorkspace: () => {},
   connectionUri: "",
   dbInfo: null,
   isConnecting: false,
@@ -12,31 +29,120 @@ const DatabaseContext = createContext({
   disconnectDatabase: () => {},
   isModalOpen: false,
   setIsModalOpen: () => {},
+  isWorkspaceModalOpen: false,
+  setIsWorkspaceModalOpen: () => {},
   executeLiveQuery: async () => {},
 })
 
-const STORAGE_KEY_URI = "tts_cloud_postgres_uri"
-const STORAGE_KEY_INFO = "tts_cloud_postgres_info"
+const STORAGE_KEY_WORKSPACES = "tts_cloud_workspaces_v2"
+const STORAGE_KEY_ACTIVE_WS = "tts_active_workspace_id_v2"
 
 export function DatabaseProvider({ children }) {
-  const [connectionUri, setConnectionUri] = useState("")
-  const [dbInfo, setDbInfo] = useState(null)
+  const [workspaces, setWorkspaces] = useState([defaultInitialWorkspace])
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState("ws-default")
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectionError, setConnectionError] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false)
 
-  // Restore saved connection from localStorage
+  // 1. Restore Workspaces & Active Workspace on Mount
   useEffect(() => {
     try {
-      const savedUri = localStorage.getItem(STORAGE_KEY_URI)
-      const savedInfo = localStorage.getItem(STORAGE_KEY_INFO)
-      if (savedUri) setConnectionUri(savedUri)
-      if (savedInfo) setDbInfo(JSON.parse(savedInfo))
+      const savedWorkspaces = localStorage.getItem(STORAGE_KEY_WORKSPACES)
+      const savedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE_WS)
+
+      if (savedWorkspaces) {
+        const parsed = JSON.parse(savedWorkspaces)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setWorkspaces(parsed)
+          if (savedActiveId && parsed.some((w) => w.id === savedActiveId)) {
+            setActiveWorkspaceId(savedActiveId)
+          } else {
+            setActiveWorkspaceId(parsed[0].id)
+          }
+          return
+        }
+      }
     } catch (e) {
       // ignore storage errors
     }
   }, [])
 
+  // 2. Derive Active Workspace
+  const activeWorkspace =
+    workspaces.find((w) => w.id === activeWorkspaceId) ||
+    workspaces[0] ||
+    defaultInitialWorkspace
+
+  const connectionUri = activeWorkspace.connectionUri || ""
+  const dbInfo = activeWorkspace.dbInfo || null
+
+  // 3. Helper to Persist Workspaces
+  const persistWorkspaces = (newWorkspaces, newActiveId = activeWorkspaceId) => {
+    setWorkspaces(newWorkspaces)
+    if (newActiveId) setActiveWorkspaceId(newActiveId)
+    try {
+      localStorage.setItem(STORAGE_KEY_WORKSPACES, JSON.stringify(newWorkspaces))
+      if (newActiveId) localStorage.setItem(STORAGE_KEY_ACTIVE_WS, newActiveId)
+    } catch (e) {}
+  }
+
+  // 4. Create New Workspace
+  const createWorkspace = async ({
+    name,
+    environment = "Production",
+    connectionUri = "",
+    color = "#3aa363",
+  }) => {
+    const newId = `ws-${Date.now()}`
+    let introspectedInfo = null
+
+    // If connectionUri is provided, test and introspect it
+    if (connectionUri && connectionUri.trim()) {
+      try {
+        const res = await axios.post("http://127.0.0.1:8000/api/database/connect", {
+          connection_uri: connectionUri.trim(),
+        })
+        introspectedInfo = res.data
+      } catch (err) {
+        // failed introspection - still create workspace but keep error
+      }
+    }
+
+    const newWs = {
+      id: newId,
+      name: name || `Project ${workspaces.length + 1}`,
+      environment,
+      color,
+      connectionUri: connectionUri.trim(),
+      dbInfo: introspectedInfo,
+      createdAt: new Date().toISOString(),
+    }
+
+    const updated = [...workspaces, newWs]
+    persistWorkspaces(updated, newId)
+    setIsWorkspaceModalOpen(false)
+    return newWs
+  }
+
+  // 5. Update Existing Workspace
+  const updateWorkspace = (id, updates) => {
+    const updated = workspaces.map((w) => (w.id === id ? { ...w, ...updates } : w))
+    persistWorkspaces(updated)
+  }
+
+  // 6. Delete Workspace
+  const deleteWorkspace = (id) => {
+    if (workspaces.length <= 1) {
+      alert("You must keep at least one active workspace.")
+      return
+    }
+    const filtered = workspaces.filter((w) => w.id !== id)
+    const nextActiveId = id === activeWorkspaceId ? filtered[0].id : activeWorkspaceId
+    persistWorkspaces(filtered, nextActiveId)
+  }
+
+  // 7. Connect Database to Active Workspace
   const connectToDatabase = async (uri) => {
     if (!uri || !uri.trim()) {
       setConnectionError("Please provide a valid PostgreSQL connection string.")
@@ -52,19 +158,20 @@ export function DatabaseProvider({ children }) {
       })
 
       const data = res.data
-      setConnectionUri(uri.trim())
-      setDbInfo(data)
 
-      // Save to localStorage
-      try {
-        localStorage.setItem(STORAGE_KEY_URI, uri.trim())
-        localStorage.setItem(STORAGE_KEY_INFO, JSON.stringify(data))
-      } catch (e) {}
+      // Update in active workspace
+      const updated = workspaces.map((w) =>
+        w.id === activeWorkspaceId
+          ? { ...w, connectionUri: uri.trim(), dbInfo: data }
+          : w
+      )
+      persistWorkspaces(updated)
 
       setIsModalOpen(false)
       return true
     } catch (err) {
-      const msg = err.response?.data?.detail || err.message || "Failed to connect to cloud database."
+      const msg =
+        err.response?.data?.detail || err.message || "Failed to connect to cloud database."
       setConnectionError(msg)
       return false
     } finally {
@@ -72,19 +179,21 @@ export function DatabaseProvider({ children }) {
     }
   }
 
+  // 8. Disconnect Database from Active Workspace
   const disconnectDatabase = () => {
-    setConnectionUri("")
-    setDbInfo(null)
     setConnectionError("")
-    try {
-      localStorage.removeItem(STORAGE_KEY_URI)
-      localStorage.removeItem(STORAGE_KEY_INFO)
-    } catch (e) {}
+    const updated = workspaces.map((w) =>
+      w.id === activeWorkspaceId
+        ? { ...w, connectionUri: "", dbInfo: null }
+        : w
+    )
+    persistWorkspaces(updated)
   }
 
+  // 9. Execute Live Query in Active Workspace
   const executeLiveQuery = async (sqlQuery, limit = 50) => {
     if (!connectionUri) {
-      throw new Error("No database currently connected.")
+      throw new Error("No database currently connected to this workspace.")
     }
     const res = await axios.post("http://127.0.0.1:8000/api/database/execute", {
       connection_uri: connectionUri,
@@ -97,6 +206,18 @@ export function DatabaseProvider({ children }) {
   return (
     <DatabaseContext.Provider
       value={{
+        workspaces,
+        activeWorkspaceId,
+        activeWorkspace,
+        setActiveWorkspaceId: (id) => {
+          setActiveWorkspaceId(id)
+          try {
+            localStorage.setItem(STORAGE_KEY_ACTIVE_WS, id)
+          } catch (e) {}
+        },
+        createWorkspace,
+        updateWorkspace,
+        deleteWorkspace,
         connectionUri,
         dbInfo,
         isConnecting,
@@ -105,6 +226,8 @@ export function DatabaseProvider({ children }) {
         disconnectDatabase,
         isModalOpen,
         setIsModalOpen,
+        isWorkspaceModalOpen,
+        setIsWorkspaceModalOpen,
         executeLiveQuery,
       }}
     >

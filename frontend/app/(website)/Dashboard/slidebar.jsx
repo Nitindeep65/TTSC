@@ -19,6 +19,8 @@ import {
   Cloud,
   Database,
   ExternalLink,
+  FolderKanban,
+  FolderPlus,
   History,
   Home,
   Layers,
@@ -44,7 +46,15 @@ import { Button } from "@/components/ui/button"
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { dbInfo, setIsModalOpen, disconnectDatabase } = useDatabase()
+  const {
+    dbInfo,
+    activeWorkspace,
+    workspaces,
+    setActiveWorkspaceId,
+    setIsModalOpen,
+    setIsWorkspaceModalOpen,
+    disconnectDatabase,
+  } = useDatabase()
 
   const workspaceItems = [
     {
@@ -71,19 +81,52 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r border-border bg-[#fbfdfb]">
       
-      {/* Brand Header */}
-      <SidebarHeader className="border-b border-border px-4 py-4">
-        <Link href="/" className="group flex items-center gap-3 font-semibold tracking-tight">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs transition-transform duration-200 group-hover:scale-105">
-            <Sparkles className="size-4.5" />
+      {/* Brand & Active Workspace Header */}
+      <SidebarHeader className="border-b border-border px-3 py-3.5 space-y-2">
+        <Link href="/" className="group flex items-center gap-2.5 font-semibold tracking-tight px-1">
+          <span className="flex size-8 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs transition-transform duration-200 group-hover:scale-105">
+            <Sparkles className="size-4" />
           </span>
           <div>
-            <span className="block text-sm font-semibold text-[#1f2d24]">Text to SQL</span>
-            <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-[#3aa363]">
+            <span className="block text-xs font-bold text-[#17241c] font-sans">Text to SQL</span>
+            <span className="block text-[9px] font-bold uppercase tracking-[0.14em] text-[#3aa363]">
               Cloud Studio
             </span>
           </div>
         </Link>
+
+        {/* Current Active Workspace Project Badge Card */}
+        <div className="rounded-xl border border-border bg-white p-2.5 shadow-3xs space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#7f9084]">
+              Active Project
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsWorkspaceModalOpen(true)}
+              className="flex items-center gap-1 rounded bg-[#f0f6f2] px-1.5 py-0.5 text-[9px] font-bold text-[#1e6138] hover:bg-[#deefe2] transition"
+              title="Create new workspace"
+            >
+              <Plus className="size-2.5" />
+              <span>New</span>
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="flex size-5 shrink-0 items-center justify-center rounded bg-[#1f2d24] text-[#71c897]">
+                <FolderKanban className="size-3" />
+              </div>
+              <span className="truncate font-bold text-xs text-[#17241c]">
+                {activeWorkspace.name}
+              </span>
+            </div>
+
+            <Badge variant="secondary" className="text-[9px] font-semibold px-1.5 py-0 shrink-0">
+              {activeWorkspace.environment || "Production"}
+            </Badge>
+          </div>
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="space-y-1">
@@ -91,7 +134,7 @@ export function AppSidebar() {
         {/* Navigation Workspaces */}
         <SidebarGroup className="px-2.5 py-3">
           <SidebarGroupLabel className="px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#819287]">
-            Workspaces
+            Workspaces Views
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
@@ -132,10 +175,10 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Cloud Database Connector Widget */}
+        {/* Cloud Database Connector Widget for Active Workspace */}
         <SidebarGroup className="px-2.5 py-2">
           <SidebarGroupLabel className="px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#819287]">
-            Cloud DB Connector
+            Database for {activeWorkspace.name}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="px-1 pt-1">
@@ -196,13 +239,13 @@ export function AppSidebar() {
                       <Cloud className="size-3.5" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-[#1f2d24]">Connect Cloud DB</p>
-                      <p className="text-[10px] text-[#718278]">Supabase, Neon, AWS RDS</p>
+                      <p className="text-xs font-semibold text-[#1f2d24]">No DB in this project</p>
+                      <p className="text-[10px] text-[#718278]">Connect specific database</p>
                     </div>
                   </div>
 
                   <p className="text-[11px] text-[#55695e] leading-relaxed">
-                    Hook your live PostgreSQL connection to ground queries in your live tables and schema constraints.
+                    Attach a dedicated Supabase, Neon, or RDS connection string to this workspace.
                   </p>
 
                   <Button
@@ -213,7 +256,7 @@ export function AppSidebar() {
                     className="w-full gap-1.5 text-xs font-semibold"
                   >
                     <Plug className="size-3 text-[#71c897]" />
-                    <span>Connect Live DB</span>
+                    <span>Connect DB</span>
                   </Button>
                 </div>
               )}
@@ -247,12 +290,12 @@ export function AppSidebar() {
           <div className="rounded-xl border border-border bg-[#f8fbf8] p-3 text-[11px] text-[#55675c] space-y-1.5">
             <div className="flex items-center gap-1.5 font-semibold text-[#226b44]">
               <ShieldCheck className="size-3.5" />
-              <span>Production Safety</span>
+              <span>Workspace Isolation</span>
             </div>
             <ul className="space-y-0.5 text-[10px] text-[#6d7e74]">
-              <li>• Read-only SELECT enforcement</li>
-              <li>• Automatic LIMIT 50 protection</li>
-              <li>• Zero-hallucination clarification</li>
+              <li>• Distinct cloud DB credentials</li>
+              <li>• Independent schema grounding</li>
+              <li>• Read-only query execution</li>
             </ul>
           </div>
         </SidebarGroup>
