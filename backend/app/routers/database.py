@@ -6,14 +6,20 @@ from app.Models.schema import (
     ExecuteQueryResponse,
     ExplainPlanRequest,
     ExplainPlanResponse,
+    TableSampleRequest,
+    TableSampleResponse,
+    DiagnoseErrorRequest,
+    DiagnoseErrorResponse,
 )
 from app.services.db_service import (
     test_db_connection,
     introspect_cloud_database,
     execute_read_only_query,
     parse_connection_info,
+    sample_table_data,
 )
 from app.services.explain_service import run_explain_plan
+from app.services.healing_service import diagnose_and_heal_error
 
 router = APIRouter(
     prefix="/api/database",
@@ -97,3 +103,61 @@ def explain_query(request: ExplainPlanRequest):
         return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Explain plan evaluation failed: {str(e)}")
+
+
+@router.post("/sample", response_model=TableSampleResponse)
+def get_table_sample(request: TableSampleRequest):
+    """
+    Profiles a table and returns 5 sample records and categorical value distributions.
+    """
+    try:
+        result = sample_table_data(
+            connection_uri=request.connection_uri,
+            table_name=request.table_name,
+            limit=request.limit or 5
+        )
+        return TableSampleResponse(
+            status="success",
+            table_name=result.get("table_name", request.table_name),
+            columns=result.get("columns", []),
+            rows=result.get("rows", []),
+            column_profiles=result.get("column_profiles", []),
+            row_count=result.get("row_count", 0),
+            message=result.get("message")
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Table sampling error: {str(e)}")
+
+
+@router.post("/diagnose", response_model=DiagnoseErrorResponse)
+def diagnose_error(request: DiagnoseErrorRequest):
+    """
+    SQL Doctor: Evaluates a PostgreSQL error message and/or failing query,
+    diagnoses root causes, and returns a verified healed SQL statement.
+    """
+    try:
+        schema_to_use = request.live_schema
+        if not schema_to_use and request.connection_uri:
+            try:
+                _, schema_sql = introspect_cloud_database(request.connection_uri.strip())
+                schema_to_use = schema_sql
+            except Exception:
+                pass
+
+        result = diagnose_and_heal_error(
+            error_message=request.error_message.strip(),
+            failing_sql=request.failing_sql.strip() if request.failing_sql else None,
+            live_schema=schema_to_use,
+            user_prompt=request.user_prompt
+        )
+        return DiagnoseErrorResponse(
+            status=result.get("status", "success"),
+            error_code=result.get("error_code"),
+            root_cause=result.get("root_cause", "Database error diagnosed."),
+            healed_sql=result.get("healed_sql"),
+            affected_entities=result.get("affected_entities", []),
+            explanation=result.get("explanation", "")
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"SQL Doctor diagnosis failed: {str(e)}")
+

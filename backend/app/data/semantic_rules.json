@@ -62,5 +62,57 @@
       "vip"
     ],
     "created_at": "2026-08-23T20:44:04.094013Z"
+  },
+  {
+    "id": "metric-1787535082619",
+    "name": "Total Spend",
+    "definition": "The total amount spent by a customer.",
+    "sql_formula": "SUM(order_total)",
+    "category": "Finance",
+    "tags": [
+      "revenue",
+      "customer",
+      "spend"
+    ],
+    "created_at": "2026-08-24T07:01:22.619103Z"
+  },
+  {
+    "id": "metric-1787535082620",
+    "name": "VIP Customer",
+    "definition": "A customer with total spend exceeding 1000 USD.",
+    "sql_formula": "CASE WHEN SUM(order_total) > 1000 THEN TRUE ELSE FALSE END",
+    "category": "Customer",
+    "tags": [
+      "vip",
+      "customer",
+      "segment"
+    ],
+    "created_at": "2026-08-24T07:01:22.620218Z"
+  },
+  {
+    "id": "metric-1787535082620",
+    "name": "Days Since Last Order",
+    "definition": "The number of days since a customer's last order.",
+    "sql_formula": "CURRENT_DATE - MAX(order_date)",
+    "category": "Customer",
+    "tags": [
+      "churn",
+      "inactivity",
+      "days"
+    ],
+    "created_at": "2026-08-24T07:01:22.620435Z"
+  },
+  {
+    "id": "metric-1787535082620",
+    "name": "At Risk Account",
+    "definition": "An account that has not placed an order in the last 60 days.",
+    "sql_formula": "CASE WHEN CURRENT_DATE - MAX(order_date) > 60 THEN TRUE ELSE FALSE END",
+    "category": "Customer",
+    "tags": [
+      "at_risk",
+      "churn",
+      "inactivity"
+    ],
+    "created_at": "2026-08-24T07:01:22.620639Z"
   }
 ]

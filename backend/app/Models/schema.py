@@ -123,6 +123,16 @@ class CreateMetricRequest(BaseModel):
 class TeachAIRequest(BaseModel):
     instruction: str = Field(description="Plain English instruction e.g. 'From now on, consider VIP Customer as total spend > 1000'")
 
+class PolicyUploadRequest(BaseModel):
+    document_title: Optional[str] = "Company Policy Document"
+    document_text: str = Field(description="Raw text, markdown, CSV, or extracted PDF content of business policy/metrics definitions")
+
+class PolicyUploadResponse(BaseModel):
+    status: str
+    extracted_metrics: List[SemanticRule]
+    count: int
+    message: str
+
 class SemanticMetricsResponse(BaseModel):
     status: str
     metrics: List[SemanticRule]
@@ -148,4 +158,63 @@ class SaveVerifiedQueryRequest(BaseModel):
 class VerifiedQueriesResponse(BaseModel):
     status: str
     queries: List[VerifiedQuery]
+    total_count: int
+
+# --- TABLE DATA PROFILER & CATEGORICAL SAMPLER ---
+class ColumnSampleData(BaseModel):
+    name: str
+    type: str
+    null_count: int = 0
+    distinct_values: List[str] = []
+
+class TableSampleRequest(BaseModel):
+    connection_uri: Optional[str] = None
+    table_name: str
+    limit: Optional[int] = 5
+
+class TableSampleResponse(BaseModel):
+    status: str
+    table_name: str
+    columns: List[str]
+    rows: List[Dict[str, Any]]
+    column_profiles: List[ColumnSampleData] = []
+    row_count: int
+    message: Optional[str] = None
+
+# --- STANDALONE SQL DOCTOR & ERROR DIAGNOSER ---
+class DiagnoseErrorRequest(BaseModel):
+    error_message: str
+    failing_sql: Optional[str] = None
+    live_schema: Optional[str] = None
+    user_prompt: Optional[str] = None
+    connection_uri: Optional[str] = None
+
+class DiagnoseErrorResponse(BaseModel):
+    status: str
+    error_code: Optional[str] = None
+    root_cause: str
+    healed_sql: Optional[str] = None
+    affected_entities: List[str] = []
+    explanation: str
+
+# --- SAVED QUERY NOTEBOOK & SNIPPETS LIBRARY ---
+class SavedNotebookQuery(BaseModel):
+    id: str
+    title: str
+    user_prompt: str
+    sql_query: str
+    tags: List[str] = []
+    database_host: Optional[str] = None
+    created_at: str
+
+class SaveNotebookQueryRequest(BaseModel):
+    title: Optional[str] = None
+    user_prompt: str
+    sql_query: str
+    tags: Optional[List[str]] = []
+    database_host: Optional[str] = None
+
+class NotebookQueriesResponse(BaseModel):
+    status: str
+    queries: List[SavedNotebookQuery]
     total_count: int

@@ -5,6 +5,7 @@ import {
   Activity,
   ArrowUp,
   BarChart3,
+  Bookmark,
   Bot,
   Check,
   ChevronDown,
@@ -16,6 +17,7 @@ import {
   Copy,
   Database,
   Download,
+  Eye,
   HelpCircle,
   Key,
   Lightbulb,
@@ -43,6 +45,8 @@ import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import DataVisualizer from "@/components/visualization/DataVisualizer"
 import MetricGlossaryModal from "@/components/semantic/MetricGlossaryModal"
+import TableDataProfilerModal from "@/components/database/TableDataProfilerModal"
+import QueryNotebookModal from "@/components/workspace/QueryNotebookModal"
 
 const API = "http://127.0.0.1:8000"
 
@@ -82,10 +86,10 @@ const FALLBACK_SCHEMA = [
 ]
 
 const BADGE_COLORS = {
-  amber:   "bg-amber-50  text-amber-700  border-amber-200",
+  amber: "bg-amber-50  text-amber-700  border-amber-200",
   emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  blue:    "bg-blue-50   text-blue-700   border-blue-200",
-  purple:  "bg-purple-50 text-purple-700 border-purple-200",
+  blue: "bg-blue-50   text-blue-700   border-blue-200",
+  purple: "bg-purple-50 text-purple-700 border-purple-200",
 }
 
 export default function Chatbox() {
@@ -100,7 +104,11 @@ export default function Chatbox() {
   const [explainingIndex, setExplainingIndex] = useState(null)
   const [explainData, setExplainData] = useState(null)
   const [verifiedSaved, setVerifiedSaved] = useState({})
+  const [notebookSaved, setNotebookSaved] = useState({})
   const [isMetricModalOpen, setIsMetricModalOpen] = useState(false)
+  const [isNotebookModalOpen, setIsNotebookModalOpen] = useState(false)
+  const [profileTable, setProfileTable] = useState(null)
+  const [copiedIndexRec, setCopiedIndexRec] = useState(false)
   const [isHelperOpen, setIsHelperOpen] = useState(true)
   const [schemaTables, setSchemaTables] = useState(FALLBACK_SCHEMA)
   const [schemaSearch, setSchemaSearch] = useState("")
@@ -115,7 +123,7 @@ export default function Chatbox() {
     if (dbInfo?.tables?.length > 0) {
       setSchemaTables(dbInfo.tables)
     } else {
-      axios.get(`${API}/api/clarification/schema`).then(r => r.data?.tables && setSchemaTables(r.data.tables)).catch(() => {})
+      axios.get(`${API}/api/clarification/schema`).then(r => r.data?.tables && setSchemaTables(r.data.tables)).catch(() => { })
     }
   }, [dbInfo])
 
@@ -224,6 +232,19 @@ export default function Chatbox() {
     } catch { alert("Failed to save to verified memory.") }
   }
 
+  const handleSaveToNotebook = async (msg, idx) => {
+    try {
+      await axios.post(`${API}/api/memory/notebook`, {
+        title: msg.message || "Saved Snippet",
+        user_prompt: msg.rawContent || msg.message || "Saved SQL Query",
+        sql_query: msg.sql_query,
+        tags: msg.tables?.length ? msg.tables.map(t => `#${t}`) : ["#saved"],
+        database_host: dbInfo?.host || "postgres",
+      })
+      setNotebookSaved(p => ({ ...p, [idx]: true }))
+    } catch { alert("Failed to save to notebook.") }
+  }
+
   const filteredSchema = schemaTables.filter(t => {
     const q = schemaSearch.toLowerCase()
     return !q || (t.table_name || "").toLowerCase().includes(q) || (t.columns || []).some(c => (c.name || "").toLowerCase().includes(q))
@@ -252,6 +273,11 @@ export default function Chatbox() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setIsNotebookModalOpen(true)}
+              className="gap-1.5 text-xs font-semibold text-[#1b6b3a] h-8 hidden sm:flex border-[--border] hover:bg-[#edf5ef]">
+              <Bookmark className="size-3.5 text-[#34c06a]" />
+              Notebook
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setIsMetricModalOpen(true)}
               className="gap-1.5 text-xs font-semibold text-[#1b6b3a] h-8 hidden sm:flex border-[--border] hover:bg-[#edf5ef]">
               <Wand2 className="size-3.5 text-[#34c06a]" />
@@ -379,18 +405,30 @@ export default function Chatbox() {
                             </span>
                           )}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleSaveVerified(msg, idx)}
-                          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11.5px] font-semibold transition-all duration-150 ${
-                            verifiedSaved[idx]
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "text-[#667872] hover:bg-[#edf5ef] hover:text-[#1a2920]"
-                          }`}
-                        >
-                          <Star className={`size-3.5 ${verifiedSaved[idx] ? "fill-emerald-500 text-emerald-500" : ""}`} />
-                          {verifiedSaved[idx] ? "Saved to Memory" : "Save as Verified"}
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleSaveToNotebook(msg, idx)}
+                            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11.5px] font-semibold transition-all duration-150 ${notebookSaved[idx]
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : "text-[#667872] hover:bg-[#edf5ef] hover:text-[#1a2920]"
+                              }`}
+                          >
+                            <Bookmark className={`size-3.5 ${notebookSaved[idx] ? "fill-emerald-500 text-emerald-500" : ""}`} />
+                            {notebookSaved[idx] ? "In Notebook" : "Save to Notebook"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSaveVerified(msg, idx)}
+                            className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11.5px] font-semibold transition-all duration-150 ${verifiedSaved[idx]
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : "text-[#667872] hover:bg-[#edf5ef] hover:text-[#1a2920]"
+                              }`}
+                          >
+                            <Star className={`size-3.5 ${verifiedSaved[idx] ? "fill-emerald-500 text-emerald-500" : ""}`} />
+                            {verifiedSaved[idx] ? "Saved to Memory" : "Save as Verified"}
+                          </button>
+                        </div>
                       </div>
 
                       {/* Card Body */}
@@ -582,23 +620,34 @@ export default function Chatbox() {
               const name = t.table_name || t.table
               const isCollapsed = !!collapsed[name]
               return (
-                <div key={name} className="rounded-xl border border-[--border] bg-white overflow-hidden shadow-sm transition-all duration-150 hover:border-[#b8d4bc]">
-                  <button
-                    type="button"
-                    onClick={() => toggleCollapse(name)}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 bg-[#f8faf8] hover:bg-[#f0f5f1] transition-colors"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Columns className="size-3.5 text-[#34c06a] shrink-0" />
-                      <span className="font-mono text-[12.5px] font-bold text-[#141a17] truncate">{name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="rounded bg-[#edf5ef] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1b6b3a]">
-                        {(t.columns || []).length} cols
-                      </span>
-                      {isCollapsed ? <ChevronDown className="size-3.5 text-[#a3b5a9]" /> : <ChevronUp className="size-3.5 text-[#a3b5a9]" />}
-                    </div>
-                  </button>
+                <div key={name} className="group/row rounded-xl border border-[--border] bg-white overflow-hidden shadow-sm transition-all duration-150 hover:border-[#b8d4bc]">
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => toggleCollapse(name)}
+                      className="w-full flex items-center justify-between px-3.5 py-2.5 bg-[#f8faf8] hover:bg-[#f0f5f1] transition-colors"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Columns className="size-3.5 text-[#34c06a] shrink-0" />
+                        <span className="font-mono text-[12.5px] font-bold text-[#141a17] truncate">{name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="rounded bg-[#edf5ef] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1b6b3a]">
+                          {(t.columns || []).length} cols
+                        </span>
+                        {isCollapsed ? <ChevronDown className="size-3.5 text-[#a3b5a9]" /> : <ChevronUp className="size-3.5 text-[#a3b5a9]" />}
+                      </div>
+                    </button>
+                    {/* 👁 Sample — sibling to the button, never inside it */}
+                    <span
+                      role="button"
+                      tabIndex={-1}
+                      onClick={(e) => { e.stopPropagation(); setProfileTable(name); }}
+                      className="absolute left-[calc(100%-7.5rem)] top-1/2 -translate-y-1/2 opacity-0 group-hover/row:opacity-100 transition-opacity cursor-pointer rounded bg-white border border-[#c6e5d1] px-1.5 py-0.5 text-[9px] font-bold text-[#1b6b3a] hover:bg-[#eef7f1] z-10"
+                    >
+                      👁
+                    </span>
+                  </div>
                   {!isCollapsed && (
                     <div className="border-t border-[--border] divide-y divide-[#f0f3f1]">
                       {t.description && (
@@ -678,9 +727,22 @@ export default function Chatbox() {
 
               {explainData.index_recommendations?.length > 0 && (
                 <div className="space-y-1.5 pt-3 border-t border-[--border]">
-                  <p className="text-[11px] font-bold uppercase text-emerald-700 tracking-wide flex items-center gap-1.5">
-                    <Sparkles className="size-3.5" /> Recommended Indexes
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-bold uppercase text-emerald-700 tracking-wide flex items-center gap-1.5">
+                      <Sparkles className="size-3.5" /> Recommended Indexes
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(explainData.index_recommendations.join("\n"))
+                        setCopiedIndexRec(true)
+                        setTimeout(() => setCopiedIndexRec(false), 1500)
+                      }}
+                      className="text-[10.5px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-2 py-0.5"
+                    >
+                      {copiedIndexRec ? "✓ Copied" : "Copy DDL"}
+                    </button>
+                  </div>
                   {explainData.index_recommendations.map((r, i) => (
                     <pre key={i} className="overflow-x-auto rounded-lg bg-[#0d1613] p-3 font-mono text-[11px] text-[#a7f3d0]"><code>{r}</code></pre>
                   ))}
@@ -696,6 +758,20 @@ export default function Chatbox() {
       )}
 
       <MetricGlossaryModal isOpen={isMetricModalOpen} onClose={() => setIsMetricModalOpen(false)} />
+
+      <TableDataProfilerModal
+        isOpen={!!profileTable}
+        onClose={() => setProfileTable(null)}
+        tableName={profileTable}
+        connectionUri={connectionUri}
+      />
+
+      <QueryNotebookModal
+        isOpen={isNotebookModalOpen}
+        onClose={() => setIsNotebookModalOpen(false)}
+        onSelectQuery={(sql, prompt) => setInputText(prompt || sql)}
+        activeDbName={dbInfo?.host || "postgres"}
+      />
     </main>
   )
 }

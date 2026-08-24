@@ -27,6 +27,13 @@
       },
       "description": "Open QueryCraft popup"
     },
+    "toggle-spotlight": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "Toggle In-Page Spotlight Command Bar"
+    },
     "toggle-compact": {
       "suggested_key": {
         "default": "Alt+Shift+Q",
@@ -38,15 +45,28 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
   "permissions": [
     "storage",
     "clipboardWrite",
-    "commands"
+    "clipboardRead",
+    "commands",
+    "contextMenus",
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "http://127.0.0.1:8000/*",
     "http://localhost:8000/*",
     "http://127.0.0.1/*",
-    "http://localhost/*"
+    "http://localhost/*",
+    "https://*/*"
   ]
 }
+

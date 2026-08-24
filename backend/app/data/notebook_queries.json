@@ -1,0 +1,40 @@
+[
+  {
+    "id": "nb-1",
+    "title": "Top 10 High-Spend VIP Customers (2024)",
+    "user_prompt": "Find top 10 customers by total spend with completed orders",
+    "sql_query": "SELECT u.id, u.name, u.email, SUM(o.total_amount) AS total_spent FROM users u JOIN orders o ON u.id = o.user_id WHERE o.status = 'completed' GROUP BY u.id, u.name, u.email ORDER BY total_spent DESC LIMIT 10;",
+    "tags": [
+      "#vip",
+      "#finance",
+      "#customers"
+    ],
+    "database_host": "cloud-postgres",
+    "created_at": "2024-08-01T10:00:00Z"
+  },
+  {
+    "id": "nb-2",
+    "title": "Daily Order Revenue & Volume (30D Trend)",
+    "user_prompt": "Daily completed revenue and volume for last 30 days",
+    "sql_query": "SELECT DATE_TRUNC('day', created_at) AS order_date, COUNT(id) AS total_orders, SUM(total_amount) AS daily_revenue FROM orders WHERE status = 'completed' AND created_at >= NOW() - INTERVAL '30 days' GROUP BY order_date ORDER BY order_date ASC LIMIT 50;",
+    "tags": [
+      "#finance",
+      "#revenue",
+      "#trend"
+    ],
+    "database_host": "cloud-postgres",
+    "created_at": "2024-08-05T12:00:00Z"
+  },
+  {
+    "id": "nb-3",
+    "title": "Low Inventory Critical Reorder List",
+    "user_prompt": "List available products with stock below 15",
+    "sql_query": "SELECT id, name, category, price, stock_quantity FROM products WHERE is_available = TRUE AND stock_quantity < 15 ORDER BY stock_quantity ASC LIMIT 50;",
+    "tags": [
+      "#inventory",
+      "#daily-ops"
+    ],
+    "database_host": "cloud-postgres",
+    "created_at": "2024-08-10T14:30:00Z"
+  }
+]

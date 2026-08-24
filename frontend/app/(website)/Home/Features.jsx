@@ -80,7 +80,7 @@ export default function Features() {
         </div>
 
         {/* Feature Cards Grid */}
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 min-w-0">
           {featureList.map((f, idx) => (
             <Card
               key={idx}

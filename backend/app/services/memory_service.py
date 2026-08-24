@@ -3,11 +3,18 @@ import json
 import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from app.Models.schema import VerifiedQuery, SaveVerifiedQueryRequest, TableInfo
+from app.Models.schema import (
+    VerifiedQuery,
+    SaveVerifiedQueryRequest,
+    SavedNotebookQuery,
+    SaveNotebookQueryRequest,
+    TableInfo
+)
 
 logger = logging.getLogger(__name__)
 
 DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "verified_queries.json")
+NOTEBOOK_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "notebook_queries.json")
 
 def load_verified_queries() -> List[VerifiedQuery]:
     """Loads all saved verified queries from storage."""
@@ -121,3 +128,90 @@ def prune_schema_for_prompt(all_tables: List[TableInfo], prompt: str, max_tables
 
     scored_tables.sort(key=lambda x: x[0], reverse=True)
     return [t for _, t in scored_tables[:max_tables]]
+
+
+# --- SAVED QUERY NOTEBOOK & SNIPPET LIBRARY ---
+DEFAULT_NOTEBOOK_SNIPPETS = [
+    {
+        "id": "nb-1",
+        "title": "Top 10 High-Spend VIP Customers (2024)",
+        "user_prompt": "Find top 10 customers by total spend with completed orders",
+        "sql_query": "SELECT u.id, u.name, u.email, SUM(o.total_amount) AS total_spent FROM users u JOIN orders o ON u.id = o.user_id WHERE o.status = 'completed' GROUP BY u.id, u.name, u.email ORDER BY total_spent DESC LIMIT 10;",
+        "tags": ["#vip", "#finance", "#customers"],
+        "database_host": "cloud-postgres",
+        "created_at": "2024-08-01T10:00:00Z"
+    },
+    {
+        "id": "nb-2",
+        "title": "Daily Order Revenue & Volume (30D Trend)",
+        "user_prompt": "Daily completed revenue and volume for last 30 days",
+        "sql_query": "SELECT DATE_TRUNC('day', created_at) AS order_date, COUNT(id) AS total_orders, SUM(total_amount) AS daily_revenue FROM orders WHERE status = 'completed' AND created_at >= NOW() - INTERVAL '30 days' GROUP BY order_date ORDER BY order_date ASC LIMIT 50;",
+        "tags": ["#finance", "#revenue", "#trend"],
+        "database_host": "cloud-postgres",
+        "created_at": "2024-08-05T12:00:00Z"
+    },
+    {
+        "id": "nb-3",
+        "title": "Low Inventory Critical Reorder List",
+        "user_prompt": "List available products with stock below 15",
+        "sql_query": "SELECT id, name, category, price, stock_quantity FROM products WHERE is_available = TRUE AND stock_quantity < 15 ORDER BY stock_quantity ASC LIMIT 50;",
+        "tags": ["#inventory", "#daily-ops"],
+        "database_host": "cloud-postgres",
+        "created_at": "2024-08-10T14:30:00Z"
+    }
+]
+
+def load_notebook_queries() -> List[SavedNotebookQuery]:
+    """Loads all saved query notebooks / team snippets."""
+    try:
+        if os.path.exists(NOTEBOOK_FILE):
+            with open(NOTEBOOK_FILE, "r", encoding="utf-8") as f:
+                raw_list = json.load(f)
+                return [SavedNotebookQuery(**item) for item in raw_list]
+        else:
+            # Seed default snippets
+            queries = [SavedNotebookQuery(**item) for item in DEFAULT_NOTEBOOK_SNIPPETS]
+            save_notebook_queries(queries)
+            return queries
+    except Exception as e:
+        logger.error(f"Error loading notebook queries: {e}")
+    return [SavedNotebookQuery(**item) for item in DEFAULT_NOTEBOOK_SNIPPETS]
+
+def save_notebook_queries(queries: List[SavedNotebookQuery]) -> bool:
+    """Persists saved query notebook snippets."""
+    try:
+        os.makedirs(os.path.dirname(NOTEBOOK_FILE), exist_ok=True)
+        with open(NOTEBOOK_FILE, "w", encoding="utf-8") as f:
+            json.dump([q.dict() for q in queries], f, indent=2)
+        return True
+    except Exception as e:
+        logger.error(f"Error saving notebook queries: {e}")
+        return False
+
+def add_notebook_query(req: SaveNotebookQueryRequest) -> SavedNotebookQuery:
+    """Saves a query snippet with tags to the notebook."""
+    queries = load_notebook_queries()
+    query_id = f"nb-{int(datetime.utcnow().timestamp() * 1000)}"
+    title = req.title.strip() if req.title and req.title.strip() else (req.user_prompt[:45] + "..." if len(req.user_prompt) > 45 else req.user_prompt)
+    new_item = SavedNotebookQuery(
+        id=query_id,
+        title=title,
+        user_prompt=req.user_prompt.strip(),
+        sql_query=req.sql_query.strip(),
+        tags=req.tags or ["#saved"],
+        database_host=req.database_host or "postgres",
+        created_at=datetime.utcnow().isoformat() + "Z"
+    )
+    queries.insert(0, new_item)
+    save_notebook_queries(queries)
+    return new_item
+
+def delete_notebook_query(query_id: str) -> bool:
+    """Deletes a notebook query by ID."""
+    queries = load_notebook_queries()
+    filtered = [q for q in queries if q.id != query_id]
+    if len(filtered) != len(queries):
+        save_notebook_queries(filtered)
+        return True
+    return False
+

@@ -11,8 +11,8 @@ import Footer from "@/components/resuable/Footer"
 
 export default function Homepage() {
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-[#f7f8f5]">
-      <main className="flex-1">
+    <div className="min-h-screen flex flex-col justify-between bg-[#f7f8f5] overflow-x-hidden w-full max-w-full">
+      <main className="flex-1 w-full max-w-full">
         <Hero />
         <Features />
         <MCPSection />

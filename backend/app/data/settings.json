@@ -10,12 +10,7 @@
     "compactOnStart": false,
     "autoFocus": true
   },
-  "shortcuts": {
-    "compact": {
-      "mod": "Cmd",
-      "key": "e"
-    }
-  },
+  "shortcuts": {},
   "apiBase": "http://127.0.0.1:8000",
   "usage": {
     "queries": 0,

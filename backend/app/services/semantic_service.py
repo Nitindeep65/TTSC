@@ -154,3 +154,74 @@ Return ONLY raw valid JSON:
             tags=["custom"]
         )
         return add_or_update_metric(req)
+
+
+def extract_metrics_from_policy_document(
+    document_text: str,
+    document_title: Optional[str] = None,
+    llm_client=None
+) -> List[SemanticRule]:
+    """
+    Document RAG: Ingests and chunks a policy document (e.g. 'Q3 Revenue Definitions', 'Retention Policy'),
+    extracts all concrete business metrics, definitions, and SQL filters, and saves them to the Semantic Layer.
+    """
+    from app.services.llm_services import get_llm_client
+    client = llm_client or get_llm_client()
+    model = os.getenv("model", "meta/llama-3.1-70b-instruct")
+
+    system_prompt = """You are a Principal Analytics Engineer & Semantic Modeler.
+Analyze the provided business policy document and extract ALL distinct business metrics, formulas, or KPIs mentioned.
+
+For each metric extracted, return:
+- "name": Concise standard KPI name (e.g. "Net MRR", "Active Churn", "High Value Order", "Gross Margin")
+- "definition": 1-2 sentence plain-English business rule
+- "sql_formula": Standard PostgreSQL expression/condition if applicable (or null)
+- "category": "Finance", "Customer", "Inventory", "Marketing", or "Operations"
+- "tags": Array of 2-4 lowercase search keywords
+
+Return ONLY valid raw JSON:
+{
+  "metrics": [
+    {
+      "name": "...",
+      "definition": "...",
+      "sql_formula": "...",
+      "category": "...",
+      "tags": ["..."]
+    }
+  ]
+}"""
+
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Document: {document_title or 'Business Policy'}\n\nContent:\n{document_text[:4000]}"}
+            ],
+            temperature=0.1,
+            max_tokens=1000,
+            response_format={"type": "json_object"}
+        )
+        content = response.choices[0].message.content.strip()
+        data = json.loads(content)
+        raw_metrics = data.get("metrics", [])
+        
+        extracted_rules = []
+        for item in raw_metrics:
+            if item.get("name") and item.get("definition"):
+                req = CreateMetricRequest(
+                    name=item["name"].strip(),
+                    definition=item["definition"].strip(),
+                    sql_formula=item.get("sql_formula"),
+                    category=item.get("category", "General"),
+                    tags=item.get("tags", [])
+                )
+                saved_rule = add_or_update_metric(req)
+                extracted_rules.append(saved_rule)
+
+        return extracted_rules
+    except Exception as e:
+        logger.error(f"Error extracting metrics from policy document: {e}")
+        return []
+

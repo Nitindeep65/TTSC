@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException
 from app.Models.schema import (
     CreateMetricRequest,
     TeachAIRequest,
+    PolicyUploadRequest,
+    PolicyUploadResponse,
     SemanticRule,
     SemanticMetricsResponse,
 )
@@ -10,6 +12,7 @@ from app.services.semantic_service import (
     add_or_update_metric,
     delete_metric,
     teach_ai_metric_from_instruction,
+    extract_metrics_from_policy_document,
 )
 
 router = APIRouter(
@@ -57,3 +60,24 @@ def teach_ai(request: TeachAIRequest):
         return rule
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/upload-policy", response_model=PolicyUploadResponse)
+def upload_policy_document(request: PolicyUploadRequest):
+    """
+    Document RAG: Upload a business policy document (text, markdown, CSV, or extracted PDF),
+    automatically extract KPI definitions and formulas, and store in the Semantic Layer.
+    """
+    try:
+        extracted = extract_metrics_from_policy_document(
+            document_text=request.document_text.strip(),
+            document_title=request.document_title
+        )
+        return PolicyUploadResponse(
+            status="success",
+            extracted_metrics=extracted,
+            count=len(extracted),
+            message=f"Successfully extracted and indexed {len(extracted)} business metrics into the Semantic Layer."
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Policy processing failed: {str(e)}")
+

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QueryCraft</title>
   <link rel="stylesheet" href="popup.css">
 </head>
+
 <body>
   <div id="app" class="app-root">
 
@@ -16,7 +18,8 @@
       <div class="topbar-left">
         <div class="brand-mark" title="QueryCraft - PostgreSQL AI Engine">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+            <path
+              d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
           </svg>
         </div>
 
@@ -26,7 +29,7 @@
           <span class="db-label" id="activeDbName">Demo DB</span>
           <span class="tbl-count" id="activeDbBadge">5 tbls</span>
           <svg class="chevron-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M4 6l4 4 4-4"/>
+            <path d="M4 6l4 4 4-4" />
           </svg>
         </button>
       </div>
@@ -41,23 +44,32 @@
 
       <!-- Right Actions -->
       <div class="topbar-right" style="display:flex;align-items:center;gap:3px;">
+        <!-- Open in Web Studio -->
+        <a href="http://localhost:3000/Dashboard/chat" target="_blank" class="action-btn" id="btnOpenWebStudio"
+          title="Open in Full Web Studio">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H8M14 2v6M14 2 8 8M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-3" />
+          </svg>
+        </a>
         <!-- Minimise / Compact toggle -->
         <button type="button" class="action-btn" id="btnToggleCompact" title="Compact mode (Cmd+M)">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M2 5h12M2 11h12"/>
+            <path d="M2 5h12M2 11h12" />
           </svg>
         </button>
         <!-- Clear Chat -->
         <button type="button" class="action-btn" id="btnResetChat" title="Clear conversation">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M2 2.5h12M5.5 2.5V1.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1M13 4.5l-.8 9.5a1.5 1.5 0 0 1-1.5 1.5H5.3a1.5 1.5 0 0 1-1.5-1.5L3 4.5"/>
+            <path
+              d="M2 2.5h12M5.5 2.5V1.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1M13 4.5l-.8 9.5a1.5 1.5 0 0 1-1.5 1.5H5.3a1.5 1.5 0 0 1-1.5-1.5L3 4.5" />
           </svg>
         </button>
         <!-- Settings Toggle -->
         <button type="button" class="action-btn" id="btnOpenSettings" title="Settings">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="8" cy="8" r="2.5"/>
-            <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06"/>
+            <circle cx="8" cy="8" r="2.5" />
+            <path
+              d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06" />
           </svg>
         </button>
       </div>
@@ -71,7 +83,8 @@
       <div class="compact-left">
         <div class="brand-mark" style="width:22px;height:22px;border-radius:6px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:11px;height:11px;">
-            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+            <path
+              d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
           </svg>
         </div>
         <span style="font-size:11.5px;font-weight:700;color:var(--text);">QueryCraft</span>
@@ -79,11 +92,15 @@
       </div>
       <div class="compact-right">
         <button type="button" class="compact-action" id="btnCompactChat" title="Open Chat">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H2a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h2v3l3-3h7a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/></svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H2a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h2v3l3-3h7a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z" />
+          </svg>
           Chat
         </button>
         <button type="button" class="compact-action" id="btnCompactExpand" title="Expand">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 10l-3 3M2 7v6h6M11 6l3-3M14 9V3H8"/></svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M5 10l-3 3M2 7v6h6M11 6l3-3M14 9V3H8" />
+          </svg>
           Expand
         </button>
       </div>
@@ -101,7 +118,9 @@
         <!-- Rendered dynamically -->
       </div>
       <button type="button" class="popover-action" id="btnAddDbQuick">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M8 3v10M3 8h10" />
+        </svg>
         <span>Add Connection</span>
       </button>
     </div>
@@ -118,14 +137,15 @@
         <div class="empty-state" id="welcomeState">
           <div class="empty-icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <ellipse cx="12" cy="5" rx="9" ry="3"/>
-              <path d="M3 5v14a9 3 0 0 0 18 0V5"/>
-              <path d="M3 12a9 3 0 0 0 18 0"/>
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M3 5v14a9 3 0 0 0 18 0V5" />
+              <path d="M3 12a9 3 0 0 0 18 0" />
             </svg>
           </div>
           <h2 class="empty-title">PostgreSQL Query Engine</h2>
           <p class="empty-desc">
-            Grounded on <span id="welcomeDbName" class="font-medium text-white">Demo DB</span> schema with <strong>Self-Healing Critic</strong> &amp; <strong>Visual Charts</strong>.
+            Grounded on <span id="welcomeDbName" class="font-medium text-white">Demo DB</span> schema with
+            <strong>Self-Healing Critic</strong> &amp; <strong>Visual Charts</strong>.
           </p>
 
           <div class="quick-prompts">
@@ -135,15 +155,18 @@
                 <span class="chip-badge">Ambiguous</span>
                 <span class="chip-query">Top 5 customers by spend in 2024</span>
               </button>
-              <button type="button" class="prompt-chip" data-prompt="Show daily completed order revenue for the last 30 days as a trend chart">
+              <button type="button" class="prompt-chip"
+                data-prompt="Show daily completed order revenue for the last 30 days as a trend chart">
                 <span class="chip-badge">Chart Trend</span>
                 <span class="chip-query">Daily revenue trend (last 30 days)</span>
               </button>
-              <button type="button" class="prompt-chip" data-prompt="List available products with stock quantity below 20 ordered by price ASC">
+              <button type="button" class="prompt-chip"
+                data-prompt="List available products with stock quantity below 20 ordered by price ASC">
                 <span class="chip-badge">Filter</span>
                 <span class="chip-query">Low stock products below 20</span>
               </button>
-              <button type="button" class="prompt-chip" data-prompt="Calculate total revenue generated per payment method in 2024">
+              <button type="button" class="prompt-chip"
+                data-prompt="Calculate total revenue generated per payment method in 2024">
                 <span class="chip-badge">Group By</span>
                 <span class="chip-query">Revenue by payment method</span>
               </button>
@@ -198,8 +221,8 @@
       <section class="view-panel hidden" id="tabSchema">
         <div class="search-box">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="7" cy="7" r="5"/>
-            <path d="m11 11 3.5 3.5"/>
+            <circle cx="7" cy="7" r="5" />
+            <path d="m11 11 3.5 3.5" />
           </svg>
           <input type="text" id="inputSchemaSearch" placeholder="Filter tables or columns..." />
           <button type="button" class="text-btn" id="btnToggleAllTables">Expand All</button>
@@ -212,14 +235,36 @@
       <!-- VIEW 3: Semantic Metrics Layer -->
       <section class="view-panel hidden" id="tabMetrics">
         <div class="panel-section">
-          <div class="section-heading"><h3>Teach AI Business Rule</h3></div>
+          <div class="section-heading">
+            <h3>Teach AI Business Rule</h3>
+          </div>
           <form id="formTeachAi" class="clean-form">
             <div class="field-row">
               <label>Instruction</label>
-              <textarea id="inputTeachInstruction" rows="2" placeholder="e.g. Consider VIP Customer as anyone with total spend > 1000"></textarea>
+              <textarea id="inputTeachInstruction" rows="2"
+                placeholder="e.g. Consider VIP Customer as anyone with total spend > 1000"></textarea>
             </div>
             <button type="submit" class="submit-btn" id="btnSubmitTeach">
               Teach &amp; Save Rule
+            </button>
+          </form>
+        </div>
+        <div class="panel-section">
+          <div class="section-heading">
+            <h3>Upload Business Policy (Document RAG)</h3>
+          </div>
+          <form id="formUploadPolicy" class="clean-form">
+            <div class="field-row">
+              <label>Document Title</label>
+              <input type="text" id="inputPolicyTitle" placeholder="e.g. Q3 Financial Metrics & VIP Rules" />
+            </div>
+            <div class="field-row">
+              <label>Policy Content</label>
+              <textarea id="inputPolicyText" rows="3"
+                placeholder="Paste business definitions, PDF/text policy, or CSV formulas..."></textarea>
+            </div>
+            <button type="submit" class="submit-btn" id="btnSubmitPolicy">
+              Extract &amp; Learn Policy Rules
             </button>
           </form>
         </div>
@@ -236,7 +281,9 @@
       <!-- VIEW 4: DB Connections Manager -->
       <section class="view-panel hidden" id="tabDatabases">
         <div class="panel-section">
-          <div class="section-heading"><h3>Add Database Profile</h3></div>
+          <div class="section-heading">
+            <h3>Add Database Profile</h3>
+          </div>
           <form id="formAddDb" class="clean-form">
             <div class="field-row">
               <label>Name</label>
@@ -245,16 +292,21 @@
             <div class="field-row">
               <label>Provider Preset</label>
               <div class="presets-row">
-                <button type="button" class="preset-btn" data-uri="postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres">Supabase</button>
-                <button type="button" class="preset-btn" data-uri="postgresql://[USER]:[PASSWORD]@ep-[ID].region.aws.neon.tech/neondb?sslmode=require">Neon</button>
-                <button type="button" class="preset-btn" data-uri="postgresql://[USER]:[PASSWORD]@[ENDPOINT].rds.amazonaws.com:5432/[DBNAME]">RDS</button>
-                <button type="button" class="preset-btn" data-uri="postgresql://postgres:postgres@localhost:5432/postgres">Local</button>
+                <button type="button" class="preset-btn"
+                  data-uri="postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres">Supabase</button>
+                <button type="button" class="preset-btn"
+                  data-uri="postgresql://[USER]:[PASSWORD]@ep-[ID].region.aws.neon.tech/neondb?sslmode=require">Neon</button>
+                <button type="button" class="preset-btn"
+                  data-uri="postgresql://[USER]:[PASSWORD]@[ENDPOINT].rds.amazonaws.com:5432/[DBNAME]">RDS</button>
+                <button type="button" class="preset-btn"
+                  data-uri="postgresql://postgres:postgres@localhost:5432/postgres">Local</button>
               </div>
             </div>
             <div class="field-row">
               <label>Connection String</label>
               <div class="uri-input-wrap">
-                <input type="password" id="inputConnectionUri" required placeholder="postgresql://user:pass@host:5432/db" />
+                <input type="password" id="inputConnectionUri" required
+                  placeholder="postgresql://user:pass@host:5432/db" />
                 <button type="button" class="eye-toggle" id="btnToggleUriEye">👁</button>
               </div>
             </div>
@@ -285,33 +337,47 @@
       <div class="settings-header">
         <div style="display:flex;align-items:center;gap:8px;">
           <div class="brand-mark" style="width:24px;height:24px;border-radius:7px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px;">
-              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              style="width:12px;height:12px;">
+              <path
+                d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
             </svg>
           </div>
           <span style="font-size:13px;font-weight:700;color:var(--text);">Settings</span>
         </div>
         <button type="button" class="settings-close-btn" id="btnCloseSettings">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3 3 13"/></svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 3l10 10M13 3 3 13" />
+          </svg>
         </button>
       </div>
 
       <!-- Sidebar Nav -->
       <nav class="settings-nav">
         <button type="button" class="settings-nav-item active" data-settings-tab="account">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 15c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="8" cy="5" r="3" />
+            <path d="M2 15c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+          </svg>
           Account
         </button>
         <button type="button" class="settings-nav-item" data-settings-tab="usage">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 13V5h4v8M6 13V2h4v11M11 13V7h4v6"/></svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M1 13V5h4v8M6 13V2h4v11M11 13V7h4v6" />
+          </svg>
           Usage
         </button>
         <button type="button" class="settings-nav-item" data-settings-tab="billing">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 7h14"/></svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="1" y="3" width="14" height="10" rx="2" />
+            <path d="M1 7h14" />
+          </svg>
           Billing
         </button>
         <button type="button" class="settings-nav-item" data-settings-tab="preferences">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h6M10 5h4M2 11h4M8 11h6M8 3v4M6 9v4"/></svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M2 5h6M10 5h4M2 11h4M8 11h6M8 3v4M6 9v4" />
+          </svg>
           Preferences
         </button>
       </nav>
@@ -325,16 +391,19 @@
             <div class="settings-avatar">QC</div>
             <div style="text-align:center;">
               <p style="font-size:13px;font-weight:700;color:var(--text);" id="settingsDisplayName">QueryCraft User</p>
-              <p style="font-size:11px;color:var(--text-3);margin-top:2px;" id="settingsUserEmail">demo@querycraft.dev</p>
+              <p style="font-size:11px;color:var(--text-3);margin-top:2px;" id="settingsUserEmail">demo@querycraft.dev
+              </p>
             </div>
             <div class="settings-badge">Free Plan</div>
           </div>
 
           <div class="settings-section" style="gap:6px;">
             <p class="settings-label">Display Name</p>
-            <input type="text" class="settings-input" id="inputDisplayName" placeholder="Your name" value="QueryCraft User" />
+            <input type="text" class="settings-input" id="inputDisplayName" placeholder="Your name"
+              value="QueryCraft User" />
             <p class="settings-label" style="margin-top:6px;">Email</p>
-            <input type="email" class="settings-input" id="inputEmail" placeholder="you@example.com" value="demo@querycraft.dev" />
+            <input type="email" class="settings-input" id="inputEmail" placeholder="you@example.com"
+              value="demo@querycraft.dev" />
             <button type="button" class="settings-save-btn" id="btnSaveAccount">Save Changes</button>
           </div>
 
@@ -373,7 +442,8 @@
               <div class="quota-bar">
                 <div class="quota-fill" id="quotaFill" style="width:0%;"></div>
               </div>
-              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-top:4px;">
+              <div
+                style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-top:4px;">
                 <span id="quotaUsed">0 queries used</span>
                 <span>500 / month (Free)</span>
               </div>
@@ -426,8 +496,9 @@
           </div>
           <div class="settings-section">
             <p class="settings-label">Payment Method</p>
-            <div style="font-size:11.5px;color:var(--text-3);padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:7px;text-align:center;">
-              No payment method on file.<br/>Upgrade above to add one.
+            <div
+              style="font-size:11.5px;color:var(--text-3);padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:7px;text-align:center;">
+              No payment method on file.<br />Upgrade above to add one.
             </div>
           </div>
         </div>
@@ -441,14 +512,17 @@
               <p class="settings-section-title">Keyboard Shortcuts</p>
               <button type="button" class="tiny-link-btn" id="btnResetShortcuts">Reset All</button>
             </div>
-            
+
             <!-- Global Chrome Shortcut Card -->
             <div class="chrome-shortcut-card">
               <div style="min-width:0;">
-                <span style="font-size:11.5px;font-weight:700;color:var(--text);display:block;">Open Extension Popup</span>
-                <span style="font-size:10px;color:var(--text-3);">Global browser hotkey: <strong style="color:var(--accent);">Alt+Q / ⌥Q</strong></span>
+                <span style="font-size:11.5px;font-weight:700;color:var(--text);display:block;">Open Extension
+                  Popup</span>
+                <span style="font-size:10px;color:var(--text-3);">Global browser hotkey: <strong
+                    style="color:var(--accent);">Alt+Q / ⌥Q</strong></span>
               </div>
-              <button type="button" class="btn-chrome-shortcuts" id="btnOpenChromeShortcuts" title="Configure in Chrome Settings">
+              <button type="button" class="btn-chrome-shortcuts" id="btnOpenChromeShortcuts"
+                title="Configure in Chrome Settings">
                 Customize ↗
               </button>
             </div>
@@ -469,7 +543,8 @@
               <label>API Base URL</label>
               <input type="text" class="settings-input" id="inputApiBase" placeholder="http://127.0.0.1:8000" />
             </div>
-            <button type="button" class="settings-save-btn" id="btnSaveApiBase" style="margin-top:6px;">Save URL</button>
+            <button type="button" class="settings-save-btn" id="btnSaveApiBase" style="margin-top:6px;">Save
+              URL</button>
           </div>
 
           <!-- Theme -->
@@ -519,14 +594,10 @@
     <!-- Input Dock -->
     <footer class="dock-footer" id="appFooter">
       <div class="command-bar">
-        <textarea
-          id="userPromptInput"
-          rows="1"
-          placeholder="Ask or clarify your SQL query…"
-        ></textarea>
+        <textarea id="userPromptInput" rows="1" placeholder="Ask or clarify your SQL query…"></textarea>
         <button type="button" class="send-btn" id="btnSendPrompt" title="Send (Enter)">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/>
+            <path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" />
           </svg>
         </button>
       </div>
@@ -542,7 +613,8 @@
     <div class="shortcut-modal-overlay hidden" id="shortcutModalOverlay">
       <div class="shortcut-modal-card">
         <div class="shortcut-modal-header">
-          <span style="font-size:12.5px;font-weight:700;color:var(--text);" id="modalShortcutLabel">Change Shortcut</span>
+          <span style="font-size:12.5px;font-weight:700;color:var(--text);" id="modalShortcutLabel">Change
+            Shortcut</span>
           <button type="button" class="drawer-btn close" id="btnCloseShortcutModal">✕</button>
         </div>
 
@@ -621,7 +693,8 @@
           </div>
 
           <!-- Preview & Action buttons -->
-          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px 10px;margin-top:6px;">
+          <div
+            style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px 10px;margin-top:6px;">
             <span style="font-size:11px;color:var(--text-3);">Preview:</span>
             <span class="key-badge" id="modalPreviewBadge" style="font-size:12px;padding:2px 8px;">Cmd+K</span>
           </div>
@@ -642,4 +715,5 @@
 
   <script src="popup.js"></script>
 </body>
+
 </html>

@@ -38,7 +38,7 @@ export default function Hero() {
       {/* --- HERO NAVBAR --- */}
       <div className="relative z-20 mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 sm:pt-6 lg:px-8">
         <nav className="flex items-center justify-between rounded-2xl border border-border/80 bg-white/80 px-4 py-2.5 shadow-xs backdrop-blur-md transition-all duration-200 sm:px-6">
-          
+
           {/* Logo & Brand */}
           <Link href="/" className="group flex items-center gap-2.5 font-semibold tracking-tight">
             <span className="flex size-9 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs transition-transform duration-200 group-hover:scale-105">
@@ -179,41 +179,41 @@ export default function Hero() {
       </div>
 
       {/* --- HERO MAIN CONTENT --- */}
-      <div className="relative mx-auto grid min-h-[680px] w-full max-w-7xl items-center gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-16">
-        
+      <div className="relative mx-auto grid min-h-[600px] w-full max-w-7xl items-center gap-8 lg:gap-8 xl:gap-12 px-4 py-10 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-14 min-w-0">
+
         {/* Left Column: Headline & Value Prop */}
-        <div className="max-w-2xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          
+        <div className="w-full max-w-2xl min-w-0 space-y-5 lg:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
           <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold shadow-2xs backdrop-blur-xs">
             <span className="flex size-2 rounded-full bg-[#4ca873] animate-pulse" />
             <Sparkles className="size-3.5 text-[#3aa363]" />
             <span>MCP Native • Cloud PostgreSQL Engine</span>
           </Badge>
 
-          <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight text-[#17241c] sm:text-5xl lg:text-6xl">
+          <h1 className="text-3xl font-semibold leading-[1.1] tracking-tight text-[#17241c] sm:text-4xl lg:text-5xl xl:text-6xl">
             Ask in plain English. <br />
             <span className="bg-gradient-to-r from-[#1f663c] via-[#2d8e57] to-[#4ca873] bg-clip-text text-transparent">
               Get Production-Ready SQL.
             </span>
           </h1>
 
-          <p className="max-w-xl text-base leading-relaxed text-[#56675d] sm:text-lg">
+          <p className="max-w-xl text-sm sm:text-base leading-relaxed text-[#56675d]">
             Powered by the <strong>Model Context Protocol (MCP)</strong>. Connect your <strong>Supabase</strong>, <strong>Neon</strong>, or <strong>AWS RDS</strong> PostgreSQL database. The engine parses live schema constraints, pauses to clarify ambiguous dates and filters, and outputs safe, read-only SQL queries.
           </p>
 
           {/* Action CTAs */}
-          <div className="flex flex-col gap-3.5 sm:flex-row pt-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center pt-1">
             <Link href="/Dashboard/chat">
-              <Button variant="default" size="lg" className="w-full sm:w-auto gap-2.5 font-semibold text-sm shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-200">
-                <MessageSquareText className="size-4.5 text-[#71c897]" />
+              <Button variant="default" size="lg" className="w-full sm:w-auto gap-2.5 font-semibold text-xs sm:text-sm shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-200">
+                <MessageSquareText className="size-4 text-[#71c897]" />
                 <span>Launch Interactive Chat</span>
-                <ArrowRight className="size-4 text-[#71c897]" />
+                <ArrowRight className="size-3.5 text-[#71c897]" />
               </Button>
             </Link>
 
             <Link href="/Dashboard">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto gap-2 font-semibold text-sm hover:scale-[1.02] transition-all duration-200">
-                <Terminal className="size-4.5 text-[#3aa363]" />
+              <Button variant="outline" size="lg" className="w-full sm:w-auto gap-2 font-semibold text-xs sm:text-sm hover:scale-[1.02] transition-all duration-200">
+                <Terminal className="size-4 text-[#3aa363]" />
                 <span>Query Compiler Workspace</span>
               </Button>
             </Link>
@@ -221,23 +221,23 @@ export default function Hero() {
 
           {/* Cloud Database Supported Badges */}
           <div className="pt-4 border-t border-border">
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7d9084] mb-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7d9084] mb-2.5">
               Native Cloud Database Support via MCP
             </p>
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-semibold text-[#304838]">
-              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 shadow-3xs transition-transform hover:scale-105">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-xs font-semibold text-[#304838]">
+              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-2.5 py-1.5 shadow-3xs transition-transform hover:scale-105">
                 <span className="size-2 rounded-full bg-[#3ecf8e]" />
                 Supabase
               </span>
-              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 shadow-3xs transition-transform hover:scale-105">
+              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-2.5 py-1.5 shadow-3xs transition-transform hover:scale-105">
                 <span className="size-2 rounded-full bg-[#00e599]" />
                 Neon Serverless
               </span>
-              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 shadow-3xs transition-transform hover:scale-105">
+              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-2.5 py-1.5 shadow-3xs transition-transform hover:scale-105">
                 <span className="size-2 rounded-full bg-[#ff9900]" />
                 AWS RDS
               </span>
-              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 shadow-3xs transition-transform hover:scale-105">
+              <span className="flex items-center gap-1.5 rounded-lg border border-border bg-white px-2.5 py-1.5 shadow-3xs transition-transform hover:scale-105">
                 <Database className="size-3.5 text-[#336791]" />
                 Custom PostgreSQL
               </span>
@@ -245,17 +245,17 @@ export default function Hero() {
           </div>
 
           {/* Value Highlights */}
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-medium text-[#627368] pt-1">
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-[#627368] pt-1">
             <span className="flex items-center gap-1.5">
-              <Check className="size-4 text-[#3aa363]" />
+              <Check className="size-3.5 text-[#3aa363]" />
               MCP Schema Streaming
             </span>
             <span className="flex items-center gap-1.5">
-              <Check className="size-4 text-[#3aa363]" />
+              <Check className="size-3.5 text-[#3aa363]" />
               Zero Hallucinations
             </span>
             <span className="flex items-center gap-1.5">
-              <Check className="size-4 text-[#3aa363]" />
+              <Check className="size-3.5 text-[#3aa363]" />
               Read-Only &amp; LIMIT 50 Safe
             </span>
           </div>
@@ -263,11 +263,11 @@ export default function Hero() {
         </div>
 
         {/* Right Column: Interactive Conversational Demo Simulation */}
-        <div className="relative mx-auto w-full max-w-[560px] lg:ml-auto animate-in fade-in slide-in-from-right-4 duration-500">
-          <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-tr from-[#89cca0]/30 to-[#d4ecd9]/30 blur-2xl" />
-          
+        <div className="relative mx-auto w-full max-w-[480px] lg:max-w-[460px] xl:max-w-[540px] min-w-0 lg:ml-auto animate-in fade-in slide-in-from-right-4 duration-500">
+          <div className="absolute -inset-2 rounded-2xl bg-gradient-to-tr from-[#89cca0]/25 to-[#d4ecd9]/25 blur-xl pointer-events-none" />
+
           <Card className="relative overflow-hidden rounded-2xl border-border bg-white shadow-[0_24px_60px_-28px_rgba(25,40,30,0.25)] hover-lift">
-            
+
             {/* Demo Header */}
             <div className="flex items-center justify-between border-b border-border bg-[#fbfdfb] px-4 sm:px-5 py-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-[#1f2d24]">
@@ -284,7 +284,7 @@ export default function Hero() {
 
             {/* Conversation Flow */}
             <div className="space-y-3.5 p-4 sm:p-5 text-xs">
-              
+
               {/* Turn 1: User Request */}
               <div className="flex gap-2.5 justify-end">
                 <div className="rounded-xl rounded-tr-xs bg-[#1f2d24] px-3.5 py-2.5 text-white shadow-2xs max-w-[85%] font-medium">
@@ -316,33 +316,33 @@ export default function Hero() {
               </div>
 
               {/* Turn 4: Final Complete SQL */}
-              <div className="flex gap-2.5 justify-start">
+              <div className="flex gap-2.5 justify-start w-full min-w-0">
                 <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#1f2d24] text-[#71c897] shadow-3xs">
                   <Bot className="size-3.5" />
                 </div>
-                <div className="w-full space-y-2 rounded-xl rounded-tl-xs border border-border bg-[#fbfdfb] p-3.5 shadow-2xs">
+                <div className="w-full min-w-0 space-y-2 rounded-xl rounded-tl-xs border border-border bg-[#fbfdfb] p-3.5 shadow-2xs">
                   <div className="flex items-center gap-1.5 font-semibold text-[#1e6138] text-[11px]">
                     <ShieldCheck className="size-3.5 text-[#3aa363]" />
                     <span>MCP Safe SQL Compiled</span>
                   </div>
 
-                  <div className="overflow-hidden rounded-lg border border-[#243529] bg-[#17231c]">
+                  <div className="overflow-hidden rounded-lg border border-[#243529] bg-[#17231c] w-full min-w-0">
                     <div className="flex items-center justify-between border-b border-white/10 bg-[#121c16] px-3 py-1.5 text-[10px] text-[#86a894] font-mono">
                       <span>PostgreSQL (Read-Only)</span>
                       <span className="rounded bg-[#216b44] px-1.5 py-0.2 text-[9px] text-white font-sans font-bold">
                         LIMIT 5
                       </span>
                     </div>
-                    <pre className="p-2.5 font-mono text-[11px] leading-relaxed text-[#d7f1df] overflow-x-auto">
+                    <pre className="p-2.5 font-mono text-[10.5px] sm:text-[11px] leading-relaxed text-[#d7f1df] overflow-x-auto w-full min-w-0 max-w-full">
                       <code>{`SELECT u.id, u.name,
-       SUM(oi.quantity * oi.unit_price) AS total_spend
+  SUM(oi.qty * oi.price) AS spend
 FROM users u
 JOIN orders o ON u.id = o.user_id
 JOIN order_items oi ON o.id = oi.order_id
 WHERE o.status = 'completed'
-  AND EXTRACT(YEAR FROM o.created_at) = 2024
+  AND o.created_at >= '2024-01-01'
 GROUP BY u.id, u.name
-ORDER BY total_spend DESC
+ORDER BY spend DESC
 LIMIT 5;`}</code>
                     </pre>
                   </div>

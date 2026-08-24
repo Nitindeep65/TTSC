@@ -3,27 +3,27 @@
 
 let API_BASE = "http://127.0.0.1:8000"
 
-const STORAGE_KEY_PROFILES   = "querycraft_db_profiles_v4"
-const STORAGE_KEY_ACTIVE_ID  = "querycraft_active_db_id_v4"
-const STORAGE_KEY_SHORTCUTS  = "querycraft_shortcuts_v1"
-const STORAGE_KEY_PREFS      = "querycraft_prefs_v1"
-const STORAGE_KEY_ACCOUNT    = "querycraft_account_v1"
-const STORAGE_KEY_USAGE      = "querycraft_usage_v1"
-const STORAGE_KEY_API_BASE   = "querycraft_api_base_v1"
+const STORAGE_KEY_PROFILES = "querycraft_db_profiles_v4"
+const STORAGE_KEY_ACTIVE_ID = "querycraft_active_db_id_v4"
+const STORAGE_KEY_SHORTCUTS = "querycraft_shortcuts_v1"
+const STORAGE_KEY_PREFS = "querycraft_prefs_v1"
+const STORAGE_KEY_ACCOUNT = "querycraft_account_v1"
+const STORAGE_KEY_USAGE = "querycraft_usage_v1"
+const STORAGE_KEY_API_BASE = "querycraft_api_base_v1"
 
 // ═══════════════════════════════════════════════
 // DEFAULT SHORTCUT DEFINITIONS
 // ═══════════════════════════════════════════════
 const DEFAULT_SHORTCUTS = [
-  { id: "openDB",       label: "Switch Database",       mod: "Cmd",  key: "K" },
-  { id: "tabChat",      label: "Go to Chat",            mod: "Cmd",  key: "1" },
-  { id: "tabSchema",    label: "Go to Schema",          mod: "Cmd",  key: "2" },
-  { id: "tabMetrics",   label: "Go to Metrics",         mod: "Cmd",  key: "3" },
-  { id: "tabDBs",       label: "Go to Databases",       mod: "Cmd",  key: "4" },
-  { id: "compact",      label: "Toggle Compact Mode",   mod: "Cmd",  key: "M" },
-  { id: "settings",     label: "Open Settings",         mod: "Cmd",  key: "," },
-  { id: "clearChat",    label: "Clear Chat",            mod: "Cmd",  key: "Backspace" },
-  { id: "closeAll",     label: "Close Panels / Escape", mod: "",     key: "Escape" },
+  { id: "openDB", label: "Switch Database", mod: "Cmd", key: "K" },
+  { id: "tabChat", label: "Go to Chat", mod: "Cmd", key: "1" },
+  { id: "tabSchema", label: "Go to Schema", mod: "Cmd", key: "2" },
+  { id: "tabMetrics", label: "Go to Metrics", mod: "Cmd", key: "3" },
+  { id: "tabDBs", label: "Go to Databases", mod: "Cmd", key: "4" },
+  { id: "compact", label: "Toggle Compact Mode", mod: "Cmd", key: "M" },
+  { id: "settings", label: "Open Settings", mod: "Cmd", key: "," },
+  { id: "clearChat", label: "Clear Chat", mod: "Cmd", key: "Backspace" },
+  { id: "closeAll", label: "Close Panels / Escape", mod: "", key: "Escape" },
 ]
 
 let customShortcuts = {}   // id -> { mod, key } overrides
@@ -33,28 +33,28 @@ let recordingFor = null    // shortcut id currently being recorded
 // FALLBACK DEMO SCHEMA
 // ═══════════════════════════════════════════════
 const fallbackDemoSchema = [
-  { table_name: "users",       description: "Registered user accounts",            columns: [{ name:"id",type:"UUID",is_primary_key:true },{ name:"email",type:"VARCHAR(255)" },{ name:"name",type:"VARCHAR(100)" },{ name:"role",type:"VARCHAR(50)" },{ name:"is_active",type:"BOOLEAN" },{ name:"created_at",type:"TIMESTAMPTZ" }] },
-  { table_name: "products",    description: "Catalog products",                    columns: [{ name:"id",type:"UUID",is_primary_key:true },{ name:"name",type:"VARCHAR(255)" },{ name:"category",type:"VARCHAR(100)" },{ name:"price",type:"NUMERIC(10,2)" },{ name:"stock_quantity",type:"INTEGER" },{ name:"is_available",type:"BOOLEAN" }] },
-  { table_name: "orders",      description: "Customer purchase orders",            columns: [{ name:"id",type:"UUID",is_primary_key:true },{ name:"user_id",type:"UUID",is_foreign_key:true },{ name:"total_amount",type:"NUMERIC(12,2)" },{ name:"status",type:"VARCHAR(50)" },{ name:"created_at",type:"TIMESTAMPTZ" }] },
-  { table_name: "order_items", description: "Line items per order",               columns: [{ name:"id",type:"UUID",is_primary_key:true },{ name:"order_id",type:"UUID",is_foreign_key:true },{ name:"product_id",type:"UUID",is_foreign_key:true },{ name:"quantity",type:"INTEGER" },{ name:"unit_price",type:"NUMERIC(10,2)" }] },
-  { table_name: "payments",    description: "Payment transactions",               columns: [{ name:"id",type:"UUID",is_primary_key:true },{ name:"order_id",type:"UUID",is_foreign_key:true },{ name:"amount",type:"NUMERIC(12,2)" },{ name:"payment_method",type:"VARCHAR(50)" },{ name:"status",type:"VARCHAR(50)" }] },
+  { table_name: "users", description: "Registered user accounts", columns: [{ name: "id", type: "UUID", is_primary_key: true }, { name: "email", type: "VARCHAR(255)" }, { name: "name", type: "VARCHAR(100)" }, { name: "role", type: "VARCHAR(50)" }, { name: "is_active", type: "BOOLEAN" }, { name: "created_at", type: "TIMESTAMPTZ" }] },
+  { table_name: "products", description: "Catalog products", columns: [{ name: "id", type: "UUID", is_primary_key: true }, { name: "name", type: "VARCHAR(255)" }, { name: "category", type: "VARCHAR(100)" }, { name: "price", type: "NUMERIC(10,2)" }, { name: "stock_quantity", type: "INTEGER" }, { name: "is_available", type: "BOOLEAN" }] },
+  { table_name: "orders", description: "Customer purchase orders", columns: [{ name: "id", type: "UUID", is_primary_key: true }, { name: "user_id", type: "UUID", is_foreign_key: true }, { name: "total_amount", type: "NUMERIC(12,2)" }, { name: "status", type: "VARCHAR(50)" }, { name: "created_at", type: "TIMESTAMPTZ" }] },
+  { table_name: "order_items", description: "Line items per order", columns: [{ name: "id", type: "UUID", is_primary_key: true }, { name: "order_id", type: "UUID", is_foreign_key: true }, { name: "product_id", type: "UUID", is_foreign_key: true }, { name: "quantity", type: "INTEGER" }, { name: "unit_price", type: "NUMERIC(10,2)" }] },
+  { table_name: "payments", description: "Payment transactions", columns: [{ name: "id", type: "UUID", is_primary_key: true }, { name: "order_id", type: "UUID", is_foreign_key: true }, { name: "amount", type: "NUMERIC(12,2)" }, { name: "payment_method", type: "VARCHAR(50)" }, { name: "status", type: "VARCHAR(50)" }] },
 ]
 
-const initialDefaultProfile = { id:"prof-demo", name:"Demo DB", uri:"", dbInfo:{ host:"demo.postgres", tables_count:5, tables:fallbackDemoSchema } }
+const initialDefaultProfile = { id: "prof-demo", name: "Demo DB", uri: "", dbInfo: { host: "demo.postgres", tables_count: 5, tables: fallbackDemoSchema } }
 
 // ═══════════════════════════════════════════════
 // GLOBAL STATE
 // ═══════════════════════════════════════════════
-let profiles        = [initialDefaultProfile]
+let profiles = [initialDefaultProfile]
 let activeProfileId = "prof-demo"
-let chatHistory     = []
-let activeTab       = "chat"
-let isLoading       = false
+let chatHistory = []
+let activeTab = "chat"
+let isLoading = false
 let collapsedTablesState = {}
 let lastQueryResults = null
 let currentResultViewMode = "table"
-let isCompactMode   = false
-let isSettingsOpen  = false
+let isCompactMode = false
+let isSettingsOpen = false
 let activeSettingsTab = "account"
 let prefs = { compactOnStart: false, autoFocus: true, theme: "dark", fontSize: "12" }
 let account = { displayName: "QueryCraft User", email: "demo@querycraft.dev" }
@@ -84,10 +84,10 @@ const storage = {
       chrome.storage.local.get(keys, cb)
     } else {
       const res = {}
-      ;(Array.isArray(keys) ? keys : [keys]).forEach(k => {
-        const v = localStorage.getItem(k)
-        if (v) { try { res[k] = JSON.parse(v) } catch {} }
-      })
+        ; (Array.isArray(keys) ? keys : [keys]).forEach(k => {
+          const v = localStorage.getItem(k)
+          if (v) { try { res[k] = JSON.parse(v) } catch { } }
+        })
       cb(res)
     }
   },
@@ -106,7 +106,7 @@ async function fetchBackendSettings() {
   try {
     const res = await fetch(`${API_BASE}/api/settings/`, { signal: AbortSignal.timeout(2500) })
     if (res.ok) return await res.json()
-  } catch {}
+  } catch { }
   return null
 }
 
@@ -118,18 +118,18 @@ async function pushBackendSettings(patch) {
       body: JSON.stringify(patch),
     })
     if (res.ok) return await res.json()
-  } catch {}
+  } catch { }
   return null
 }
 
 async function syncFromBackend() {
   const data = await fetchBackendSettings()
   if (!data) return
-  if (data.account)     account           = { ...account,   ...data.account }
-  if (data.preferences) prefs             = { ...prefs,     ...data.preferences }
-  if (data.shortcuts)   customShortcuts   = { ...data.shortcuts }
-  if (data.usage)       usage             = { ...usage,     ...data.usage }
-  if (data.apiBase)     API_BASE          = data.apiBase
+  if (data.account) account = { ...account, ...data.account }
+  if (data.preferences) prefs = { ...prefs, ...data.preferences }
+  if (data.shortcuts) customShortcuts = { ...data.shortcuts }
+  if (data.usage) usage = { ...usage, ...data.usage }
+  if (data.apiBase) API_BASE = data.apiBase
 }
 
 // ═══════════════════════════════════════════════
@@ -155,7 +155,7 @@ function loadAll() {
       activeProfileId = data[STORAGE_KEY_ACTIVE_ID]
     }
     if (data[STORAGE_KEY_SHORTCUTS]) customShortcuts = data[STORAGE_KEY_SHORTCUTS]
-    if (data[STORAGE_KEY_PREFS])     prefs = { ...prefs, ...data[STORAGE_KEY_PREFS] }
+    if (data[STORAGE_KEY_PREFS]) prefs = { ...prefs, ...data[STORAGE_KEY_PREFS] }
 
     applyPrefs()
     updateActiveProfileUI()
@@ -250,21 +250,21 @@ async function refreshSettingsData() {
 }
 
 function _populateSettingsUI() {
-  const nameInput  = $("inputDisplayName")
+  const nameInput = $("inputDisplayName")
   const emailInput = $("inputEmail")
-  const nameDisp   = $("settingsDisplayName")
-  const emailDisp  = $("settingsUserEmail")
-  if (nameInput)  nameInput.value  = account.displayName || ""
+  const nameDisp = $("settingsDisplayName")
+  const emailDisp = $("settingsUserEmail")
+  if (nameInput) nameInput.value = account.displayName || ""
   if (emailInput) emailInput.value = account.email || ""
-  if (nameDisp)   nameDisp.textContent  = account.displayName || "QueryCraft User"
-  if (emailDisp)  emailDisp.textContent = account.email || "demo@querycraft.dev"
+  if (nameDisp) nameDisp.textContent = account.displayName || "QueryCraft User"
+  if (emailDisp) emailDisp.textContent = account.email || "demo@querycraft.dev"
 
   const qEl = $("usageQueries")
   const hEl = $("usageHeals")
   const vEl = $("usageVerified")
   const dEl = $("usageDbs")
-  if (qEl) qEl.textContent = usage.queries  || 0
-  if (hEl) hEl.textContent = usage.heals    || 0
+  if (qEl) qEl.textContent = usage.queries || 0
+  if (hEl) hEl.textContent = usage.heals || 0
   if (vEl) vEl.textContent = usage.verified || 0
   if (dEl) dEl.textContent = profiles.length
 
@@ -293,9 +293,9 @@ function _populateSettingsUI() {
   renderShortcutsList()
 
   const prefCompact = $("prefCompactOnStart")
-  const prefAuto    = $("prefAutoFocus")
+  const prefAuto = $("prefAutoFocus")
   if (prefCompact) prefCompact.checked = !!prefs.compactOnStart
-  if (prefAuto)    prefAuto.checked    = !!prefs.autoFocus
+  if (prefAuto) prefAuto.checked = !!prefs.autoFocus
 
   $$("[data-fontsize]").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.fontsize === String(prefs.fontSize || "12"))
@@ -464,9 +464,9 @@ function shortcutMatches(shortcutId, e) {
 async function checkBackendHealth() {
   const statusEl = $("serverStatusText")
   try {
-    const res = await fetch(`${API_BASE}/`, { method:"GET", signal: AbortSignal.timeout(2000) })
+    const res = await fetch(`${API_BASE}/`, { method: "GET", signal: AbortSignal.timeout(2000) })
     if (res.ok && statusEl) {
-      statusEl.textContent = API_BASE.replace("http://","")
+      statusEl.textContent = API_BASE.replace("http://", "")
       statusEl.style.color = "#22c55e"
     } else throw new Error()
   } catch {
@@ -498,8 +498,8 @@ function switchTab(tabName) {
   const appFooter = $("appFooter")
   if (appFooter) appFooter.classList.toggle("hidden", tabName !== "chat")
 
-  if (tabName === "schema")    renderSchemaExplorer()
-  if (tabName === "metrics")   renderMetricsList()
+  if (tabName === "schema") renderSchemaExplorer()
+  if (tabName === "metrics") renderMetricsList()
   if (tabName === "databases") renderProfilesList()
 }
 
@@ -534,8 +534,8 @@ function bindEvents() {
   // Results/Explain drawers
   safeOn("btnCloseResults", "click", () => $("queryResultsDrawer")?.classList.add("hidden"))
   safeOn("btnCloseExplain", "click", () => $("explainDrawer")?.classList.add("hidden"))
-  safeOn("btnExportCsv",    "click", exportCsvResults)
-  safeOn("btnResetChat",    "click", resetChat)
+  safeOn("btnExportCsv", "click", exportCsvResults)
+  safeOn("btnResetChat", "click", resetChat)
 
   safeOn("btnViewTable", "click", () => {
     currentResultViewMode = "table"
@@ -577,9 +577,9 @@ function bindEvents() {
   safeOn("formAddDb", "submit", async (e) => {
     e.preventDefault()
     const nameInput = $("inputProfileName")
-    const uriInput  = $("inputConnectionUri")
+    const uriInput = $("inputConnectionUri")
     const name = nameInput?.value.trim() || ""
-    const uri  = uriInput?.value.trim() || ""
+    const uri = uriInput?.value.trim() || ""
     if (!name || !uri) return
 
     const btn = $("btnConnectProfile")
@@ -604,10 +604,10 @@ function bindEvents() {
       renderProfilesList()
       incrementUsage("dbs")
       if (nameInput) nameInput.value = ""
-      if (uriInput)  uriInput.value = ""
+      if (uriInput) uriInput.value = ""
       switchTab("chat")
       showToast(`Connected to ${name}`)
-    } catch(err) {
+    } catch (err) {
       alert(`Error: ${err.message}`)
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = "Connect & Introspect" }
@@ -634,10 +634,41 @@ function bindEvents() {
       if (textInput) textInput.value = ""
       renderMetricsList()
       showToast("Business rule taught successfully!")
-    } catch(err) {
+    } catch (err) {
       alert(`Error: ${err.message}`)
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = "Teach & Save Rule" }
+    }
+  })
+
+  // Upload Business Policy (Document RAG)
+  safeOn("formUploadPolicy", "submit", async (e) => {
+    e.preventDefault()
+    const titleInput = $("inputPolicyTitle")
+    const textInput = $("inputPolicyText")
+    const docText = textInput?.value.trim() || ""
+    const docTitle = titleInput?.value.trim() || "Business Policy"
+    if (!docText) return
+
+    const btn = $("btnSubmitPolicy")
+    if (btn) { btn.disabled = true; btn.textContent = "Extracting & Chunking Document…" }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/semantic/upload-policy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ document_title: docTitle, document_text: docText })
+      })
+      if (!res.ok) throw new Error("Failed to process policy document")
+      const data = await res.json()
+      if (titleInput) titleInput.value = ""
+      if (textInput) textInput.value = ""
+      renderMetricsList()
+      showToast(`Extracted & indexed ${data.count || 0} business rules!`)
+    } catch (err) {
+      alert(`Error: ${err.message}`)
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "Extract & Learn Policy Rules" }
     }
   })
 
@@ -676,16 +707,16 @@ function bindEvents() {
   // Compact Mode buttons
   safeOn("btnToggleCompact", "click", toggleCompactMode)
   safeOn("btnCompactExpand", "click", disableCompactMode)
-  safeOn("btnCompactChat",   "click", () => {
+  safeOn("btnCompactChat", "click", () => {
     disableCompactMode()
     switchTab("chat")
     $("userPromptInput")?.focus()
   })
 
   // Settings Sidebar triggers
-  safeOn("btnOpenSettings",  "click", () => isSettingsOpen ? closeSettings() : openSettings())
+  safeOn("btnOpenSettings", "click", () => isSettingsOpen ? closeSettings() : openSettings())
   safeOn("btnCloseSettings", "click", closeSettings)
-  safeOn("settingsOverlay",  "click", closeSettings)
+  safeOn("settingsOverlay", "click", closeSettings)
 
   // Settings Nav
   $$(".settings-nav-item").forEach(item => {
@@ -698,7 +729,7 @@ function bindEvents() {
   // Account Save
   safeOn("btnSaveAccount", "click", async () => {
     account.displayName = $("inputDisplayName")?.value.trim() || account.displayName
-    account.email       = $("inputEmail")?.value.trim()       || account.email
+    account.email = $("inputEmail")?.value.trim() || account.email
     storage.set({ [STORAGE_KEY_ACCOUNT]: account })
     await pushBackendSettings({ account })
     refreshSettingsData()
@@ -817,14 +848,14 @@ function bindEvents() {
   if (dangerBtn) {
     safeOn(dangerBtn, "click", async () => {
       if (!confirm("This will delete all profiles, shortcuts, and settings on the extension AND web dashboard. Continue?")) return
-      await fetch(`${API_BASE}/api/settings/reset`, { method: "DELETE" }).catch(() => {})
+      await fetch(`${API_BASE}/api/settings/reset`, { method: "DELETE" }).catch(() => { })
       storage.set({
-        [STORAGE_KEY_PROFILES]:  [initialDefaultProfile],
+        [STORAGE_KEY_PROFILES]: [initialDefaultProfile],
         [STORAGE_KEY_ACTIVE_ID]: "prof-demo",
         [STORAGE_KEY_SHORTCUTS]: {},
-        [STORAGE_KEY_PREFS]:     {},
-        [STORAGE_KEY_USAGE]:     {},
-        [STORAGE_KEY_ACCOUNT]:   {},
+        [STORAGE_KEY_PREFS]: {},
+        [STORAGE_KEY_USAGE]: {},
+        [STORAGE_KEY_ACCOUNT]: {},
       }, () => location.reload())
     })
   }
@@ -838,15 +869,15 @@ function bindEvents() {
     }
 
     // Normal in-app shortcuts
-    if (shortcutMatches("openDB", e))    { e.preventDefault(); $("dbDropdownMenu")?.classList.toggle("hidden") }
-    if (shortcutMatches("tabChat", e))   { e.preventDefault(); switchTab("chat") }
+    if (shortcutMatches("openDB", e)) { e.preventDefault(); $("dbDropdownMenu")?.classList.toggle("hidden") }
+    if (shortcutMatches("tabChat", e)) { e.preventDefault(); switchTab("chat") }
     if (shortcutMatches("tabSchema", e)) { e.preventDefault(); switchTab("schema") }
-    if (shortcutMatches("tabMetrics",e)) { e.preventDefault(); switchTab("metrics") }
-    if (shortcutMatches("tabDBs", e))    { e.preventDefault(); switchTab("databases") }
-    if (shortcutMatches("compact", e))   { e.preventDefault(); toggleCompactMode() }
-    if (shortcutMatches("settings", e))  { e.preventDefault(); isSettingsOpen ? closeSettings() : openSettings() }
+    if (shortcutMatches("tabMetrics", e)) { e.preventDefault(); switchTab("metrics") }
+    if (shortcutMatches("tabDBs", e)) { e.preventDefault(); switchTab("databases") }
+    if (shortcutMatches("compact", e)) { e.preventDefault(); toggleCompactMode() }
+    if (shortcutMatches("settings", e)) { e.preventDefault(); isSettingsOpen ? closeSettings() : openSettings() }
     if (shortcutMatches("clearChat", e)) { e.preventDefault(); resetChat() }
-    if (shortcutMatches("closeAll", e))  {
+    if (shortcutMatches("closeAll", e)) {
       $("dbDropdownMenu")?.classList.add("hidden")
       $("queryResultsDrawer")?.classList.add("hidden")
       $("explainDrawer")?.classList.add("hidden")
@@ -870,7 +901,7 @@ async function incrementUsage(field) {
   storage.set({ [STORAGE_KEY_USAGE]: usage })
   try {
     await fetch(`${API_BASE}/api/settings/usage/increment?field=${field}`, { method: "POST" })
-  } catch {}
+  } catch { }
 }
 
 // ═══════════════════════════════════════════════
@@ -904,18 +935,18 @@ function getActiveProfile() {
 
 function updateActiveProfileUI() {
   const active = getActiveProfile()
-  const nameEl    = $("activeDbName")
-  const badgeEl   = $("activeDbBadge")
-  const dotEl     = $("activeDbDot")
+  const nameEl = $("activeDbName")
+  const badgeEl = $("activeDbBadge")
+  const dotEl = $("activeDbDot")
   const welcomeEl = $("welcomeDbName")
   const compactEl = $("compactDbLabel")
 
-  if (nameEl)    nameEl.textContent = active.name
+  if (nameEl) nameEl.textContent = active.name
   if (welcomeEl) welcomeEl.textContent = active.name
-  if (compactEl) compactEl.textContent  = active.name
+  if (compactEl) compactEl.textContent = active.name
   const tbl = active.dbInfo?.tables_count || active.dbInfo?.tables?.length || 5
-  if (badgeEl)   badgeEl.textContent = `${tbl} tbls`
-  if (dotEl)     dotEl.classList.toggle("live", !!active.uri)
+  if (badgeEl) badgeEl.textContent = `${tbl} tbls`
+  if (dotEl) dotEl.classList.toggle("live", !!active.uri)
 
   renderSchemaExplorer()
 }
@@ -925,15 +956,15 @@ function saveProfilesState() {
 }
 
 function renderProfilesList() {
-  const dbProfilesList   = $("dbProfilesList")
+  const dbProfilesList = $("dbProfilesList")
   const savedProfilesList = $("savedProfilesList")
-  const dbCountBadge     = $("dbCountBadge")
-  const savedCount       = $("savedCount")
+  const dbCountBadge = $("dbCountBadge")
+  const savedCount = $("savedCount")
 
-  if (dbProfilesList)    dbProfilesList.innerHTML = ""
-  if (savedProfilesList)  savedProfilesList.innerHTML = ""
-  if (dbCountBadge)      dbCountBadge.textContent = profiles.length
-  if (savedCount)        savedCount.textContent   = profiles.length
+  if (dbProfilesList) dbProfilesList.innerHTML = ""
+  if (savedProfilesList) savedProfilesList.innerHTML = ""
+  if (dbCountBadge) dbCountBadge.textContent = profiles.length
+  if (savedCount) savedCount.textContent = profiles.length
 
   profiles.forEach(p => {
     const isActive = p.id === activeProfileId
@@ -1058,10 +1089,10 @@ function renderSchemaExplorer(filterQuery = "") {
   const query = filterQuery.toLowerCase().trim()
   let filtered = query
     ? tables.filter(t => {
-        const matchTable = (t.table_name || t.table || "").toLowerCase().includes(query)
-        const matchCol   = (t.columns || []).some(c => (typeof c === "string" ? c : c.name || "").toLowerCase().includes(query))
-        return matchTable || matchCol
-      })
+      const matchTable = (t.table_name || t.table || "").toLowerCase().includes(query)
+      const matchCol = (t.columns || []).some(c => (typeof c === "string" ? c : c.name || "").toLowerCase().includes(query))
+      return matchTable || matchCol
+    })
     : tables
 
   if (!filtered.length) {
@@ -1076,8 +1107,8 @@ function renderSchemaExplorer(filterQuery = "") {
     const colsHtml = cols.map(c => {
       const name = typeof c === "string" ? c : c.name
       const type = typeof c === "string" ? "TEXT" : c.type
-      const pk   = c?.is_primary_key ? "🔑 " : ""
-      const fk   = c?.is_foreign_key ? "🔗 " : ""
+      const pk = c?.is_primary_key ? "🔑 " : ""
+      const fk = c?.is_foreign_key ? "🔗 " : ""
       return `<div class="column-row"><span>${pk}${fk}${escapeHtml(name)}</span><span class="col-tag">${escapeHtml(type)}</span></div>`
     }).join("")
 
@@ -1085,18 +1116,103 @@ function renderSchemaExplorer(filterQuery = "") {
     card.className = "table-node"
     card.innerHTML = `
       <div class="table-node-header" data-table="${tableName}">
-        <span>${escapeHtml(tableName)}</span>
-        <span class="tbl-count">${cols.length} cols ${isCollapsed ? "▸" : "▾"}</span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <strong style="color:var(--text);">${escapeHtml(tableName)}</strong>
+        </span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button type="button" class="btn-sample-data" data-table="${tableName}" style="font-size:9.5px;font-weight:700;color:#34d399;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.25);border-radius:4px;padding:1px 6px;cursor:pointer;">👁 Sample</button>
+          <span class="tbl-count">${cols.length} cols ${isCollapsed ? "▸" : "▾"}</span>
+        </div>
       </div>
       ${isCollapsed ? "" : `<div class="table-columns">${colsHtml}</div>`}
+      <div class="sample-drawer hidden" id="sampleDrawer-${tableName}"></div>
     `
     const hdr = card.querySelector(".table-node-header")
     if (hdr) {
-      hdr.addEventListener("click", () => {
+      hdr.addEventListener("click", (e) => {
+        if (e.target.closest(".btn-sample-data")) return
         collapsedTablesState[tableName] = !collapsedTablesState[tableName]
         renderSchemaExplorer($("inputSchemaSearch")?.value.toLowerCase().trim() || "")
       })
     }
+
+    const btnSample = card.querySelector(".btn-sample-data")
+    if (btnSample) {
+      btnSample.addEventListener("click", async (e) => {
+        e.stopPropagation()
+        const drawer = card.querySelector(`#sampleDrawer-${tableName}`)
+        if (!drawer) return
+
+        if (!drawer.classList.contains("hidden")) {
+          drawer.classList.add("hidden")
+          return
+        }
+
+        drawer.classList.remove("hidden")
+        drawer.innerHTML = `<div style="padding:8px;font-size:11px;color:#34d399;">Loading sample records &amp; categorical values…</div>`
+
+        try {
+          const res = await fetch(`${API_BASE}/api/database/sample`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ connection_uri: active.uri || "", table_name: tableName, limit: 5 })
+          })
+          const data = await res.json()
+          if (!res.ok) throw new Error(data.detail || "Sample failed")
+
+          let catBadges = ""
+          if (data.column_profiles && data.column_profiles.length > 0) {
+            const withEnums = data.column_profiles.filter(p => p.distinct_values && p.distinct_values.length > 0)
+            if (withEnums.length > 0) {
+              catBadges = `
+                <div style="padding:6px 8px;background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border);font-size:10px;">
+                  <span style="color:#6ee7b7;font-weight:700;">Categorical Values:</span>
+                  ${withEnums.map(p => `
+                    <div style="margin-top:2px;">
+                      <span style="color:#a7f3d0;font-family:monospace;">${p.name}:</span>
+                      ${p.distinct_values.map(v => `<span style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);border-radius:3px;padding:1px 4px;margin:0 2px;color:#d1fae5;">${escapeHtml(v)}</span>`).join('')}
+                    </div>
+                  `).join('')}
+                </div>
+              `
+            }
+          }
+
+          let tableRows = ""
+          if (data.rows && data.rows.length > 0) {
+            const cols = data.columns || Object.keys(data.rows[0])
+            tableRows = `
+              <div style="overflow-x:auto;max-height:120px;padding:4px;">
+                <table style="width:100%;border-collapse:collapse;font-size:10px;font-family:monospace;">
+                  <thead>
+                    <tr style="background:#111b15;color:#6ee7b7;text-align:left;">
+                      ${cols.map(c => `<th style="padding:3px 6px;border:1px solid var(--border);">${escapeHtml(c)}</th>`).join('')}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${data.rows.map(r => `
+                      <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                        ${cols.map(c => `<td style="padding:3px 6px;border:1px solid var(--border);color:#c4e6d2;">${escapeHtml(r[c] !== null && r[c] !== undefined ? String(r[c]) : 'NULL')}</td>`).join('')}
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `
+          }
+
+          drawer.innerHTML = `
+            <div style="background:#0c1410;border-top:1px solid var(--border);border-radius:0 0 6px 6px;">
+              ${catBadges}
+              ${tableRows}
+            </div>
+          `
+        } catch (err) {
+          drawer.innerHTML = `<div style="padding:8px;font-size:10.5px;color:#f87171;">Could not profile table: ${escapeHtml(err.message)}</div>`
+        }
+      })
+    }
+
     container.appendChild(card)
   })
 }
@@ -1106,23 +1222,23 @@ function renderSchemaExplorer(filterQuery = "") {
 // ═══════════════════════════════════════════════
 async function handleSendPrompt(text) {
   const promptInput = $("userPromptInput")
-  const sendBtn     = $("btnSendPrompt")
-  const welcomeEl   = $("welcomeState")
-  const feedEl      = $("messagesFeed")
+  const sendBtn = $("btnSendPrompt")
+  const welcomeEl = $("welcomeState")
+  const feedEl = $("messagesFeed")
 
   const prompt = text || promptInput?.value.trim() || ""
   if (!prompt || isLoading) return
 
   if (promptInput) promptInput.value = ""
-  if (welcomeEl)   welcomeEl.classList.add("hidden")
-  if (feedEl)      feedEl.classList.remove("hidden")
+  if (welcomeEl) welcomeEl.classList.add("hidden")
+  if (feedEl) feedEl.classList.remove("hidden")
 
   appendUserMessage(prompt)
 
   const active = getActiveProfile()
   const historyPayload = chatHistory.map(m => ({ role: m.role, content: m.rawContent || m.content }))
   const payload = { user_prompt: prompt, session_history: historyPayload }
-  if (active.uri)              { payload.connection_uri = active.uri; payload.db_uri = active.uri }
+  if (active.uri) { payload.connection_uri = active.uri; payload.db_uri = active.uri }
   if (active.dbInfo?.schema_sql) payload.live_schema = active.dbInfo.schema_sql
 
   const loadingEl = appendLoading()
@@ -1161,7 +1277,7 @@ async function handleSendPrompt(text) {
     }
 
     incrementUsage("queries")
-  } catch(err) {
+  } catch (err) {
     if (loadingEl) loadingEl.remove()
     appendErrorMessage(`Unable to connect to backend at ${API_BASE}`)
     checkBackendHealth()
@@ -1230,7 +1346,10 @@ function appendCompleteMessage(data) {
       <div class="complete-box">
         <div class="complete-topbar">
           <span class="complete-status">${data.message ? escapeHtml(data.message) : "Query Ready"}</span>
-          <button type="button" class="verified-btn btn-save-verified" title="Save into verified memory">⭐ Save Verified</button>
+          <div style="display:flex;gap:4px;">
+            <button type="button" class="verified-btn btn-save-notebook" title="Save into query notebook">💾 Notebook</button>
+            <button type="button" class="verified-btn btn-save-verified" title="Save into verified memory">⭐ Verified</button>
+          </div>
         </div>
         ${data.explanation ? `<div class="complete-explanation">${escapeHtml(data.explanation)}</div>` : ""}
         ${tablesHtml}
@@ -1278,6 +1397,33 @@ function appendCompleteMessage(data) {
         }
       })
     }
+
+    const btnNotebook = row.querySelector(".btn-save-notebook")
+    if (btnNotebook) {
+      btnNotebook.addEventListener("click", async (e) => {
+        const btn = e.currentTarget
+        const tag = prompt("Enter tags for this snippet (comma separated, e.g. #finance, #vip):", "#saved") || "#saved"
+        const tagList = tag.split(",").map(t => t.trim().startsWith("#") ? t.trim() : `#${t.trim()}`)
+        try {
+          await fetch(`${API_BASE}/api/memory/notebook`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: data.message || "Saved Snippet",
+              user_prompt: data.message || "Saved SQL Query",
+              sql_query: data.sql_query,
+              tags: tagList,
+              database_host: getActiveProfile().name || "postgres"
+            })
+          })
+          btn.classList.add("saved")
+          btn.textContent = "✓ In Notebook"
+          showToast("Saved to Query Notebook!")
+        } catch {
+          alert("Failed to save to notebook.")
+        }
+      })
+    }
   }
 
   feedEl.appendChild(row)
@@ -1316,9 +1462,9 @@ async function executeQuery(sql, messageData) {
     return
   }
 
-  const resultsDrawer  = $("queryResultsDrawer")
+  const resultsDrawer = $("queryResultsDrawer")
   const resultsContent = $("queryResultsContent")
-  const countEl        = $("resultRowCount")
+  const countEl = $("resultRowCount")
 
   if (resultsDrawer) resultsDrawer.classList.remove("hidden")
   if (resultsContent) resultsContent.innerHTML = `<div class="loading-indicator"><div class="spin-dot"></div><span>Running on ${escapeHtml(active.name)}…</span></div>`
@@ -1356,7 +1502,7 @@ async function executeQuery(sql, messageData) {
     }
     renderResultsContent(data.healing_info)
     if (data.healing_info?.was_healed) incrementUsage("heals")
-  } catch(err) {
+  } catch (err) {
     if (countEl) countEl.textContent = "Error"
     if (resultsContent) {
       resultsContent.innerHTML = `<div style="padding:10px;background:var(--red-bg);color:var(--red);border-radius:6px;font-size:11px;">${escapeHtml(err.message)}</div>`
@@ -1393,14 +1539,14 @@ function renderResultsContent(healingInfo) {
     html += `</tbody></table>`
     resultsContent.innerHTML = html
   } else {
-    const numCol   = columns.find(c => rows.some(r => !isNaN(Number(r[c])))) || columns[1] || columns[0]
+    const numCol = columns.find(c => rows.some(r => !isNaN(Number(r[c])))) || columns[1] || columns[0]
     const labelCol = columns.find(c => c !== numCol) || columns[0]
-    const maxY     = Math.max(...rows.map(r => Number(r[numCol]) || 0), 1)
+    const maxY = Math.max(...rows.map(r => Number(r[numCol]) || 0), 1)
 
     let html = `${healHtml}<div class="chart-container">`
     rows.slice(0, 12).forEach(r => {
       const val = Number(r[numCol]) || 0
-      const h   = Math.max(8, (val / maxY) * 100)
+      const h = Math.max(8, (val / maxY) * 100)
       const lbl = String(r[labelCol] || "")
       html += `<div class="chart-bar-item" title="${escapeHtml(lbl)}: ${val}"><div class="chart-bar" style="height:${h}%;"></div><span class="chart-label">${escapeHtml(lbl)}</span></div>`
     })
@@ -1419,9 +1565,9 @@ async function explainQuery(sql) {
     return
   }
 
-  const drawer  = $("explainDrawer")
+  const drawer = $("explainDrawer")
   const content = $("explainContent")
-  if (drawer)  drawer.classList.remove("hidden")
+  if (drawer) drawer.classList.remove("hidden")
   if (content) content.innerHTML = `<div class="loading-indicator"><div class="spin-dot"></div><span>Analyzing execution tree and query cost…</span></div>`
 
   try {
@@ -1462,7 +1608,7 @@ async function explainQuery(sql) {
         </div>
       `
     }
-  } catch(err) {
+  } catch (err) {
     if (content) {
       content.innerHTML = `<div style="padding:10px;color:#f87171;font-size:11px;">EXPLAIN Error: ${escapeHtml(err.message)}</div>`
     }

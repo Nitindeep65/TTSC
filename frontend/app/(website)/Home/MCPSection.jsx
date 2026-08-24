@@ -90,7 +90,7 @@ export default function MCPSection() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_25%,rgba(76,168,115,0.12),transparent_40%),radial-gradient(circle_at_85%_75%,rgba(31,45,36,0.06),transparent_40%)]" />
 
       <div className="relative mx-auto max-w-7xl">
-        
+
         {/* Header */}
         <div className="mx-auto max-w-3xl text-center space-y-3">
           <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold">
@@ -108,10 +108,10 @@ export default function MCPSection() {
         </div>
 
         {/* 2-Column Showcase */}
-        <div className="mt-16 grid gap-10 lg:grid-cols-2 lg:items-center">
-          
+        <div className="mt-16 grid gap-10 lg:grid-cols-2 lg:items-center min-w-0">
+
           {/* Left: 3 Core Pillars */}
-          <div className="space-y-5">
+          <div className="space-y-5 min-w-0">
             {mcpHighlights.map((item, idx) => (
               <Card
                 key={idx}
@@ -120,12 +120,12 @@ export default function MCPSection() {
                 <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
                   <item.icon className="size-5.5" />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm sm:text-base font-semibold text-[#17241c]">
+                    <h3 className="text-sm sm:text-base font-semibold text-[#17241c] truncate">
                       {item.title}
                     </h3>
-                    <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-wider">
+                    <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-wider shrink-0">
                       {item.badge}
                     </Badge>
                   </div>
@@ -137,41 +137,39 @@ export default function MCPSection() {
             ))}
 
             <div className="rounded-2xl border border-[#d5e7d9] bg-[#edf8f1] p-4 text-xs text-[#1e6138] flex items-center justify-between shadow-2xs">
-              <div className="flex items-center gap-2 font-medium">
-                <CheckCircle2 className="size-4 text-[#3aa363]" />
-                <span>Compatible with Claude Desktop, Cursor &amp; Custom MCP Clients</span>
+              <div className="flex items-center gap-2 font-medium min-w-0">
+                <CheckCircle2 className="size-4 text-[#3aa363] shrink-0" />
+                <span className="truncate">Compatible with Claude Desktop, Cursor &amp; Custom MCP Clients</span>
               </div>
-              <Badge variant="emerald" className="font-mono text-[10px] bg-white text-[#206642]">
+              <Badge variant="emerald" className="font-mono text-[10px] bg-white text-[#206642] shrink-0">
                 v1.0 MCP
               </Badge>
             </div>
           </div>
 
           {/* Right: Interactive MCP Code & Protocol Inspector */}
-          <div className="overflow-hidden rounded-2xl border border-[#27382d] bg-[#141f18] shadow-2xl transition-all duration-300">
-            
+          <div className="overflow-hidden rounded-2xl border border-[#27382d] bg-[#141f18] shadow-2xl transition-all duration-300 min-w-0">
+
             {/* Header Tabs */}
             <div className="flex items-center justify-between border-b border-white/10 bg-[#0f1712] px-4 py-2.5">
               <div className="flex items-center gap-2 text-xs">
                 <button
                   type="button"
                   onClick={() => setActiveTab("config")}
-                  className={`rounded-lg px-3 py-1 font-mono text-[11px] font-medium transition-all duration-150 ${
-                    activeTab === "config"
+                  className={`rounded-lg px-3 py-1 font-mono text-[11px] font-medium transition-all duration-150 ${activeTab === "config"
                       ? "bg-[#1f2d24] text-[#71c897] border border-[#35523f] shadow-xs"
                       : "text-[#86a894] hover:text-white"
-                  }`}
+                    }`}
                 >
                   mcp_config.json
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab("tool")}
-                  className={`rounded-lg px-3 py-1 font-mono text-[11px] font-medium transition-all duration-150 ${
-                    activeTab === "tool"
+                  className={`rounded-lg px-3 py-1 font-mono text-[11px] font-medium transition-all duration-150 ${activeTab === "tool"
                       ? "bg-[#1f2d24] text-[#71c897] border border-[#35523f] shadow-xs"
                       : "text-[#86a894] hover:text-white"
-                  }`}
+                    }`}
                 >
                   MCP Tool Request
                 </button>

@@ -35,6 +35,11 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
   const [manualCategory, setManualCategory] = useState("Finance")
   const [isSavingManual, setIsSavingManual] = useState(false)
 
+  // Policy Document Upload State
+  const [policyTitle, setPolicyTitle] = useState("")
+  const [policyText, setPolicyText] = useState("")
+  const [isUploadingPolicy, setIsUploadingPolicy] = useState(false)
+
   const fetchMetrics = async () => {
     setLoading(true)
     try {
@@ -95,6 +100,26 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
     }
   }
 
+  const handleUploadPolicy = async (e) => {
+    e.preventDefault()
+    if (!policyText.trim()) return
+    setIsUploadingPolicy(true)
+    try {
+      await axios.post("http://127.0.0.1:8000/api/semantic/upload-policy", {
+        document_title: policyTitle.trim() || "Policy Document",
+        document_text: policyText.trim(),
+      })
+      setPolicyTitle("")
+      setPolicyText("")
+      setActiveTab("list")
+      fetchMetrics()
+    } catch (e) {
+      alert("Failed to extract policy rules: " + (e.response?.data?.detail || e.message))
+    } finally {
+      setIsUploadingPolicy(false)
+    }
+  }
+
   const handleDeleteMetric = async (id) => {
     if (!confirm("Remove this business metric rule?")) return
     try {
@@ -140,7 +165,7 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 border-b border-border pt-4 pb-2">
+        <div className="flex items-center gap-1.5 border-b border-border pt-4 pb-2 flex-wrap">
           <button
             type="button"
             onClick={() => setActiveTab("list")}
@@ -164,7 +189,20 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
             }`}
           >
             <Sparkles className="size-3.5 text-[#3ba565]" />
-            <span>Teach AI (Natural Language)</span>
+            <span>Teach AI</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("upload")}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+              activeTab === "upload"
+                ? "bg-[#1f2d24] text-white shadow-2xs"
+                : "text-[#55675c] hover:bg-[#edf4ef]"
+            }`}
+          >
+            <FolderKanban className="size-3.5 text-blue-500" />
+            <span>Upload Policy (RAG)</span>
           </button>
 
           <button
@@ -177,7 +215,7 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
             }`}
           >
             <Code2 className="size-3.5" />
-            <span>Explicit SQL Formula</span>
+            <span>Explicit SQL</span>
           </button>
         </div>
 
@@ -189,7 +227,7 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
             <div className="space-y-2.5">
               {metrics.length === 0 ? (
                 <div className="py-12 text-center text-xs text-[#6e8074]">
-                  No custom metrics defined yet. Click &quot;Teach AI&quot; or &quot;Explicit SQL Formula&quot; above to add one.
+                  No custom metrics defined yet. Click &quot;Teach AI&quot; or &quot;Upload Policy&quot; above to add one.
                 </div>
               ) : (
                 metrics.map((m) => (
@@ -280,7 +318,70 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
             </form>
           )}
 
-          {/* TAB 3: Manual SQL Formula Override */}
+          {/* TAB 3: Document Policy Upload (Document RAG) */}
+          {activeTab === "upload" && (
+            <form onSubmit={handleUploadPolicy} className="space-y-3.5">
+              <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-xs text-blue-900 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-blue-800">
+                  <FolderKanban className="size-3.5" />
+                  <span>Document RAG (Batch Policy Ingestion)</span>
+                </div>
+                <p className="text-[11px] text-blue-700 leading-relaxed">
+                  Paste internal policy documents (e.g. &quot;Q3 Financial Definitions&quot;, CSV columns, or PDF text). The engine chunks the document and extracts all KPI rules at once.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#2a3e31] uppercase tracking-wider mb-1">
+                  Policy Document Title
+                </label>
+                <input
+                  type="text"
+                  value={policyTitle}
+                  onChange={(e) => setPolicyTitle(e.target.value)}
+                  placeholder="e.g. Q3 2024 Revenue &amp; Customer Health Definitions"
+                  className="w-full rounded-xl border border-input bg-white px-3 py-2 text-xs text-[#17241c] outline-none focus:border-[#4ca873]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#2a3e31] uppercase tracking-wider mb-1">
+                  Document Content / Policy Text <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  required
+                  rows={5}
+                  value={policyText}
+                  onChange={(e) => setPolicyText(e.target.value)}
+                  placeholder="Paste policy document text, markdown definitions, or CSV formulas here..."
+                  className="w-full rounded-xl border border-input bg-white p-3 text-xs text-[#17241c] outline-none placeholder:text-[#9aa79e] focus:border-[#4ca873]"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                <Button
+                  type="submit"
+                  variant="default"
+                  disabled={!policyText.trim() || isUploadingPolicy}
+                  className="gap-1.5"
+                >
+                  {isUploadingPolicy ? (
+                    <>
+                      <Loader2 className="size-3.5 animate-spin" />
+                      <span>Extracting &amp; Indexing Rules…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="size-3.5 text-[#71c897]" />
+                      <span>Extract &amp; Save All Rules</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {/* TAB 4: Manual SQL Formula Override */}
           {activeTab === "manual" && (
             <form onSubmit={handleCreateManual} className="space-y-3.5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -372,3 +473,4 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
     </div>
   )
 }
+

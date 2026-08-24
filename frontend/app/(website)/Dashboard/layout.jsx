@@ -33,7 +33,7 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
   const { dbInfo, setIsModalOpen } = useDatabase()
 
   const isQueryTester = pathname === "/Dashboard"
-  const isChat        = pathname === "/Dashboard/chat"
+  const isChat = pathname === "/Dashboard/chat"
 
   return (
     <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-border bg-white/95 px-4 backdrop-blur-md sm:px-6">
@@ -92,22 +92,20 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
         <div className="flex items-center rounded-xl border border-border bg-[#f8fbf8] p-1 text-xs">
           <Link
             href="/Dashboard"
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition-all duration-150 ${
-              isQueryTester
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition-all duration-150 ${isQueryTester
                 ? "bg-[#1f2d24] text-white shadow-2xs"
                 : "text-[#55675c] hover:bg-[#eef4ef] hover:text-[#1f2d24]"
-            }`}
+              }`}
           >
             <Terminal className="size-3.5" />
             <span>Tester</span>
           </Link>
           <Link
             href="/Dashboard/chat"
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition-all duration-150 ${
-              isChat
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition-all duration-150 ${isChat
                 ? "bg-[#1f2d24] text-white shadow-2xs"
                 : "text-[#55675c] hover:bg-[#eef4ef] hover:text-[#1f2d24]"
-            }`}
+              }`}
           >
             <MessageSquareText className="size-3.5" />
             <span>Live Chat</span>
@@ -146,7 +144,7 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
 
 function DashboardShell({ children }) {
   const [isMetricModalOpen, setIsMetricModalOpen] = useState(false)
-  const [isSettingsOpen,    setIsSettingsOpen]    = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   // Global keyboard shortcut Cmd+, opens Settings (reads from backend-synced shortcuts)
   // The SettingsPanel itself handles its own key listener for Escape
