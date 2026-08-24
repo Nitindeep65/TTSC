@@ -1,0 +1,25 @@
+{
+  "account": {
+    "displayName": "QueryCraft User",
+    "email": "demo@querycraft.dev",
+    "plan": "free"
+  },
+  "preferences": {
+    "theme": "dark",
+    "fontSize": "12",
+    "compactOnStart": false,
+    "autoFocus": true
+  },
+  "shortcuts": {
+    "compact": {
+      "mod": "Cmd",
+      "key": "e"
+    }
+  },
+  "apiBase": "http://127.0.0.1:8000",
+  "usage": {
+    "queries": 0,
+    "heals": 0,
+    "verified": 0
+  }
+}

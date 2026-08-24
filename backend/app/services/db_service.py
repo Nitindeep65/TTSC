@@ -3,7 +3,7 @@ import logging
 from typing import Dict, List, Any, Optional, Tuple
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from app.Models.schema import TableInfo, ColumnInfo, SchemaInfoResponse
+from app.Models.schema import TableInfo, ColumnInfo, SchemaInfoResponse, HealedQueryInfo
 
 logger = logging.getLogger(__name__)
 
@@ -64,8 +64,6 @@ ORDER BY t.table_name, c.ordinal_position;
 def parse_connection_info(connection_uri: str) -> Dict[str, str]:
     """Extracts safe metadata (host, port, dbname, user) from connection string."""
     try:
-        # Regex to match postgres connection URI
-        # postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
         pattern = r"postgres(?:ql)?://(?:([^:@]+)(?::([^@]+))?@)?([^:/]+)(?::(\d+))?(?:/([^?]+))?"
         match = re.match(pattern, connection_uri)
         if match:
@@ -124,7 +122,6 @@ def introspect_cloud_database(connection_uri: str) -> Tuple[List[TableInfo], str
         if not rows:
             raise ValueError("No tables found in the public schema of the connected database.")
 
-        # Group rows by table
         tables_dict: Dict[str, List[ColumnInfo]] = {}
         for row in rows:
             t_name = row["table_name"]
@@ -148,7 +145,6 @@ def introspect_cloud_database(connection_uri: str) -> Tuple[List[TableInfo], str
             )
             tables_dict[t_name].append(col_info)
 
-        # Build TableInfo objects
         table_info_list: List[TableInfo] = []
         schema_sql_lines: List[str] = ["-- Live Introspected PostgreSQL Schema\n"]
 
@@ -160,7 +156,6 @@ def introspect_cloud_database(connection_uri: str) -> Tuple[List[TableInfo], str
             )
             table_info_list.append(table_info)
 
-            # Build SQL DDL representation
             col_ddl_parts = []
             for col in cols:
                 parts = [f"    {col.name} {col.type}"]
@@ -184,52 +179,99 @@ def introspect_cloud_database(connection_uri: str) -> Tuple[List[TableInfo], str
             conn.close()
 
 
-def execute_read_only_query(connection_uri: str, sql_query: str, limit: int = 50) -> Dict[str, Any]:
+def serialize_val(val):
+    if val is None:
+        return None
+    if hasattr(val, "isoformat"):
+        return val.isoformat()
+    return str(val)
+
+
+def _raw_execute_select(connection_uri: str, query: str, limit: int = 50) -> Tuple[List[str], List[Dict[str, Any]]]:
+    """Helper to run a read-only query safely with strict timeout."""
+    conn = None
+    try:
+        conn = psycopg2.connect(connection_uri, connect_timeout=8)
+        conn.set_session(readonly=True, autocommit=True)
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SET statement_timeout = '8000';")
+        cursor.execute(query)
+        rows = cursor.fetchmany(limit)
+        columns = [desc[0] for desc in cursor.description] if cursor.description else []
+        cursor.close()
+
+        serialized_rows = [{k: serialize_val(v) for k, v in r.items()} for r in rows]
+        return columns, serialized_rows
+    finally:
+        if conn:
+            conn.close()
+
+
+def execute_read_only_query(
+    connection_uri: str,
+    sql_query: str,
+    limit: int = 50,
+    auto_heal: bool = True,
+    user_prompt: Optional[str] = None,
+    live_schema: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Executes a SELECT query safely in read-only mode against the cloud database.
+    If execution fails and auto_heal=True, intercepts error and invokes the Critic Agent.
     """
-    # Verify read-only safety
     query = sql_query.strip()
     if not (re.match(r"^\s*(?:SELECT|WITH)\b", query, re.IGNORECASE)):
         raise ValueError("Only SELECT statements can be executed.")
 
-    conn = None
+    healing_info = None
+
     try:
-        conn = psycopg2.connect(connection_uri, connect_timeout=10)
-        # Set strict read-only transaction and statement timeout
-        conn.set_session(readonly=True, autocommit=True)
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
-        cursor.execute("SET statement_timeout = '8000';")  # 8s timeout
-        
-        cursor.execute(query)
-        rows = cursor.fetchmany(limit)
-        
-        # Extract column metadata
-        columns = [desc[0] for desc in cursor.description] if cursor.description else []
-        cursor.close()
-
-        # Serialize rows safely (handle dates, UUIDs, decimals)
-        def serialize_val(val):
-            if val is None:
-                return None
-            if hasattr(val, "isoformat"):
-                return val.isoformat()
-            return str(val)
-
-        serialized_rows = []
-        for r in rows:
-            serialized_rows.append({k: serialize_val(v) for k, v in r.items()})
-
+        columns, rows = _raw_execute_select(connection_uri, query, limit)
         return {
             "status": "success",
             "columns": columns,
-            "rows": serialized_rows,
-            "row_count": len(serialized_rows)
+            "rows": rows,
+            "row_count": len(rows),
+            "healing_info": None
         }
 
-    except Exception as e:
-        logger.error(f"Query execution failed: {str(e)}")
-        raise ValueError(f"Database query execution error: {str(e)}")
-    finally:
-        if conn:
-            conn.close()
+    except Exception as primary_error:
+        err_msg = str(primary_error)
+        logger.warning(f"Initial query execution error: {err_msg}")
+
+        # If auto-healing is disabled, propagate error
+        if not auto_heal:
+            raise ValueError(f"Database query execution error: {err_msg}")
+
+        # Invoke Critic Self-Healing Loop
+        try:
+            from app.services.healing_service import heal_sql_with_critic
+            healed_sql, diagnosis = heal_sql_with_critic(
+                failing_sql=query,
+                error_message=err_msg,
+                live_schema=live_schema,
+                user_prompt=user_prompt
+            )
+
+            # Re-execute healed SQL query
+            columns, rows = _raw_execute_select(connection_uri, healed_sql, limit)
+
+            healing_info = HealedQueryInfo(
+                was_healed=True,
+                original_sql=query,
+                healed_sql=healed_sql,
+                diagnosis=diagnosis,
+                error_message=err_msg
+            )
+
+            return {
+                "status": "success",
+                "columns": columns,
+                "rows": rows,
+                "row_count": len(rows),
+                "healing_info": healing_info
+            }
+
+        except Exception as heal_error:
+            logger.error(f"Auto-healing retry failed: {heal_error}")
+            raise ValueError(f"Query execution failed: {err_msg} (Healing failed: {str(heal_error)})")

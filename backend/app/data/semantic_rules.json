@@ -1,0 +1,66 @@
+[
+  {
+    "id": "rule-net-mrr",
+    "name": "Net MRR",
+    "definition": "Monthly Recurring Revenue deducting refunded or failed transactions",
+    "sql_formula": "SUM(CASE WHEN status = 'completed' THEN total_amount ELSE 0 END) - SUM(CASE WHEN status = 'refunded' THEN total_amount ELSE 0 END)",
+    "category": "Finance",
+    "tags": [
+      "revenue",
+      "finance",
+      "mrr"
+    ],
+    "created_at": "2026-08-24T00:00:00Z"
+  },
+  {
+    "id": "rule-vip-customer",
+    "name": "VIP Customer",
+    "definition": "A registered user with more than $1,000 in total completed order spend",
+    "sql_formula": "orders.status = 'completed' GROUP BY users.id HAVING SUM(orders.total_amount) >= 1000",
+    "category": "Customer",
+    "tags": [
+      "vip",
+      "high-value",
+      "customer"
+    ],
+    "created_at": "2026-08-24T00:00:00Z"
+  },
+  {
+    "id": "rule-active-customer",
+    "name": "Active Customer",
+    "definition": "Users with is_active = TRUE and at least one completed order in the last 90 days",
+    "sql_formula": "users.is_active = TRUE AND orders.status = 'completed' AND orders.created_at >= NOW() - INTERVAL '90 days'",
+    "category": "Customer",
+    "tags": [
+      "active",
+      "retention"
+    ],
+    "created_at": "2026-08-24T00:00:00Z"
+  },
+  {
+    "id": "rule-low-stock",
+    "name": "Low Stock Threshold",
+    "definition": "Available products with stock_quantity strictly below 20 units",
+    "sql_formula": "products.is_available = TRUE AND products.stock_quantity < 20",
+    "category": "Inventory",
+    "tags": [
+      "inventory",
+      "stock",
+      "alert"
+    ],
+    "created_at": "2026-08-24T00:00:00Z"
+  },
+  {
+    "id": "metric-1787498044094",
+    "name": "VIP Customer",
+    "definition": "A customer who has spent over $1,000 in completed orders.",
+    "sql_formula": "SUM(order_total) > 1000 AND order_status = 'completed'",
+    "category": "Customer",
+    "tags": [
+      "customer_segment",
+      "order_value",
+      "vip"
+    ],
+    "created_at": "2026-08-23T20:44:04.094013Z"
+  }
+]

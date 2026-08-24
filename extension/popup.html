@@ -8,18 +8,20 @@
 </head>
 <body>
   <div id="app" class="app-root">
-    
-    <!-- Ultra-Minimalist Top Bar -->
+
+    <!-- ══════════════════════════════
+         TOP BAR
+    ══════════════════════════════ -->
     <header class="topbar">
       <div class="topbar-left">
-        <div class="brand-mark">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <div class="brand-mark" title="QueryCraft - PostgreSQL AI Engine">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
           </svg>
         </div>
-        
+
         <!-- Active DB Quick Switcher -->
-        <button type="button" class="db-pill" id="dbSwitcherTrigger" title="Switch database (Cmd+K)">
+        <button type="button" class="db-pill" id="dbSwitcherTrigger" title="Switch database">
           <span class="status-indicator live" id="activeDbDot"></span>
           <span class="db-label" id="activeDbName">Demo DB</span>
           <span class="tbl-count" id="activeDbBadge">5 tbls</span>
@@ -33,20 +35,63 @@
       <nav class="nav-pills">
         <button type="button" class="nav-item active" data-tab="chat">Chat</button>
         <button type="button" class="nav-item" data-tab="schema">Schema</button>
+        <button type="button" class="nav-item" data-tab="metrics">Metrics</button>
         <button type="button" class="nav-item" data-tab="databases">DBs</button>
       </nav>
 
       <!-- Right Actions -->
-      <div class="topbar-right">
+      <div class="topbar-right" style="display:flex;align-items:center;gap:3px;">
+        <!-- Minimise / Compact toggle -->
+        <button type="button" class="action-btn" id="btnToggleCompact" title="Compact mode (Cmd+M)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M2 5h12M2 11h12"/>
+          </svg>
+        </button>
+        <!-- Clear Chat -->
         <button type="button" class="action-btn" id="btnResetChat" title="Clear conversation">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M2 2.5h12M5.5 2.5V1.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1M13 4.5l-.8 9.5a1.5 1.5 0 0 1-1.5 1.5H5.3a1.5 1.5 0 0 1-1.5-1.5L3 4.5"/>
           </svg>
         </button>
+        <!-- Settings Toggle -->
+        <button type="button" class="action-btn" id="btnOpenSettings" title="Settings">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="8" cy="8" r="2.5"/>
+            <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06"/>
+          </svg>
+        </button>
       </div>
     </header>
 
-    <!-- DB Profiles Popover -->
+    <!-- ══════════════════════════════
+         COMPACT / MINIMISED BAR
+         (shown when compact mode is on)
+    ══════════════════════════════ -->
+    <div class="compact-bar hidden" id="compactBar">
+      <div class="compact-left">
+        <div class="brand-mark" style="width:22px;height:22px;border-radius:6px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:11px;height:11px;">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+          </svg>
+        </div>
+        <span style="font-size:11.5px;font-weight:700;color:var(--text);">QueryCraft</span>
+        <span class="compact-db-badge" id="compactDbLabel">Demo DB</span>
+      </div>
+      <div class="compact-right">
+        <button type="button" class="compact-action" id="btnCompactChat" title="Open Chat">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H2a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h2v3l3-3h7a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/></svg>
+          Chat
+        </button>
+        <button type="button" class="compact-action" id="btnCompactExpand" title="Expand">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 10l-3 3M2 7v6h6M11 6l3-3M14 9V3H8"/></svg>
+          Expand
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         DB PROFILES POPOVER
+    ══════════════════════════════ -->
     <div class="popover hidden" id="dbDropdownMenu">
       <div class="popover-header">
         <span>Active Connections</span>
@@ -61,144 +106,423 @@
       </button>
     </div>
 
-    <!-- VIEW 1: Chat Stream -->
-    <main class="view-panel active" id="tabChat">
-      
-      <!-- Minimalist Welcome State -->
-      <div class="empty-state" id="welcomeState">
-        <div class="empty-icon-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <ellipse cx="12" cy="5" rx="9" ry="3"/>
-            <path d="M3 5v14a9 3 0 0 0 18 0V5"/>
-            <path d="M3 12a9 3 0 0 0 18 0"/>
-          </svg>
-        </div>
-        <h2 class="empty-title">PostgreSQL Query Engine</h2>
-        <p class="empty-desc">
-          Grounded on <span id="welcomeDbName" class="font-medium text-white">Demo DB</span> schema. Ambiguous metrics and filters are clarified automatically.
-        </p>
+    <!-- ══════════════════════════════
+         MAIN CONTENT AREA
+    ══════════════════════════════ -->
+    <div class="main-content" id="mainContent">
 
-        <!-- Minimal Quick Starters -->
-        <div class="quick-prompts">
-          <div class="prompts-label">Quick Starters</div>
-          <div class="prompts-list">
-            <button type="button" class="prompt-chip" data-prompt="Show top 5 customers by total order spend in 2024">
-              <span class="chip-badge">Ambiguous</span>
-              <span class="chip-query">Top 5 customers by spend in 2024</span>
-            </button>
-            <button type="button" class="prompt-chip" data-prompt="Find completed orders from the last 7 days with customer names and total amount">
-              <span class="chip-badge">Joins</span>
-              <span class="chip-query">Completed orders in last 7 days</span>
-            </button>
-            <button type="button" class="prompt-chip" data-prompt="List available products with stock quantity below 20 ordered by price ASC">
-              <span class="chip-badge">Filter</span>
-              <span class="chip-query">Low stock products below 20</span>
-            </button>
-            <button type="button" class="prompt-chip" data-prompt="Calculate total revenue generated per payment method in 2024">
-              <span class="chip-badge">Group By</span>
-              <span class="chip-query">Revenue by payment method</span>
-            </button>
+      <!-- VIEW 1: Chat Stream -->
+      <main class="view-panel active" id="tabChat">
+
+        <!-- Minimalist Welcome State -->
+        <div class="empty-state" id="welcomeState">
+          <div class="empty-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M3 5v14a9 3 0 0 0 18 0V5"/>
+              <path d="M3 12a9 3 0 0 0 18 0"/>
+            </svg>
           </div>
-        </div>
-      </div>
+          <h2 class="empty-title">PostgreSQL Query Engine</h2>
+          <p class="empty-desc">
+            Grounded on <span id="welcomeDbName" class="font-medium text-white">Demo DB</span> schema with <strong>Self-Healing Critic</strong> &amp; <strong>Visual Charts</strong>.
+          </p>
 
-      <!-- Messages Stream -->
-      <div class="message-stream hidden" id="messagesFeed">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <!-- Live Query Results Drawer -->
-      <div class="results-drawer hidden" id="queryResultsDrawer">
-        <div class="results-bar">
-          <div class="results-title">
-            <span class="results-dot"></span>
-            <span>Query Results</span>
-            <span class="results-count" id="resultRowCount">0 rows</span>
-          </div>
-          <div class="results-actions">
-            <button type="button" class="drawer-btn" id="btnExportCsv" title="Copy as CSV">CSV</button>
-            <button type="button" class="drawer-btn close" id="btnCloseResults">✕</button>
-          </div>
-        </div>
-        <div class="results-table-wrap" id="queryResultsContent">
-          <!-- Table -->
-        </div>
-      </div>
-
-    </main>
-
-    <!-- VIEW 2: Schema Explorer -->
-    <section class="view-panel hidden" id="tabSchema">
-      <div class="search-box">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="7" cy="7" r="5"/>
-          <path d="m11 11 3.5 3.5"/>
-        </svg>
-        <input type="text" id="inputSchemaSearch" placeholder="Filter tables or columns..." />
-        <button type="button" class="text-btn" id="btnToggleAllTables">Expand All</button>
-      </div>
-
-      <div class="schema-list" id="schemaTablesContainer">
-        <!-- Tables rendered dynamically -->
-      </div>
-    </section>
-
-    <!-- VIEW 3: DB Connections Manager -->
-    <section class="view-panel hidden" id="tabDatabases">
-      
-      <div class="panel-section">
-        <div class="section-heading">
-          <h3>Add Database Profile</h3>
-        </div>
-
-        <form id="formAddDb" class="clean-form">
-          <div class="field-row">
-            <label>Name</label>
-            <input type="text" id="inputProfileName" required placeholder="e.g. Supabase Prod, Neon DB" />
-          </div>
-
-          <div class="field-row">
-            <label>Provider Preset</label>
-            <div class="presets-row">
-              <button type="button" class="preset-btn" data-uri="postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres">Supabase</button>
-              <button type="button" class="preset-btn" data-uri="postgresql://[USER]:[PASSWORD]@ep-[ID].region.aws.neon.tech/neondb?sslmode=require">Neon</button>
-              <button type="button" class="preset-btn" data-uri="postgresql://[USER]:[PASSWORD]@[ENDPOINT].rds.amazonaws.com:5432/[DBNAME]">RDS</button>
-              <button type="button" class="preset-btn" data-uri="postgresql://postgres:postgres@localhost:5432/postgres">Local</button>
+          <div class="quick-prompts">
+            <div class="prompts-label">Suggested Prompts</div>
+            <div class="prompts-list">
+              <button type="button" class="prompt-chip" data-prompt="Show top 5 customers by total order spend in 2024">
+                <span class="chip-badge">Ambiguous</span>
+                <span class="chip-query">Top 5 customers by spend in 2024</span>
+              </button>
+              <button type="button" class="prompt-chip" data-prompt="Show daily completed order revenue for the last 30 days as a trend chart">
+                <span class="chip-badge">Chart Trend</span>
+                <span class="chip-query">Daily revenue trend (last 30 days)</span>
+              </button>
+              <button type="button" class="prompt-chip" data-prompt="List available products with stock quantity below 20 ordered by price ASC">
+                <span class="chip-badge">Filter</span>
+                <span class="chip-query">Low stock products below 20</span>
+              </button>
+              <button type="button" class="prompt-chip" data-prompt="Calculate total revenue generated per payment method in 2024">
+                <span class="chip-badge">Group By</span>
+                <span class="chip-query">Revenue by payment method</span>
+              </button>
             </div>
           </div>
-
-          <div class="field-row">
-            <label>Connection String</label>
-            <div class="uri-input-wrap">
-              <input type="password" id="inputConnectionUri" required placeholder="postgresql://user:pass@host:5432/db" />
-              <button type="button" class="eye-toggle" id="btnToggleUriEye">👁</button>
-            </div>
-          </div>
-
-          <button type="submit" class="submit-btn" id="btnConnectProfile">
-            Connect &amp; Introspect
-          </button>
-        </form>
-      </div>
-
-      <div class="panel-section">
-        <div class="section-heading">
-          <h3>Saved Databases (<span id="savedCount">1</span>)</h3>
         </div>
-        <div class="saved-dbs-list" id="savedProfilesList">
+
+        <!-- Messages Stream -->
+        <div class="message-stream hidden" id="messagesFeed">
           <!-- Rendered dynamically -->
         </div>
+
+        <!-- Query Results Drawer -->
+        <div class="results-drawer hidden" id="queryResultsDrawer">
+          <div class="results-bar">
+            <div class="results-title">
+              <span class="results-dot"></span>
+              <span>Query Results</span>
+              <span class="results-count" id="resultRowCount">0 rows</span>
+            </div>
+            <div class="results-actions">
+              <div class="view-toggle-wrap">
+                <button type="button" class="toggle-btn active" id="btnViewTable">Table</button>
+                <button type="button" class="toggle-btn" id="btnViewChart">Chart</button>
+              </div>
+              <button type="button" class="drawer-btn" id="btnExportCsv" title="Copy as CSV">CSV</button>
+              <button type="button" class="drawer-btn close" id="btnCloseResults">✕</button>
+            </div>
+          </div>
+          <div class="results-table-wrap" id="queryResultsContent">
+            <!-- Table or Chart rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- EXPLAIN Drawer -->
+        <div class="explain-drawer hidden" id="explainDrawer">
+          <div class="results-bar">
+            <div class="results-title">
+              <span class="results-dot" style="background:#3b82f6;"></span>
+              <span>EXPLAIN Performance Guard</span>
+            </div>
+            <button type="button" class="drawer-btn close" id="btnCloseExplain">✕</button>
+          </div>
+          <div class="explain-body" id="explainContent">
+            <!-- Plan rendered dynamically -->
+          </div>
+        </div>
+
+      </main>
+
+      <!-- VIEW 2: Schema Explorer -->
+      <section class="view-panel hidden" id="tabSchema">
+        <div class="search-box">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="7" cy="7" r="5"/>
+            <path d="m11 11 3.5 3.5"/>
+          </svg>
+          <input type="text" id="inputSchemaSearch" placeholder="Filter tables or columns..." />
+          <button type="button" class="text-btn" id="btnToggleAllTables">Expand All</button>
+        </div>
+        <div class="schema-list" id="schemaTablesContainer">
+          <!-- Tables rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- VIEW 3: Semantic Metrics Layer -->
+      <section class="view-panel hidden" id="tabMetrics">
+        <div class="panel-section">
+          <div class="section-heading"><h3>Teach AI Business Rule</h3></div>
+          <form id="formTeachAi" class="clean-form">
+            <div class="field-row">
+              <label>Instruction</label>
+              <textarea id="inputTeachInstruction" rows="2" placeholder="e.g. Consider VIP Customer as anyone with total spend > 1000"></textarea>
+            </div>
+            <button type="submit" class="submit-btn" id="btnSubmitTeach">
+              Teach &amp; Save Rule
+            </button>
+          </form>
+        </div>
+        <div class="panel-section">
+          <div class="section-heading">
+            <h3>Active Business Rules (<span id="metricsCount">4</span>)</h3>
+          </div>
+          <div class="saved-dbs-list" id="metricsListContainer">
+            <!-- Metrics rendered dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: DB Connections Manager -->
+      <section class="view-panel hidden" id="tabDatabases">
+        <div class="panel-section">
+          <div class="section-heading"><h3>Add Database Profile</h3></div>
+          <form id="formAddDb" class="clean-form">
+            <div class="field-row">
+              <label>Name</label>
+              <input type="text" id="inputProfileName" required placeholder="e.g. Supabase Prod, Neon DB" />
+            </div>
+            <div class="field-row">
+              <label>Provider Preset</label>
+              <div class="presets-row">
+                <button type="button" class="preset-btn" data-uri="postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres">Supabase</button>
+                <button type="button" class="preset-btn" data-uri="postgresql://[USER]:[PASSWORD]@ep-[ID].region.aws.neon.tech/neondb?sslmode=require">Neon</button>
+                <button type="button" class="preset-btn" data-uri="postgresql://[USER]:[PASSWORD]@[ENDPOINT].rds.amazonaws.com:5432/[DBNAME]">RDS</button>
+                <button type="button" class="preset-btn" data-uri="postgresql://postgres:postgres@localhost:5432/postgres">Local</button>
+              </div>
+            </div>
+            <div class="field-row">
+              <label>Connection String</label>
+              <div class="uri-input-wrap">
+                <input type="password" id="inputConnectionUri" required placeholder="postgresql://user:pass@host:5432/db" />
+                <button type="button" class="eye-toggle" id="btnToggleUriEye">👁</button>
+              </div>
+            </div>
+            <button type="submit" class="submit-btn" id="btnConnectProfile">
+              Connect &amp; Introspect
+            </button>
+          </form>
+        </div>
+        <div class="panel-section">
+          <div class="section-heading">
+            <h3>Saved Databases (<span id="savedCount">1</span>)</h3>
+          </div>
+          <div class="saved-dbs-list" id="savedProfilesList">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /main-content -->
+
+    <!-- ══════════════════════════════
+         SETTINGS SIDEBAR (SLIDE-IN)
+    ══════════════════════════════ -->
+    <div class="settings-overlay hidden" id="settingsOverlay"></div>
+    <aside class="settings-sidebar hidden" id="settingsSidebar">
+
+      <!-- Sidebar Header -->
+      <div class="settings-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="brand-mark" style="width:24px;height:24px;border-radius:7px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px;">
+              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+            </svg>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:var(--text);">Settings</span>
+        </div>
+        <button type="button" class="settings-close-btn" id="btnCloseSettings">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3 3 13"/></svg>
+        </button>
       </div>
 
-    </section>
+      <!-- Sidebar Nav -->
+      <nav class="settings-nav">
+        <button type="button" class="settings-nav-item active" data-settings-tab="account">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 15c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+          Account
+        </button>
+        <button type="button" class="settings-nav-item" data-settings-tab="usage">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 13V5h4v8M6 13V2h4v11M11 13V7h4v6"/></svg>
+          Usage
+        </button>
+        <button type="button" class="settings-nav-item" data-settings-tab="billing">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M1 7h14"/></svg>
+          Billing
+        </button>
+        <button type="button" class="settings-nav-item" data-settings-tab="preferences">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h6M10 5h4M2 11h4M8 11h6M8 3v4M6 9v4"/></svg>
+          Preferences
+        </button>
+      </nav>
 
-    <!-- Minimal Floating Command / Input Bar (Chat Tab) -->
+      <!-- Sidebar Panels -->
+      <div class="settings-body">
+
+        <!-- Account Panel -->
+        <div class="settings-panel active" id="settingsTabAccount">
+          <div class="settings-section">
+            <div class="settings-avatar">QC</div>
+            <div style="text-align:center;">
+              <p style="font-size:13px;font-weight:700;color:var(--text);" id="settingsDisplayName">QueryCraft User</p>
+              <p style="font-size:11px;color:var(--text-3);margin-top:2px;" id="settingsUserEmail">demo@querycraft.dev</p>
+            </div>
+            <div class="settings-badge">Free Plan</div>
+          </div>
+
+          <div class="settings-section" style="gap:6px;">
+            <p class="settings-label">Display Name</p>
+            <input type="text" class="settings-input" id="inputDisplayName" placeholder="Your name" value="QueryCraft User" />
+            <p class="settings-label" style="margin-top:6px;">Email</p>
+            <input type="email" class="settings-input" id="inputEmail" placeholder="you@example.com" value="demo@querycraft.dev" />
+            <button type="button" class="settings-save-btn" id="btnSaveAccount">Save Changes</button>
+          </div>
+
+          <div class="settings-section" style="gap:6px;">
+            <p class="settings-label">Danger Zone</p>
+            <button type="button" class="settings-danger-btn">Clear All Data &amp; Reset Extension</button>
+          </div>
+        </div>
+
+        <!-- Usage Panel -->
+        <div class="settings-panel" id="settingsTabUsage">
+          <div class="settings-section">
+            <p class="settings-section-title">This Month's Usage</p>
+            <div class="usage-stat-grid">
+              <div class="usage-stat">
+                <span class="usage-num" id="usageQueries">0</span>
+                <span class="usage-lbl">Queries Run</span>
+              </div>
+              <div class="usage-stat">
+                <span class="usage-num" id="usageHeals">0</span>
+                <span class="usage-lbl">Auto-Heals</span>
+              </div>
+              <div class="usage-stat">
+                <span class="usage-num" id="usageVerified">0</span>
+                <span class="usage-lbl">Verified SQL</span>
+              </div>
+              <div class="usage-stat">
+                <span class="usage-num" id="usageDbs">0</span>
+                <span class="usage-lbl">DBs Connected</span>
+              </div>
+            </div>
+          </div>
+          <div class="settings-section">
+            <p class="settings-section-title">Query Quota</p>
+            <div class="quota-bar-wrap">
+              <div class="quota-bar">
+                <div class="quota-fill" id="quotaFill" style="width:0%;"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-top:4px;">
+                <span id="quotaUsed">0 queries used</span>
+                <span>500 / month (Free)</span>
+              </div>
+            </div>
+          </div>
+          <div class="settings-section">
+            <p class="settings-section-title">Connected Databases</p>
+            <div id="usageDbList" style="display:flex;flex-direction:column;gap:4px;">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Billing Panel -->
+        <div class="settings-panel" id="settingsTabBilling">
+          <div class="settings-section">
+            <p class="settings-section-title">Current Plan</p>
+            <div class="billing-plan-card free">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:14px;font-weight:700;color:var(--text);">Free Plan</span>
+                <span class="settings-badge">Active</span>
+              </div>
+              <ul class="billing-features">
+                <li>✓ 500 AI queries / month</li>
+                <li>✓ Up to 3 database profiles</li>
+                <li>✓ Self-Healing Critic engine</li>
+                <li>✓ EXPLAIN Performance Guard</li>
+                <li>✗ Verified Memory (unlimited)</li>
+                <li>✗ Custom metric glossary export</li>
+              </ul>
+            </div>
+          </div>
+          <div class="settings-section">
+            <p class="settings-section-title">Upgrade to Pro</p>
+            <div class="billing-plan-card pro">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:14px;font-weight:700;color:var(--text);">Pro Plan</span>
+                <span style="font-size:12px;font-weight:700;color:var(--accent);">$9/mo</span>
+              </div>
+              <ul class="billing-features">
+                <li>✓ Unlimited AI queries</li>
+                <li>✓ Unlimited database profiles</li>
+                <li>✓ Priority backend access</li>
+                <li>✓ Full Verified SQL memory</li>
+                <li>✓ Metric glossary export (JSON/CSV)</li>
+                <li>✓ Team workspace sharing</li>
+              </ul>
+              <button type="button" class="settings-save-btn" style="margin-top:8px;">Upgrade — $9/month</button>
+            </div>
+          </div>
+          <div class="settings-section">
+            <p class="settings-label">Payment Method</p>
+            <div style="font-size:11.5px;color:var(--text-3);padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:7px;text-align:center;">
+              No payment method on file.<br/>Upgrade above to add one.
+            </div>
+          </div>
+        </div>
+
+        <!-- Preferences Panel -->
+        <div class="settings-panel" id="settingsTabPreferences">
+
+          <!-- Keyboard Shortcuts Section -->
+          <div class="settings-section">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <p class="settings-section-title">Keyboard Shortcuts</p>
+              <button type="button" class="tiny-link-btn" id="btnResetShortcuts">Reset All</button>
+            </div>
+            
+            <!-- Global Chrome Shortcut Card -->
+            <div class="chrome-shortcut-card">
+              <div style="min-width:0;">
+                <span style="font-size:11.5px;font-weight:700;color:var(--text);display:block;">Open Extension Popup</span>
+                <span style="font-size:10px;color:var(--text-3);">Global browser hotkey: <strong style="color:var(--accent);">Alt+Q / ⌥Q</strong></span>
+              </div>
+              <button type="button" class="btn-chrome-shortcuts" id="btnOpenChromeShortcuts" title="Configure in Chrome Settings">
+                Customize ↗
+              </button>
+            </div>
+
+            <p style="font-size:10px;color:var(--text-3);margin-top:4px;">
+              In-App Navigation & Actions:
+            </p>
+
+            <div class="shortcuts-list" id="shortcutsList">
+              <!-- Rendered dynamically with Edit buttons -->
+            </div>
+          </div>
+
+          <!-- API Endpoint -->
+          <div class="settings-section">
+            <p class="settings-section-title">Backend API</p>
+            <div class="field-row" style="margin-bottom:0;">
+              <label>API Base URL</label>
+              <input type="text" class="settings-input" id="inputApiBase" placeholder="http://127.0.0.1:8000" />
+            </div>
+            <button type="button" class="settings-save-btn" id="btnSaveApiBase" style="margin-top:6px;">Save URL</button>
+          </div>
+
+          <!-- Theme -->
+          <div class="settings-section">
+            <p class="settings-section-title">Appearance</p>
+            <div class="pref-row">
+              <span class="pref-label">Theme</span>
+              <div style="display:flex;gap:5px;">
+                <button type="button" class="pref-chip active" data-theme="dark">Dark</button>
+                <button type="button" class="pref-chip" data-theme="dim">Dim</button>
+                <button type="button" class="pref-chip" data-theme="light">Light</button>
+              </div>
+            </div>
+            <div class="pref-row">
+              <span class="pref-label">Font Size</span>
+              <div style="display:flex;gap:5px;">
+                <button type="button" class="pref-chip active" data-fontsize="12">S</button>
+                <button type="button" class="pref-chip" data-fontsize="13">M</button>
+                <button type="button" class="pref-chip" data-fontsize="14">L</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Auto-start compact mode -->
+          <div class="settings-section">
+            <p class="settings-section-title">Startup</p>
+            <div class="pref-row">
+              <span class="pref-label">Launch in compact mode</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="prefCompactOnStart" />
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+            <div class="pref-row">
+              <span class="pref-label">Auto-focus input on open</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="prefAutoFocus" checked />
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /settings-body -->
+    </aside>
+
+    <!-- Input Dock -->
     <footer class="dock-footer" id="appFooter">
       <div class="command-bar">
-        <textarea 
-          id="userPromptInput" 
-          rows="1" 
-          placeholder="Ask a question or clarify query..."
+        <textarea
+          id="userPromptInput"
+          rows="1"
+          placeholder="Ask or clarify your SQL query…"
         ></textarea>
         <button type="button" class="send-btn" id="btnSendPrompt" title="Send (Enter)">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
@@ -208,9 +532,111 @@
       </div>
       <div class="dock-meta">
         <span class="meta-status" id="serverStatusText">127.0.0.1:8000</span>
-        <span class="meta-hint">Enter ↵ • Shift+Enter ↵ for line</span>
+        <span class="meta-hint" id="shortcutHint">Enter ↵ · Shift+Enter for line</span>
       </div>
     </footer>
+
+    <!-- ══════════════════════════════
+         SHORTCUT REBIND MODAL
+    ══════════════════════════════ -->
+    <div class="shortcut-modal-overlay hidden" id="shortcutModalOverlay">
+      <div class="shortcut-modal-card">
+        <div class="shortcut-modal-header">
+          <span style="font-size:12.5px;font-weight:700;color:var(--text);" id="modalShortcutLabel">Change Shortcut</span>
+          <button type="button" class="drawer-btn close" id="btnCloseShortcutModal">✕</button>
+        </div>
+
+        <div class="shortcut-modal-body">
+          <p style="font-size:11px;color:var(--text-3);line-height:1.4;">
+            Press keys on your keyboard to record, or choose modifier &amp; key manually below:
+          </p>
+
+          <!-- Key Recording Area -->
+          <div class="key-recorder-box" id="keyRecorderBox" tabindex="0">
+            <span class="recorder-icon">⌨️</span>
+            <span class="recorder-text" id="keyRecorderText">Click here &amp; press keys...</span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:6px;margin:6px 0;">
+            <div style="flex:1;height:1px;background:var(--border);"></div>
+            <span style="font-size:9.5px;color:var(--text-3);text-transform:uppercase;">or select manually</span>
+            <div style="flex:1;height:1px;background:var(--border);"></div>
+          </div>
+
+          <!-- Manual Modifier & Key Selectors -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div class="field-row" style="margin:0;">
+              <label>Modifier</label>
+              <select class="settings-input" id="selectShortcutMod" style="height:30px;padding:2px 6px;">
+                <option value="Cmd">Cmd / Ctrl</option>
+                <option value="Alt">Alt / Option</option>
+                <option value="Shift">Shift</option>
+                <option value="">None (Key Only)</option>
+              </select>
+            </div>
+            <div class="field-row" style="margin:0;">
+              <label>Key</label>
+              <select class="settings-input" id="selectShortcutKey" style="height:30px;padding:2px 6px;">
+                <option value="K">K</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="M">M</option>
+                <option value=",">,</option>
+                <option value="Backspace">Backspace</option>
+                <option value="Escape">Escape</option>
+                <option value="Enter">Enter</option>
+                <option value="Space">Space</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+                <option value="G">G</option>
+                <option value="H">H</option>
+                <option value="I">I</option>
+                <option value="J">J</option>
+                <option value="L">L</option>
+                <option value="N">N</option>
+                <option value="O">O</option>
+                <option value="P">P</option>
+                <option value="Q">Q</option>
+                <option value="R">R</option>
+                <option value="S">S</option>
+                <option value="T">T</option>
+                <option value="U">U</option>
+                <option value="V">V</option>
+                <option value="W">W</option>
+                <option value="X">X</option>
+                <option value="Y">Y</option>
+                <option value="Z">Z</option>
+                <option value="F1">F1</option>
+                <option value="F2">F2</option>
+                <option value="F3">F3</option>
+                <option value="F4">F4</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Preview & Action buttons -->
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px 10px;margin-top:6px;">
+            <span style="font-size:11px;color:var(--text-3);">Preview:</span>
+            <span class="key-badge" id="modalPreviewBadge" style="font-size:12px;padding:2px 8px;">Cmd+K</span>
+          </div>
+
+          <div style="display:flex;gap:6px;margin-top:8px;">
+            <button type="button" class="settings-save-btn" id="btnSaveModalShortcut" style="flex:1;">
+              Save Shortcut
+            </button>
+            <button type="button" class="compact-action" id="btnCancelModalShortcut">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div>
 

@@ -4,6 +4,8 @@ from app.Models.schema import (
     DBConnectResponse,
     ExecuteQueryRequest,
     ExecuteQueryResponse,
+    ExplainPlanRequest,
+    ExplainPlanResponse,
 )
 from app.services.db_service import (
     test_db_connection,
@@ -11,6 +13,7 @@ from app.services.db_service import (
     execute_read_only_query,
     parse_connection_info,
 )
+from app.services.explain_service import run_explain_plan
 
 router = APIRouter(
     prefix="/api/database",
@@ -37,7 +40,6 @@ def connect_and_introspect(request: DBConnectRequest):
     """
     uri = request.connection_uri.strip()
     try:
-        # Introspect schema
         table_infos, schema_sql = introspect_cloud_database(uri)
         conn_info = parse_connection_info(uri)
 
@@ -59,18 +61,39 @@ def connect_and_introspect(request: DBConnectRequest):
 def execute_query(request: ExecuteQueryRequest):
     """
     Safely executes a read-only SELECT query against the connected cloud PostgreSQL database.
+    Automatically self-heals failing queries if auto_heal=True.
     """
     try:
         result = execute_read_only_query(
             connection_uri=request.connection_uri.strip(),
             sql_query=request.sql_query.strip(),
-            limit=request.limit or 50
+            limit=request.limit or 50,
+            auto_heal=request.auto_heal if request.auto_heal is not None else True,
+            user_prompt=request.user_prompt,
+            live_schema=request.live_schema
         )
         return ExecuteQueryResponse(
             status="success",
             columns=result.get("columns", []),
             rows=result.get("rows", []),
-            row_count=result.get("row_count", 0)
+            row_count=result.get("row_count", 0),
+            healing_info=result.get("healing_info")
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Execution error: {str(e)}")
+
+
+@router.post("/explain", response_model=ExplainPlanResponse)
+def explain_query(request: ExplainPlanRequest):
+    """
+    Executes PostgreSQL EXPLAIN (FORMAT JSON, COSTS TRUE) in a dry-run transaction
+    to estimate execution cost, scan types, and recommend indexes.
+    """
+    try:
+        result = run_explain_plan(
+            connection_uri=request.connection_uri.strip(),
+            sql_query=request.sql_query.strip()
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Explain plan evaluation failed: {str(e)}")

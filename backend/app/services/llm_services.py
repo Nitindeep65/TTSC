@@ -10,6 +10,7 @@ from app.Models.schema import (
     SchemaInfoResponse,
     TableInfo,
     ColumnInfo,
+    VisualIntent,
 )
 from dotenv import load_dotenv
 
@@ -156,9 +157,63 @@ def get_llm_client() -> OpenAI:
     return OpenAI(base_url=base_url, api_key=api_key, timeout=30.0)
 
 
-def build_system_prompt(live_schema: Optional[str] = None) -> str:
+def detect_visual_intent(prompt: str) -> VisualIntent:
+    """NLP intent detector for visual keywords (chart, graph, plot, trend, breakdown, etc.)."""
+    p_lower = prompt.lower()
+    
+    # Check for visual keywords
+    visual_keywords = [
+        "chart", "graph", "plot", "visualize", "visualization",
+        "trend", "timeline", "breakdown", "distribution",
+        "bar chart", "line chart", "pie chart", "area chart", "donut"
+    ]
+    should_visualize = any(kw in p_lower for kw in visual_keywords)
+    
+    recommended_chart = "table"
+    if "line" in p_lower or "trend" in p_lower or "over time" in p_lower or "daily" in p_lower or "monthly" in p_lower:
+        recommended_chart = "line"
+    elif "pie" in p_lower or "donut" in p_lower or "share" in p_lower or "proportion" in p_lower:
+        recommended_chart = "pie"
+    elif "area" in p_lower:
+        recommended_chart = "area"
+    elif "bar" in p_lower or "breakdown" in p_lower or "compare" in p_lower or "by category" in p_lower:
+        recommended_chart = "bar"
+    elif should_visualize:
+        recommended_chart = "bar"
+
+    return VisualIntent(
+        should_visualize=should_visualize,
+        recommended_chart=recommended_chart,
+        title="Query Visualization"
+    )
+
+
+def build_system_prompt(
+    live_schema: Optional[str] = None,
+    matched_metrics: Optional[List[Any]] = None,
+    few_shot_examples: Optional[List[Any]] = None
+) -> str:
     schema_to_use = live_schema if live_schema and live_schema.strip() else LIVE_DATABASE_SCHEMA_SQL
     
+    # 1. Semantic Business Rules Section
+    metrics_section = ""
+    if matched_metrics and len(matched_metrics) > 0:
+        lines = ["\n### RELEVANT BUSINESS METRIC DEFINITIONS & RULES:"]
+        for m in matched_metrics:
+            formula_str = f" (Formula: {m.sql_formula})" if m.sql_formula else ""
+            lines.append(f"- **{m.name}**: {m.definition}{formula_str}")
+        metrics_section = "\n".join(lines) + "\n"
+
+    # 2. Few-Shot Verified Examples Section
+    few_shot_section = ""
+    if few_shot_examples and len(few_shot_examples) > 0:
+        lines = ["\n### VERIFIED GOLD-STANDARD FEW-SHOT EXAMPLES:"]
+        for ex in few_shot_examples:
+            lines.append(f"Prompt: \"{ex.user_prompt}\"")
+            lines.append(f"SQL: {ex.verified_sql}")
+            lines.append("")
+        few_shot_section = "\n".join(lines) + "\n"
+
     return f"""You are an expert Text-to-SQL Clarification and Query Engine specializing in cloud PostgreSQL environments (Supabase, Neon, AWS RDS). 
 
 Your objective is to analyze user requests, evaluate conversational context, clarify ambiguities, and generate safe, optimized, production-ready PostgreSQL queries based strictly on the live schema provided via MCP.
@@ -168,7 +223,8 @@ Your objective is to analyze user requests, evaluate conversational context, cla
 ### INPUT CONTEXT PROVIDED
 - LIVE DATABASE SCHEMA: Live tables, column names, data types, and constraints retrieved from the connected cloud database.
 {schema_to_use}
-
+{metrics_section}
+{few_shot_section}
 ---
 
 ### CORE EVALUATION RULES
@@ -176,7 +232,7 @@ Your objective is to analyze user requests, evaluate conversational context, cla
 1. SCHEMA GROUNDING (ZERO HALLUCINATION):
    - Only reference tables and columns explicitly present in the provided schema.
    - Respect PostgreSQL data types (e.g., UUID, TIMESTAMPTZ, JSONB, NUMERIC). Cast types explicitly when necessary (e.g., column::date or column::text, json_column->>'key').
-   - If the user asks for data stored in columns or tables that do not exist, treat this as an ambiguity and ask for clarification.
+   - Strictly adhere to any Business Metric definitions provided above.
 
 2. CLARIFICATION CRITERIA (WHEN TO PAUSE SQL GENERATION):
    - Set "status" to "needs_clarification" if any of the following are missing or ambiguous:
@@ -215,7 +271,6 @@ def sanitize_and_parse_json(raw_text: str) -> Dict[str, Any]:
     """Cleans markdown wrappers, extracts JSON object, and parses securely."""
     text = raw_text.strip()
     
-    # Remove markdown code block fences if present
     if text.startswith("```"):
         text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
         text = re.sub(r"\s*```$", "", text)
@@ -224,7 +279,6 @@ def sanitize_and_parse_json(raw_text: str) -> Dict[str, Any]:
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        # Attempt regex extraction of outermost JSON object
         match = re.search(r"\{.*\}", text, re.DOTALL)
         if match:
             return json.loads(match.group(0))
@@ -235,7 +289,6 @@ def validate_and_enforce_sql_safety(sql_query: str) -> str:
     """Enforces read-only PostgreSQL execution and safety constraints."""
     query = sql_query.strip()
     
-    # Disallow destructive/modifying SQL keywords
     disallowed_patterns = [
         r"\bINSERT\s+INTO\b",
         r"\bUPDATE\s+\w+\s+SET\b",
@@ -253,15 +306,12 @@ def validate_and_enforce_sql_safety(sql_query: str) -> str:
         if re.search(pattern, query, re.IGNORECASE):
             raise ValueError(f"Dangerous operation detected in generated query matching '{pattern}'. Only SELECT queries are permitted.")
             
-    # Query must begin with SELECT or WITH
     if not (re.match(r"^\s*(?:SELECT|WITH)\b", query, re.IGNORECASE)):
         raise ValueError("Generated query is not a valid SELECT statement.")
         
-    # Enforce LIMIT on list queries if not already present and not an aggregation-only without GROUP BY
     is_pure_scalar_agg = bool(re.search(r"^\s*SELECT\s+(?:COUNT|SUM|AVG|MIN|MAX)\(", query, re.IGNORECASE) and not re.search(r"\bGROUP\s+BY\b", query, re.IGNORECASE))
     
     if not is_pure_scalar_agg and not re.search(r"\bLIMIT\s+\d+\b", query, re.IGNORECASE):
-        # If query ends with semicolon, insert LIMIT before semicolon
         if query.endswith(";"):
             query = query[:-1].rstrip() + " LIMIT 50;"
         else:
@@ -277,22 +327,36 @@ def evaluate_user_intent(
 ) -> ClarificationResponse:
     """
     Evaluates conversational context against the cloud PostgreSQL schema,
-    clarifies ambiguities, or produces a complete, validated SQL query.
+    applies RAG semantic metrics and few-shot verified queries, and returns validated SQL.
     """
     if session_history is None:
         session_history = []
 
-    system_prompt = build_system_prompt(live_schema)
+    # 1. Detect NLP Visual Intent
+    visual_intent = detect_visual_intent(user_prompt)
+
+    # 2. Retrieve Semantic Business Metrics via RAG
+    from app.services.semantic_service import find_matching_metrics
+    from app.services.memory_service import find_relevant_few_shot_examples
+
+    matched_metrics = find_matching_metrics(user_prompt, top_k=3)
+    few_shot_examples = find_relevant_few_shot_examples(user_prompt, top_k=2)
+
+    # 3. Build System Prompt with injected context
+    system_prompt = build_system_prompt(
+        live_schema=live_schema,
+        matched_metrics=matched_metrics,
+        few_shot_examples=few_shot_examples
+    )
+    
     messages = [{"role": "system", "content": system_prompt}]
 
-    # Reconstruct valid conversation history
     for item in session_history:
         role = item.get("role")
         content = item.get("content")
         if role in ["user", "assistant"] and content:
             messages.append({"role": role, "content": str(content)})
 
-    # Append current user prompt
     messages.append({"role": "user", "content": user_prompt})
 
     client = get_llm_client()
@@ -310,14 +374,12 @@ def evaluate_user_intent(
         raw_content = response.choices[0].message.content
         parsed_data = sanitize_and_parse_json(raw_content)
 
-        # Validate response schema
         status = parsed_data.get("status", "needs_clarification")
         message = parsed_data.get("message", "Could you please clarify your request?")
         extracted_data_raw = parsed_data.get("extracted_data")
 
         if status == "complete" and extracted_data_raw:
             sql_query = extracted_data_raw.get("sql_query", "")
-            # Apply safety guardrails and LIMIT enforcement
             safe_sql = validate_and_enforce_sql_safety(sql_query)
             tables = extracted_data_raw.get("tables_identified", [])
             explanation = extracted_data_raw.get("explanation", "")
@@ -325,18 +387,22 @@ def evaluate_user_intent(
             extracted_data = ExtractedSQLData(
                 sql_query=safe_sql,
                 tables_identified=tables,
-                explanation=explanation
+                explanation=explanation,
+                visual_intent=visual_intent,
+                matched_metrics=[m.name for m in matched_metrics]
             )
             return ClarificationResponse(
                 status="complete",
                 message=message,
-                extracted_data=extracted_data
+                extracted_data=extracted_data,
+                visual_intent=visual_intent
             )
         else:
             return ClarificationResponse(
                 status="needs_clarification",
                 message=message,
-                extracted_data=None
+                extracted_data=None,
+                visual_intent=visual_intent
             )
 
     except Exception as e:
@@ -344,5 +410,6 @@ def evaluate_user_intent(
         return ClarificationResponse(
             status="needs_clarification",
             message="I'd be glad to help formulate this query. Could you specify any required date ranges, status filters, or metrics to ensure an accurate query?",
-            extracted_data=None
+            extracted_data=None,
+            visual_intent=visual_intent
         )
