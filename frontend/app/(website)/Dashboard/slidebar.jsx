@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useState } from "react"
 import {
   Sidebar,
   SidebarContent,
@@ -13,32 +14,23 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/Sidebar"
 import {
-  Activity,
-  ArrowRight,
-  BarChart3,
-  Bot,
-  CheckCircle2,
+  ChevronDown,
   ChevronRight,
   Cloud,
-  Cpu,
   Database,
   ExternalLink,
   FolderKanban,
   HardDrive,
-  Home,
-  Layers,
-  Lock,
   LogOut,
   MessageSquareText,
   Plug,
   Plus,
-  Radio,
   RefreshCw,
   Settings,
-  ShieldCheck,
   Sparkles,
+  Table2,
   Terminal,
-  TrendingUp,
+  Unplug,
   Wand2,
   Zap,
 } from "lucide-react"
@@ -46,161 +38,117 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useDatabase } from "@/lib/databaseContext"
 import { useAuth } from "@/lib/authContext"
-import { Badge } from "@/components/ui/badge"
+import { useExtension } from "@/lib/extensionContext"
 import { Button } from "@/components/ui/button"
 
-export function AppSidebar({ onOpenSettings }) {
+const QUICK_STARTERS = [
+  {
+    title: "Top Customers by Spend",
+    tag: "SQL",
+    tagColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    href: "/Dashboard/chat",
+  },
+  {
+    title: "Recent Completed Orders (7d)",
+    tag: "Sales",
+    tagColor: "bg-blue-50 text-blue-700 border-blue-200",
+    href: "/Dashboard/chat",
+  },
+  {
+    title: "Low Inventory Stock Alert",
+    tag: "Ops",
+    tagColor: "bg-amber-50 text-amber-700 border-amber-200",
+    href: "/Dashboard/chat",
+  },
+]
+
+export function AppSidebar({ onOpenSettings, onOpenMetrics }) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
+  const { isInstalled, openModal: openExtensionModal } = useExtension()
   const {
     dbInfo,
     activeWorkspace,
-    workspaces,
-    setActiveWorkspaceId,
     setIsModalOpen,
     setIsWorkspaceModalOpen,
     disconnectDatabase,
   } = useDatabase()
 
-  const workspaceViews = [
+  const [isTablesExpanded, setIsTablesExpanded] = useState(true)
+
+  const navItems = [
     {
       label: "Interactive Chat",
       href: "/Dashboard/chat",
       icon: MessageSquareText,
-      badge: "AI",
-      description: "Clarification engine",
+      badge: "AI Agent",
     },
     {
       label: "Query Compiler",
       href: "/Dashboard",
       icon: Terminal,
-      badge: "SQL",
-      description: "Direct SQL generation",
+      badge: "SQL / MQL",
     },
   ]
 
-  const quickStarters = [
-    {
-      title: "Top Customers by Spend",
-      tag: "Finance",
-      tagColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-      prompt: "Show top 5 customers by total order spend in 2024",
-    },
-    {
-      title: "Low Stock Inventory",
-      tag: "Inventory",
-      tagColor: "bg-amber-50 text-amber-700 border-amber-200",
-      prompt: "List products with stock below 20 units",
-    },
-    {
-      title: "User Retention Cohorts",
-      tag: "Growth",
-      tagColor: "bg-blue-50 text-blue-700 border-blue-200",
-      prompt: "List users registered in last 60 days who haven't ordered yet",
-    },
-    {
-      title: "Recent Completed Orders",
-      tag: "Ops",
-      tagColor: "bg-purple-50 text-purple-700 border-purple-200",
-      prompt: "Completed orders from last 7 days with customer names",
-    },
-  ]
+  const userInitials = (user?.displayName || user?.email || "U")
+    .split(" ")
+    .filter(Boolean)
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "U"
 
   return (
     <Sidebar className="border-r border-[--border] bg-[#f8faf8] text-[#141a17]">
-
-      {/* ── Brand & Workspace Header ── */}
-      <SidebarHeader className="border-b border-[--border] bg-white/90 px-3.5 py-3.5 backdrop-blur-md space-y-3">
-        
-        {/* Main Logo & Engine Status */}
-        <div className="flex items-center justify-between px-1">
+      
+      {/* ── Brand Header ── */}
+      <SidebarHeader className="border-b border-[--border] bg-white px-3.5 py-3">
+        <div className="flex items-center justify-between">
           <Link href="/" className="group flex items-center gap-2.5">
-            <span className="flex size-8.5 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#1b3324] to-[#122218] text-[#4ade80] shadow-sm ring-1 ring-white/15 transition-all duration-200 group-hover:scale-105 group-hover:shadow-md">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#1b3324] text-[#4ade80] shadow-xs ring-1 ring-white/15 transition-transform duration-150 group-hover:scale-105">
               <Sparkles className="size-4" />
             </span>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[13px] font-bold text-[#141a17] tracking-tight leading-none">
+            <div>
+              <div className="flex items-center gap-1.5 leading-none">
+                <span className="text-[13.5px] font-bold text-[#141a17] tracking-tight">
                   QueryCraft
                 </span>
-                <span className="rounded bg-emerald-100/70 border border-emerald-200 px-1 py-0.2 text-[8.5px] font-bold text-emerald-800 uppercase tracking-wide">
-                  v2.0
+                <span className="rounded bg-emerald-100/70 border border-emerald-200/80 px-1 py-0.2 text-[8px] font-bold text-emerald-800 uppercase">
+                  Studio
                 </span>
               </div>
-              <span className="block mt-0.5 text-[10px] font-semibold text-[#667e71] leading-tight truncate">
-                PostgreSQL Studio
+              <span className="block mt-0.5 text-[10px] text-[#667e71] font-medium leading-none">
+                Universal SQL &amp; NoSQL
               </span>
             </div>
           </Link>
 
-          {/* Engine indicator */}
-          <div className="flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-2 py-0.5" title="LLM Engine: Llama 3.1 70B Active">
+          {/* Engine Status Pill */}
+          <div className="flex items-center gap-1 rounded-full border border-emerald-200/80 bg-emerald-50 px-2 py-0.5" title="Llama 3.1 70B via NVIDIA NIM">
             <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[9.5px] font-bold text-emerald-700 font-mono">70B</span>
+            <span className="text-[9px] font-bold text-emerald-700 font-mono">70B</span>
           </div>
         </div>
-
-        {/* Workspace Card */}
-        <div className="group relative rounded-xl border border-[--border] bg-[#fcfdfc] p-2.5 shadow-2xs transition-all duration-150 hover:border-[#b4d4be] hover:bg-white">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#7a9184]">
-                Active Project
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsWorkspaceModalOpen(true)}
-              className="flex items-center gap-1 rounded-md bg-[#edf5ef] border border-[#cbe1d2] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1b6b3a] hover:bg-[#d8eedd] transition-colors"
-              title="Create or switch workspace"
-            >
-              <Plus className="size-2.5" />
-              <span>New</span>
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="flex size-6.5 shrink-0 items-center justify-center rounded-lg bg-[#18281e] text-[#4ade80] shadow-xs">
-              <FolderKanban className="size-3.5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p suppressHydrationWarning className="truncate text-[12px] font-bold text-[#141a17] leading-none">
-                {activeWorkspace.name}
-              </p>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="size-1.5 rounded-full bg-[#34c06a]" />
-                <span suppressHydrationWarning className="text-[10px] font-medium text-[#6e8477]">
-                  {activeWorkspace.environment || "Production"}
-                </span>
-                <span className="text-[#a0b5a8]">•</span>
-                <span suppressHydrationWarning className="text-[10px] font-mono text-[#6e8477] truncate">
-                  {dbInfo ? `${dbInfo.tables_count} tbls` : "No DB"}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </SidebarHeader>
 
       <SidebarContent className="overflow-y-auto px-2.5 py-3 space-y-4">
 
-        {/* ── Navigation: Workspace Views ── */}
+        {/* ── 1. Main Navigation ── */}
         <SidebarGroup className="p-0">
-          <SidebarGroupLabel className="px-2 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#799081]">
-            Workspaces
+          <SidebarGroupLabel className="px-2 mb-1 text-[10px] font-bold uppercase tracking-wider text-[#799081]">
+            Studio Navigation
           </SidebarGroupLabel>
-          
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
-              {workspaceViews.map((item) => {
+              {navItems.map((item) => {
                 const isActive = pathname === item.href
                 return (
                   <SidebarMenuItem key={item.label}>
                     <SidebarMenuButton
                       render={<Link href={item.href} />}
                       isActive={isActive}
-                      className={`group flex items-center justify-between rounded-xl px-3 py-2.5 text-[13px] font-semibold transition-all duration-150 ${
+                      className={`group flex items-center justify-between rounded-xl px-3 py-2 text-[12.5px] font-semibold transition-all ${
                         isActive
                           ? "bg-[#18291f] text-white shadow-xs"
                           : "text-[#2e4034] hover:bg-[#edf5ef] hover:text-[#141a17]"
@@ -208,7 +156,7 @@ export function AppSidebar({ onOpenSettings }) {
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <item.icon
-                          className={`size-4 shrink-0 transition-colors ${
+                          className={`size-4 shrink-0 ${
                             isActive ? "text-[#4ade80]" : "text-[#5e7768] group-hover:text-[#18291f]"
                           }`}
                         />
@@ -216,10 +164,10 @@ export function AppSidebar({ onOpenSettings }) {
                       </div>
 
                       <span
-                        className={`rounded-md px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wider shrink-0 transition-colors ${
+                        className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase shrink-0 ${
                           isActive
                             ? "bg-white/15 text-[#bbf7d0]"
-                            : "bg-[#e5ede7] text-[#3d5947] group-hover:bg-[#d8eedd]"
+                            : "bg-[#e5ede7] text-[#3d5947]"
                         }`}
                       >
                         {item.badge}
@@ -232,89 +180,110 @@ export function AppSidebar({ onOpenSettings }) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* ── Live Cloud Database Card ── */}
+        {/* ── 2. Active Database & Live Schema ── */}
         <SidebarGroup className="p-0">
-          <SidebarGroupLabel className="px-2 mb-1.5 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#7e9587]">
-            <span>Cloud Database</span>
+          <SidebarGroupLabel className="px-2 mb-1 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#7e9587]">
+            <span>Active Database</span>
             {dbInfo && (
-              <span className="flex items-center gap-1 text-[9.5px] font-semibold text-[#1b6b3a]">
+              <span className="flex items-center gap-1 text-[9px] font-semibold text-[#1b6b3a]">
                 <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live
               </span>
             )}
           </SidebarGroupLabel>
+          
           <SidebarGroupContent>
             {dbInfo ? (
-              <div className="rounded-xl border border-[#b4dcbe] bg-gradient-to-b from-[#f2faf5] to-[#e7f6ed] p-3 space-y-2.5 shadow-2xs">
-                
-                {/* Engine Info Header */}
+              <div className="rounded-xl border border-[#b8dec2] bg-[#f2faf5] p-2.5 space-y-2 shadow-2xs">
+                {/* Connected Host Info */}
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="flex size-5 items-center justify-center rounded-md bg-[#18291f] text-[#4ade80]">
-                      <Database className="size-3" />
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Database className="size-3.5 text-[#1b6b3a] shrink-0" />
+                    <span className="text-[11.5px] font-bold text-[#144229] truncate" title={dbInfo.host}>
+                      {dbInfo.host}
                     </span>
-                    <span className="text-[11.5px] font-bold text-[#144229]">PostgreSQL</span>
                   </div>
-                  <Badge className="bg-white text-emerald-800 border-emerald-200 text-[9px] font-bold px-1.5 py-0">
-                    SSL Active
-                  </Badge>
+                  <span className="rounded bg-white border border-[#cbe4d3] px-1.5 py-0.2 text-[9px] font-mono font-bold text-[#1a5b35]">
+                    {dbInfo.tables_count} tables
+                  </span>
                 </div>
 
-                {/* Host & Table Metrics */}
-                <div className="space-y-1 rounded-lg bg-white/80 border border-[#cbe4d3] p-2 text-[11px] font-mono">
-                  <div className="flex items-center justify-between gap-1.5">
-                    <span className="text-[10px] font-sans font-semibold text-[#5a8069] uppercase">Host</span>
-                    <span className="truncate max-w-[125px] font-bold text-[#14291c]" title={dbInfo.host}>{dbInfo.host}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-1.5">
-                    <span className="text-[10px] font-sans font-semibold text-[#5a8069] uppercase">Catalog</span>
-                    <span className="truncate max-w-[125px] font-medium text-[#1f3d2a]">{dbInfo.database || "postgres"}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-1.5">
-                    <span className="text-[10px] font-sans font-semibold text-[#5a8069] uppercase">Tables</span>
-                    <span className="font-bold text-[#1b6b3a]">{dbInfo.tables_count} indexed</span>
-                  </div>
-                </div>
+                {/* Collapsible Schema Table List */}
+                {dbInfo.tables?.length > 0 && (
+                  <div className="rounded-lg bg-white border border-[#cbe4d3] p-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsTablesExpanded(!isTablesExpanded)}
+                      className="flex items-center justify-between w-full text-[10px] font-bold text-[#446b52] hover:text-[#1b6b3a] px-1 py-0.5"
+                    >
+                      <span className="flex items-center gap-1">
+                        <Table2 className="size-3 text-[#3aa363]" />
+                        <span>Introspected Tables</span>
+                      </span>
+                      {isTablesExpanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+                    </button>
 
-                {/* Quick DB Actions */}
-                <div className="grid grid-cols-2 gap-1.5 pt-1">
+                    {isTablesExpanded && (
+                      <div className="mt-1 space-y-0.5 max-h-32 overflow-y-auto pr-1">
+                        {dbInfo.tables.slice(0, 8).map((tbl, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between rounded px-1.5 py-0.5 text-[10px] font-mono text-[#324f3c] hover:bg-[#ebf6ee]"
+                          >
+                            <span className="truncate">{tbl.table_name || tbl.name || tbl}</span>
+                            <span className="text-[8.5px] text-[#86a894] font-sans">
+                              {tbl.columns?.length ? `${tbl.columns.length} cols` : "table"}
+                            </span>
+                          </div>
+                        ))}
+                        {dbInfo.tables.length > 8 && (
+                          <p className="text-[9px] text-[#719580] px-1.5 pt-0.5 font-sans">
+                            +{dbInfo.tables.length - 8} more tables
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Quick Actions */}
+                <div className="flex items-center gap-1.5 pt-0.5">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(true)}
-                    className="flex items-center justify-center gap-1 rounded-lg border border-[#badbc4] bg-white py-1 text-[10.5px] font-bold text-[#1a5b35] hover:bg-[#ebf7ef] transition-colors shadow-3xs"
+                    className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-[#badbc4] bg-white py-1 text-[10.5px] font-semibold text-[#1a5b35] hover:bg-[#ebf7ef] transition"
                   >
                     <RefreshCw className="size-2.5" />
-                    Switch
+                    <span>Switch DB</span>
                   </button>
                   <button
                     type="button"
                     onClick={disconnectDatabase}
-                    className="flex items-center justify-center gap-1 rounded-lg border border-red-200 bg-red-50/70 py-1 text-[10.5px] font-bold text-red-700 hover:bg-red-100 transition-colors"
+                    className="flex items-center justify-center size-6.5 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition"
+                    title="Disconnect Database"
                   >
-                    Disconnect
+                    <Unplug className="size-3" />
                   </button>
                 </div>
-
               </div>
             ) : (
-              <div className="rounded-xl border border-[--border] bg-white p-3 space-y-2.5 shadow-2xs">
-                <div className="flex items-center gap-2">
-                  <div className="flex size-7.5 items-center justify-center rounded-xl bg-[#18291f] text-[#4ade80] shadow-xs">
+              <div className="rounded-xl border border-[--border] bg-white p-3 space-y-2 text-center shadow-2xs">
+                <div className="flex justify-center">
+                  <div className="flex size-7 items-center justify-center rounded-lg bg-[#18291f] text-[#4ade80]">
                     <Cloud className="size-3.5" />
                   </div>
-                  <div>
-                    <p className="text-[12px] font-bold text-[#141a17] leading-tight">No Database Linked</p>
-                    <p className="text-[10px] text-[#7a9184] leading-tight mt-0.5">Supabase, Neon, AWS RDS</p>
-                  </div>
+                </div>
+                <div>
+                  <p className="text-[11.5px] font-bold text-[#141a17]">No Database Connected</p>
+                  <p className="text-[10px] text-[#7a9184]">PostgreSQL, MongoDB, MySQL, RDS</p>
                 </div>
                 <Button
                   type="button"
-                  variant="default"
                   size="sm"
                   onClick={() => setIsModalOpen(true)}
-                  className="w-full h-7.5 gap-1.5 text-[11px] font-bold shadow-xs bg-[#18291f] hover:bg-[#233d2e]"
+                  className="w-full h-7 text-[11px] font-semibold bg-[#18291f] hover:bg-[#233d2e] text-white shadow-xs"
                 >
-                  <Plug className="size-3 text-[#4ade80]" />
+                  <Plug className="size-3 text-[#4ade80] mr-1" />
                   <span>Connect Database</span>
                 </Button>
               </div>
@@ -322,115 +291,115 @@ export function AppSidebar({ onOpenSettings }) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* ── Quick Query Starters ── */}
+        {/* ── 3. Developer Tools ── */}
         <SidebarGroup className="p-0">
-          <SidebarGroupLabel className="px-2 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#7e9587]">
-            Prompt Library
+          <SidebarGroupLabel className="px-2 mb-1 text-[10px] font-bold uppercase tracking-wider text-[#7e9587]">
+            Tools &amp; Extensions
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="space-y-1">
-              {quickStarters.map((item, idx) => (
+              {/* Metrics Glossary */}
+              {onOpenMetrics && (
+                <button
+                  type="button"
+                  onClick={onOpenMetrics}
+                  className="flex items-center justify-between w-full rounded-xl px-3 py-2 text-[12px] font-medium text-[#2d3f33] hover:bg-white hover:shadow-2xs border border-transparent hover:border-[--border] transition text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Wand2 className="size-3.5 text-[#3aa363]" />
+                    <span>Metrics Glossary</span>
+                  </div>
+                  <span className="text-[9px] font-semibold text-[#5e7768] bg-[#edf5ef] px-1.5 py-0.5 rounded">
+                    RAG Rules
+                  </span>
+                </button>
+              )}
+
+              {/* Chrome Spotlight Copilot */}
+              <button
+                type="button"
+                onClick={() => openExtensionModal(true)}
+                className="flex items-center justify-between w-full rounded-xl px-3 py-2 text-[12px] font-medium text-[#2d3f33] hover:bg-white hover:shadow-2xs border border-transparent hover:border-[--border] transition text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Zap className="size-3.5 text-emerald-600" />
+                  <span>Spotlight Extension</span>
+                </div>
+                <kbd className="rounded bg-[#e8f1eb] px-1.5 py-0.5 font-mono text-[9px] text-[#245838]">
+                  Cmd+Shift+K
+                </kbd>
+              </button>
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* ── 4. Prompt Quick Starters ── */}
+        <SidebarGroup className="p-0">
+          <SidebarGroupLabel className="px-2 mb-1 text-[10px] font-bold uppercase tracking-wider text-[#7e9587]">
+            Sample Prompts
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="space-y-1">
+              {QUICK_STARTERS.map((item, idx) => (
                 <Link
                   key={idx}
-                  href="/Dashboard/chat"
-                  className="group flex items-center justify-between rounded-xl p-2 text-[11.5px] font-medium text-[#2d3f33] transition-all duration-150 hover:bg-white hover:shadow-2xs hover:border-[--border] border border-transparent"
+                  href={item.href}
+                  className="group flex items-center justify-between rounded-xl p-2 text-[11px] font-medium text-[#2d3f33] hover:bg-white hover:shadow-2xs border border-transparent hover:border-[--border] transition"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className={`rounded-md border px-1.5 py-0.2 text-[9px] font-bold uppercase shrink-0 ${item.tagColor}`}>
+                    <span className={`rounded border px-1.5 py-0.2 text-[8.5px] font-bold uppercase shrink-0 ${item.tagColor}`}>
                       {item.tag}
                     </span>
-                    <span className="truncate leading-tight text-[#17261d] font-semibold">
+                    <span className="truncate font-semibold text-[#17261d]">
                       {item.title}
                     </span>
                   </div>
-                  <ChevronRight className="size-3 text-[#94b09e] shrink-0 transition-transform duration-150 group-hover:translate-x-0.5" />
+                  <ChevronRight className="size-3 text-[#94b09e] shrink-0 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               ))}
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* ── Safety & Integrity Widget ── */}
-        <SidebarGroup className="p-0">
-          <div className="rounded-xl border border-[#d2e7d7] bg-[#f0f9f3] p-2.5 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#145a32]">
-                <ShieldCheck className="size-3.5 text-[#34c06a]" />
-                <span>Production Guardrails</span>
-              </div>
-              <span className="rounded bg-emerald-100 border border-emerald-200 text-emerald-800 text-[8.5px] font-bold px-1 py-0.2">
-                Active
-              </span>
-            </div>
-            <div className="grid grid-cols-1 gap-1 text-[10px] text-[#557864] pt-0.5 font-medium">
-              <div className="flex items-center gap-1.5">
-                <span className="size-1 rounded-full bg-[#34c06a]" />
-                <span>100% Read-Only SELECT</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="size-1 rounded-full bg-[#34c06a]" />
-                <span>Zero-Hallucination Grounding</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="size-1 rounded-full bg-[#34c06a]" />
-                <span>Auto-Limit 50 Defense</span>
-              </div>
-            </div>
-          </div>
-        </SidebarGroup>
-
       </SidebarContent>
 
-      {/* ── Sidebar Footer ── */}
-      <SidebarFooter className="border-t border-[--border] bg-white px-3 py-2.5 space-y-2">
-        <SidebarMenu className="gap-1">
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={<Link href="/" />}
-              tooltip="Return to Landing Page"
-              className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[11.5px] font-semibold text-[#4a5e53] hover:bg-[#edf5ef] hover:text-[#141a17] transition-colors"
-            >
-              <Home className="size-3.5 text-[#6e8779]" />
-              <span>Landing Page</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={<Link href="/Dashboard/chat" />}
-              tooltip="Open Interactive AI Studio"
-              className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[11.5px] font-semibold text-[#4a5e53] hover:bg-[#edf5ef] hover:text-[#141a17] transition-colors"
-            >
-              <MessageSquareText className="size-3.5 text-[#6e8779]" />
-              <span>Interactive Chat</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          {onOpenSettings && (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={onOpenSettings}
-                tooltip="Open Global Settings & Shortcuts (Cmd+,)"
-                className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[11.5px] font-semibold text-[#4a5e53] hover:bg-[#edf5ef] hover:text-[#141a17] transition-colors cursor-pointer"
-              >
-                <Settings className="size-3.5 text-[#6e8779]" />
-                <span>Settings</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
-        </SidebarMenu>
+      {/* ── Sidebar Footer: User Profile & Settings ── */}
+      <SidebarFooter className="border-t border-[--border] bg-white px-3 py-2.5 space-y-1.5">
+        
+        {/* Settings Button */}
+        {onOpenSettings && (
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="flex items-center justify-between w-full rounded-lg px-2 py-1.5 text-[11.5px] font-semibold text-[#4a5e53] hover:bg-[#edf5ef] hover:text-[#141a17] transition cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Settings className="size-3.5 text-[#6e8779]" />
+              <span>Settings</span>
+            </div>
+            <kbd className="font-mono text-[9px] text-[#718578] bg-[#f0f4f1] px-1 py-0.2 rounded">
+              Cmd+,
+            </kbd>
+          </button>
+        )}
 
-        {/* User Authentication Status Tile */}
-        <div className="pt-2 border-t border-[#edf2ee]">
+        {/* User Account Tile */}
+        <div className="pt-1.5 border-t border-[#edf2ee]">
           {user ? (
             <div className="flex items-center justify-between gap-2 p-1.5 rounded-xl bg-[#f7f9f7] border border-[#e4ece5]">
               <div className="flex items-center gap-2 min-w-0">
-                <div className="size-6 rounded-lg bg-[#1a2920] text-[#5de08a] flex items-center justify-center font-bold text-[10px] shrink-0">
-                  {(user.displayName || user.email || "U").charAt(0).toUpperCase()}
-                </div>
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="Avatar" className="size-6 rounded-lg object-cover shrink-0" />
+                ) : (
+                  <div className="size-6 rounded-lg bg-[#1a2920] text-[#5de08a] flex items-center justify-center font-bold text-[10px] shrink-0">
+                    {userInitials}
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-bold text-[#141a17] truncate leading-tight">
                     {user.displayName || "QueryCraft User"}
                   </p>
-                  <p className="text-[9.5px] text-[#718578] truncate leading-tight">
+                  <p className="text-[9px] text-[#718578] truncate leading-tight">
                     {user.email}
                   </p>
                 </div>
@@ -439,7 +408,7 @@ export function AppSidebar({ onOpenSettings }) {
                 type="button"
                 onClick={() => logout()}
                 title="Sign Out"
-                className="size-6 flex items-center justify-center rounded-lg text-[#718578] hover:text-red-600 hover:bg-red-50 transition-colors shrink-0 cursor-pointer"
+                className="size-6 flex items-center justify-center rounded-lg text-[#718578] hover:text-red-600 hover:bg-red-50 transition shrink-0 cursor-pointer"
               >
                 <LogOut className="size-3" />
               </button>
@@ -447,10 +416,9 @@ export function AppSidebar({ onOpenSettings }) {
           ) : (
             <Link
               href="/Login"
-              className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-xl bg-[#1f2d24] text-white text-[11px] font-bold hover:bg-[#2c4033] transition-colors shadow-2xs"
+              className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-xl bg-[#1f2d24] text-white text-[11px] font-bold hover:bg-[#2c4033] transition shadow-2xs"
             >
               <span>Sign In / Register</span>
-              <ArrowRight className="size-3" />
             </Link>
           )}
         </div>

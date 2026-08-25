@@ -211,7 +211,10 @@ function DashboardShell({ children }) {
 
   return (
     <SidebarProvider>
-      <AppSidebar onOpenSettings={() => setIsSettingsOpen(true)} />
+      <AppSidebar
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenMetrics={() => setIsMetricModalOpen(true)}
+      />
       <SidebarInset className="bg-background">
         <DashboardNavbar
           onOpenMetrics={() => setIsMetricModalOpen(true)}
