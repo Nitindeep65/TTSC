@@ -226,11 +226,10 @@ export default function Chatbox() {
   }
 
   const handleRun = async (sql, idx, msg) => {
-    if (!connectionUri) { setIsModalOpen(true); return }
     setExecutingIndex(idx)
     try {
       const data = await databaseApi.execute({
-        connection_uri: connectionUri, sql_query: sql, limit: 50,
+        connection_uri: connectionUri || "", sql_query: sql, limit: 50,
         auto_heal: true, user_prompt: msg?.rawContent, live_schema: dbInfo?.schema_sql,
       })
       setQueryResults(p => ({ ...p, [idx]: { success: true, columns: data.columns, rows: data.rows, rowCount: data.row_count, healingInfo: data.healing_info } }))
@@ -242,10 +241,9 @@ export default function Chatbox() {
   }
 
   const handleExplain = async (sql, idx) => {
-    if (!connectionUri) { setIsModalOpen(true); return }
     setExplainingIndex(idx)
     try {
-      const data = await databaseApi.explain({ connection_uri: connectionUri, sql_query: sql })
+      const data = await databaseApi.explain({ connection_uri: connectionUri || "", sql_query: sql })
       setExplainData(data)
     } catch (err) {
       alert("EXPLAIN error: " + (err.response?.data?.detail || err.message))
@@ -538,10 +536,10 @@ export default function Chatbox() {
                                 className="h-6 sm:h-7 px-2 sm:px-2.5 text-[10.5px] sm:text-[11.5px] font-bold bg-[#1f7a47] hover:bg-[#186038] text-white"
                                 size="sm"
                               >
-                                {executingIndex === idx
-                                  ? <><Loader2 className="size-3 animate-spin" /> <span className="hidden xs:inline">Running...</span></>
-                                  : <><Play className="size-3" /> <span>{connectionUri ? "Run" : "Connect & Run"}</span></>
-                                }
+                                  {executingIndex === idx
+                                    ? <><Loader2 className="size-3 animate-spin" /> <span className="hidden xs:inline">Running...</span></>
+                                    : <><Play className="size-3" /> <span>{connectionUri ? "Run on DB" : "Run Query"}</span></>
+                                  }
                               </Button>
                               <Button variant="ghost" size="sm"
                                 onClick={() => handleCopy(msg.sql_query, idx)}
