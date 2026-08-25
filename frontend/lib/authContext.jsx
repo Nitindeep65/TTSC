@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react"
 import {
   auth,
+  apiKey,
   googleProvider,
   githubProvider,
   signInWithEmailAndPassword,
@@ -24,7 +25,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let unsubscribe = () => {}
 
-    if (auth) {
+    if (auth && apiKey && apiKey !== "AIzaSyDummyBuildPlaceholderOnly") {
       try {
         unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
           if (firebaseUser) {
@@ -53,11 +54,12 @@ export function AuthProvider({ children }) {
     return () => unsubscribe()
   }, [])
 
-  // Helper check for missing env vars
+  // Helper check for missing env vars in build
   const checkFirebaseEnv = () => {
-    if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NODE_ENV !== "test") {
+    if (process.env.NODE_ENV === "test") return
+    if (!apiKey || apiKey === "AIzaSyDummyBuildPlaceholderOnly") {
       throw new Error(
-        "Missing Firebase Environment Variables in Deployment: Please configure NEXT_PUBLIC_FIREBASE_API_KEY and NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN in your Vercel Project Settings > Environment Variables, then Redeploy."
+        "Firebase API Key not compiled into build: After adding environment variables in Vercel, you MUST go to Vercel > Deployments > ... > Redeploy for Next.js to embed them."
       )
     }
   }
@@ -202,22 +204,22 @@ function formatFirebaseError(codeOrMessage) {
   const str = String(codeOrMessage)
 
   if (
-    str.includes("auth/auth-domain-config-required") ||
-    str.includes("auth/invalid-auth-domain")
-  ) {
-    return "Firebase Auth Domain is missing in deployment. Set NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN in Vercel Project Settings > Environment Variables."
-  }
-  if (
     str.includes("auth/invalid-api-key") ||
     str.includes("auth/api-key-not-valid")
   ) {
-    return "Invalid Firebase API Key. Please verify NEXT_PUBLIC_FIREBASE_API_KEY in Vercel Project Settings > Environment Variables."
+    return "Invalid Firebase API Key. Please verify: 1) You redeployed after setting variables in Vercel. 2) The key starts with 'AIzaSy' and has no extra spaces or quotes. 3) Identity Toolkit API is enabled in Google Cloud Console."
+  }
+  if (
+    str.includes("auth/auth-domain-config-required") ||
+    str.includes("auth/invalid-auth-domain")
+  ) {
+    return "Firebase Auth Domain is missing. Set NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN in Vercel Project Settings > Environment Variables, then Redeploy."
   }
   if (str.includes("auth/operation-not-allowed")) {
     return "This sign-in provider is disabled in Firebase. Enable Google / Email in Firebase Console > Authentication > Sign-in method."
   }
   if (str.includes("auth/unauthorized-domain")) {
-    return "This domain is not authorized. Add your Vercel deployment domain (e.g. *.vercel.app) in Firebase Console > Authentication > Settings > Authorized domains."
+    return "This domain is not authorized in Firebase. Add your Vercel URL (e.g. *.vercel.app) in Firebase Console > Authentication > Settings > Authorized domains."
   }
   if (
     str.includes("auth/invalid-credential") ||

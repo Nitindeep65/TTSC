@@ -11,21 +11,23 @@ import {
   onAuthStateChanged,
 } from "firebase/auth"
 
-const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || ""
+const cleanEnv = (val) => (val || "").replace(/['"]/g, "").trim()
+
+const apiKey = cleanEnv(process.env.NEXT_PUBLIC_FIREBASE_API_KEY)
+const projectId = cleanEnv(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID)
 const authDomain =
-  process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ||
+  cleanEnv(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) ||
   (projectId ? `${projectId}.firebaseapp.com` : "")
 const storageBucket =
-  process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+  cleanEnv(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) ||
   (projectId ? `${projectId}.appspot.com` : "")
-const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || ""
-const messagingSenderId = process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || ""
-const appId = process.env.NEXT_PUBLIC_FIREBASE_APP_ID || ""
+const messagingSenderId = cleanEnv(process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID)
+const appId = cleanEnv(process.env.NEXT_PUBLIC_FIREBASE_APP_ID)
 
 const firebaseConfig = {
-  apiKey: apiKey,
-  authDomain: authDomain,
-  projectId: projectId,
+  apiKey: apiKey || "AIzaSyDummyBuildPlaceholderOnly",
+  authDomain: authDomain || "localhost",
+  projectId: projectId || "querycraft-app",
   storageBucket: storageBucket,
   messagingSenderId: messagingSenderId,
   appId: appId,
@@ -38,15 +40,8 @@ let auth = null
 try {
   if (getApps().length > 0) {
     app = getApp()
-  } else if (apiKey) {
-    app = initializeApp(firebaseConfig)
   } else {
-    // Build/Test fallback to allow compilation
-    app = initializeApp({
-      apiKey: "AIzaSyDummyBuildPlaceholderOnly",
-      authDomain: "querycraft.firebaseapp.com",
-      projectId: "querycraft-prod",
-    })
+    app = initializeApp(firebaseConfig)
   }
   auth = getAuth(app)
 } catch {
@@ -62,6 +57,7 @@ export const githubProvider = new GithubAuthProvider()
 export {
   app,
   auth,
+  apiKey,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
@@ -73,6 +69,7 @@ export {
 const firebaseClient = {
   app,
   auth,
+  apiKey,
   googleProvider,
   githubProvider,
 }
