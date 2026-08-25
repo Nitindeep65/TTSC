@@ -18,7 +18,7 @@ describe('Centralized Frontend API Client (lib/api.js)', () => {
     expect(typeof API_BASE_URL).toBe('string')
   })
 
-  test('clarificationApi.compileQuery calls /api/clarification/ with payload', async () => {
+  test('clarificationApi.compileQuery calls /api/clarification with payload', async () => {
     const mockPost = jest.spyOn(apiClient, 'post').mockResolvedValueOnce({
       data: { status: 'complete', message: 'SQL compiled', extracted_data: { sql_query: 'SELECT 1;' } },
     })
@@ -30,7 +30,7 @@ describe('Centralized Frontend API Client (lib/api.js)', () => {
       connection_uri: 'postgresql://test:pass@localhost:5432/db',
     })
 
-    expect(mockPost).toHaveBeenCalledWith('/api/clarification/', {
+    expect(mockPost).toHaveBeenCalledWith('/api/clarification', {
       user_prompt: 'Show top 5 users',
       session_history: [],
       live_schema: 'CREATE TABLE users (id int);',

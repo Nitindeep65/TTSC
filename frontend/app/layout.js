@@ -26,9 +26,13 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${plusJakartaSans.variable} ${jetbrainsMono.variable} h-full antialiased scroll-smooth overflow-x-hidden`}
     >
-      <body className="min-h-full flex flex-col font-sans bg-[#f7f8f5] text-[#17241c] selection:bg-[#4ca873]/25 selection:text-[#114227] overflow-x-hidden">
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col font-sans bg-[#f7f8f5] text-[#17241c] selection:bg-[#4ca873]/25 selection:text-[#114227] overflow-x-hidden"
+      >
         <AuthProviderWrapper>
           {children}
         </AuthProviderWrapper>

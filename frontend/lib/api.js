@@ -125,7 +125,7 @@ export const clarificationApi = {
     connection_uri = null,
   }) => {
     try {
-      const res = await apiClient.post("/api/clarification/", {
+      const res = await apiClient.post("/api/clarification", {
         user_prompt,
         session_history,
         live_schema,
@@ -355,7 +355,7 @@ export const settingsApi = {
    */
   getSettings: async () => {
     try {
-      const res = await apiClient.get("/api/settings/")
+      const res = await apiClient.get("/api/settings")
       return res.data
     } catch {
       return DEFAULT_FALLBACK_SETTINGS
@@ -367,7 +367,7 @@ export const settingsApi = {
    */
   updateSettings: async (patch) => {
     try {
-      const res = await apiClient.post("/api/settings/", patch)
+      const res = await apiClient.post("/api/settings", patch)
       return res.data
     } catch {
       return patch

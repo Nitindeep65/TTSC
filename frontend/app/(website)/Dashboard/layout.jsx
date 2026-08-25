@@ -31,6 +31,7 @@ import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher"
 import MetricGlossaryModal from "@/components/semantic/MetricGlossaryModal"
 import SettingsPanel from "@/components/settings/SettingsPanel"
 import ExtensionPromptModal from "@/components/extension/ExtensionPromptModal"
+import OnboardingModal from "@/components/onboarding/OnboardingModal"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -190,6 +191,27 @@ function DashboardShell({ children }) {
   const { user, loading } = useAuth()
   const [isMetricModalOpen, setIsMetricModalOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  // First-time user onboarding detection
+  useEffect(() => {
+    try {
+      const isComplete = localStorage.getItem("querycraft_onboarding_complete")
+      if (!isComplete || isComplete === "false") {
+        setShowOnboarding(true)
+      }
+    } catch (e) {}
+  }, [])
+
+  const handleOnboardingComplete = ({ role } = {}) => {
+    try {
+      localStorage.setItem("querycraft_onboarding_complete", "true")
+      if (role) {
+        localStorage.setItem("querycraft_user_role", role)
+      }
+    } catch (e) {}
+    setShowOnboarding(false)
+  }
 
   // Route protection: If authentication state is resolved and no user is signed in, redirect to /Login
   useEffect(() => {
@@ -245,6 +267,12 @@ function DashboardShell({ children }) {
 
       {/* Extension Promotion / Setup Modal */}
       <ExtensionPromptModal />
+
+      {/* First-Time User Onboarding Modal Flow */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onComplete={handleOnboardingComplete}
+      />
     </SidebarProvider>
   )
 }

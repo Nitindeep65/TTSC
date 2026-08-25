@@ -9,7 +9,7 @@ export async function POST(request) {
     // If a deployed cloud backend is configured and reachable, proxy to it
     if (backendUrl && !backendUrl.includes("127.0.0.1") && !backendUrl.includes("localhost")) {
       try {
-        const res = await fetch(`${backendUrl.replace(/\/$/, "")}/api/clarification/`, {
+        const res = await fetch(`${backendUrl.replace(/\/$/, "")}/api/clarification`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
