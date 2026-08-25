@@ -143,43 +143,43 @@ export default function Dashboard() {
   const extractedData = apiResponse?.extracted_data
 
   return (
-    <main className="flex-1 bg-[#f7f8f5]">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <main className="flex-1 bg-[#f7f8f5] w-full max-w-full overflow-x-hidden">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-6 px-3 sm:px-6 lg:px-8 py-4 sm:py-8 min-w-0">
         
         {/* Banner if connected to cloud DB */}
         {dbInfo && (
-          <div className="flex items-center justify-between rounded-xl border border-[#cbe3d2] bg-[#f0faf3] px-4 py-2.5 text-xs text-[#1e6138]">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="size-4 text-[#3ba565]" />
-              <span>
-                <strong>Cloud DB Connected:</strong> {dbInfo.host} ({dbInfo.database}) — {dbInfo.tables_count} live tables introspected.
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#cbe3d2] bg-[#f0faf3] px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs text-[#1e6138]">
+            <div className="flex items-center gap-2 min-w-0">
+              <CheckCircle2 className="size-4 text-[#3ba565] shrink-0" />
+              <span className="truncate">
+                <strong>Cloud DB Connected:</strong> {dbInfo.host} ({dbInfo.database}) — {dbInfo.tables_count} live tables.
               </span>
             </div>
             <button
               type="button"
               onClick={() => setIsModalOpen(true)}
-              className="text-xs font-semibold text-[#1a5732] underline hover:text-[#124024]"
+              className="text-xs font-semibold text-[#1a5732] underline hover:text-[#124024] shrink-0"
             >
               Manage DB
             </button>
           </div>
         )}
 
-        <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between min-w-0">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#d2e2d5] bg-[#edf7f0] px-3 py-1 text-xs font-semibold text-[#256a44]">
-              <Sparkles className="size-3.5" />
-              SQL Clarification &amp; Generation Workspace
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-[#d2e2d5] bg-[#edf7f0] px-2.5 sm:px-3 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold text-[#256a44]">
+              <Sparkles className="size-3 sm:size-3.5 shrink-0" />
+              <span>SQL Clarification &amp; Generation</span>
             </div>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[#1f2d24] sm:text-3xl">
+            <h1 className="mt-1.5 sm:mt-2 text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-[#1f2d24]">
               Natural Language Query Compiler
             </h1>
-            <p className="mt-1 text-sm text-[#66776d]">
+            <p className="mt-1 text-xs sm:text-sm text-[#66776d]">
               {dbInfo ? `Grounded in your live PostgreSQL schema on ${dbInfo.host}.` : "Test single-turn prompts against the Cloud PostgreSQL schema."}
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {!dbInfo && (
               <button
                 type="button"
@@ -187,21 +187,22 @@ export default function Dashboard() {
                 className="inline-flex items-center gap-1.5 rounded-xl border border-[#bde2cb] bg-[#eef8f2] px-3 py-2 text-xs font-semibold text-[#1a5b33] shadow-2xs transition hover:bg-[#e1f3e7]"
               >
                 <Cloud className="size-3.5 text-[#30975a]" />
-                <span>Connect Cloud DB</span>
+                <span className="hidden xs:inline">Connect DB</span>
+                <span className="xs:hidden">Connect</span>
               </button>
             )}
 
             <Link
               href="/Dashboard/chat"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#1f2d24] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2f4837]"
+              className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl bg-[#1f2d24] px-3 sm:px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2f4837]"
             >
               <MessageSquareText className="size-3.5 text-[#71c897]" />
-              Open Multi-Turn Chat
+              <span>Open Chat</span>
             </Link>
           </div>
         </section>
 
-        <section className="rounded-2xl border border-[#dfe7df] bg-white p-5 shadow-sm sm:p-6">
+        <section className="rounded-2xl border border-[#dfe7df] bg-white p-4 sm:p-6 shadow-2xs min-w-0">
           <div className="relative">
             <label htmlFor="data-question" className="sr-only">
               Ask a question
@@ -216,8 +217,8 @@ export default function Dashboard() {
                 }
               }}
               placeholder="Ask a question about your database (e.g. 'Show total sales by product category in 2024')..."
-              rows={4}
-              className="w-full resize-none rounded-xl border border-[#dfe7df] bg-[#fbfdfb] px-4 py-3.5 pr-14 text-sm leading-relaxed text-[#1f2d24] outline-none transition placeholder:text-[#9aa59d] focus:border-[#4ca873] focus:ring-4 focus:ring-[#4ca873]/10"
+              rows={3}
+              className="w-full resize-none rounded-xl border border-[#dfe7df] bg-[#fbfdfb] px-3.5 sm:px-4 py-3 pr-12 text-xs sm:text-sm leading-relaxed text-[#1f2d24] outline-none transition placeholder:text-[#9aa59d] focus:border-[#4ca873] focus:ring-4 focus:ring-[#4ca873]/10"
             />
             <Button
               type="button"
@@ -225,15 +226,15 @@ export default function Dashboard() {
               aria-label="Send Query"
               disabled={!query.trim() || isGenerating}
               onClick={() => handleGenerate()}
-              className="absolute bottom-3 right-3 rounded-lg bg-[#1f2d24] text-white transition hover:bg-[#324e3c]"
+              className="absolute bottom-2.5 right-2.5 size-8 sm:size-9 rounded-lg bg-[#1f2d24] text-white transition hover:bg-[#324e3c]"
             >
               <ArrowUp className="size-4" />
             </Button>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[#718278]">
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs text-[#718278]">
             <span className="flex items-center gap-1.5">
-              <span className="rounded border border-[#dfe7df] bg-[#f2f5f2] px-1.5 py-0.5 font-mono text-[10px]">
+              <span className="rounded border border-[#dfe7df] bg-[#f2f5f2] px-1.5 py-0.5 font-mono text-[9.5px] sm:text-[10px]">
                 Cmd/Ctrl + Enter
               </span>
               <span>to compile</span>
@@ -241,17 +242,17 @@ export default function Dashboard() {
             <span>{query.length}/600</span>
           </div>
 
-          <div className="mt-5 border-t border-[#eef2ee] pt-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#819287]">
+          <div className="mt-4 border-t border-[#eef2ee] pt-3.5">
+            <p className="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-[0.14em] text-[#819287]">
               Sample SQL Prompts
             </p>
-            <div className="mt-2.5 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-1.5 sm:gap-2">
               {sqlExamples.map((example) => (
                 <button
                   key={example}
                   type="button"
                   onClick={() => handleGenerate(example)}
-                  className="rounded-lg border border-[#e0e8e1] bg-[#fbfdfb] px-3 py-1.5 text-left text-xs font-medium text-[#44554a] transition hover:border-[#79b790] hover:bg-[#f1f8f2] hover:text-[#236742]"
+                  className="rounded-lg border border-[#e0e8e1] bg-[#fbfdfb] px-2.5 sm:px-3 py-1 sm:py-1.5 text-left text-[11px] sm:text-xs font-medium text-[#44554a] transition hover:border-[#79b790] hover:bg-[#f1f8f2] hover:text-[#236742]"
                 >
                   {example}
                 </button>
@@ -260,9 +261,9 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section aria-live="polite" className="overflow-hidden rounded-2xl border border-[#dfe7df] bg-white shadow-sm">
+        <section aria-live="polite" className="overflow-hidden rounded-2xl border border-[#dfe7df] bg-white shadow-2xs min-w-0">
           {!hasResult && !isGenerating ? (
-            <div className="flex min-h-64 flex-col items-center justify-center px-6 py-14 text-center">
+            <div className="flex min-h-56 flex-col items-center justify-center px-4 py-10 sm:py-14 text-center">
               <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-[#e9f4ed] text-[#28734d]">
                 <Database className="size-6" />
               </div>

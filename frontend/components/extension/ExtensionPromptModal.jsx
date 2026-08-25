@@ -95,24 +95,24 @@ export default function ExtensionPromptModal() {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-3 sm:p-4 backdrop-blur-sm animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) dismissModal(24)
       }}
     >
-      <div className="relative flex max-h-[90vh] w-full max-w-[560px] flex-col overflow-hidden rounded-2xl border border-[#233529] bg-[#0e1511] text-[#e2ede6] shadow-2xl ring-1 ring-white/5">
+      <div className="relative flex max-h-[92dvh] w-full max-w-[560px] flex-col overflow-hidden rounded-2xl border border-[#233529] bg-[#0e1511] text-[#e2ede6] shadow-2xl ring-1 ring-white/5">
         
         {/* Header Bar */}
-        <div className="flex items-center justify-between border-b border-[#1b2b20] px-6 py-4.5 bg-[#111a14]/60">
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#162e1e] text-emerald-400 border border-emerald-500/20 shadow-xs">
-              <Sparkles className="size-4.5" />
+        <div className="flex items-center justify-between border-b border-[#1b2b20] px-4 py-3 sm:px-6 sm:py-4.5 bg-[#111a14]/60 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-[#162e1e] text-emerald-400 border border-emerald-500/20 shadow-xs">
+              <Sparkles className="size-4 sm:size-4.5" />
             </div>
-            <div>
-              <h3 className="text-[15px] font-semibold text-white tracking-tight leading-none">
+            <div className="min-w-0">
+              <h3 className="text-sm sm:text-[15px] font-semibold text-white tracking-tight leading-none truncate">
                 Unlock the QueryCraft Chrome Extension
               </h3>
-              <p className="mt-1 text-xs text-[#87a090] leading-none">
+              <p className="mt-1 text-[11px] sm:text-xs text-[#87a090] leading-none truncate">
                 AI Spotlight Copilot &amp; In-Situ Query Studio
               </p>
             </div>
@@ -122,7 +122,7 @@ export default function ExtensionPromptModal() {
             <button
               type="button"
               onClick={toggleSound}
-              className="flex size-7.5 items-center justify-center rounded-lg border border-[#203326] bg-[#142018] text-[#809b8b] hover:border-emerald-500/30 hover:text-white transition"
+              className="flex size-7 sm:size-7.5 items-center justify-center rounded-lg border border-[#203326] bg-[#142018] text-[#809b8b] hover:border-emerald-500/30 hover:text-white transition"
               title={soundActive ? "Sound enabled (click to mute)" : "Sound muted"}
             >
               {soundActive ? <Volume2 className="size-3.5 text-emerald-400" /> : <VolumeX className="size-3.5" />}
@@ -131,7 +131,7 @@ export default function ExtensionPromptModal() {
             <button
               type="button"
               onClick={() => dismissModal(24)}
-              className="flex size-7.5 items-center justify-center rounded-lg border border-[#203326] bg-[#142018] text-[#809b8b] hover:border-rose-500/30 hover:text-white transition"
+              className="flex size-7 sm:size-7.5 items-center justify-center rounded-lg border border-[#203326] bg-[#142018] text-[#809b8b] hover:border-rose-500/30 hover:text-white transition"
               title="Close"
             >
               <X className="size-3.5" />
@@ -140,11 +140,11 @@ export default function ExtensionPromptModal() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex border-b border-[#1b2b20] bg-[#0c120e] px-6 pt-2">
+        <div className="flex border-b border-[#1b2b20] bg-[#0c120e] px-4 sm:px-6 pt-2 overflow-x-auto shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab("preview")}
-            className={`relative flex items-center gap-2 pb-2.5 pt-1 text-xs font-medium transition ${
+            className={`relative flex items-center gap-2 pb-2.5 pt-1 text-xs font-medium transition shrink-0 ${
               activeTab === "preview"
                 ? "text-white font-semibold"
                 : "text-[#738d7d] hover:text-[#c4d6cb]"
@@ -160,7 +160,7 @@ export default function ExtensionPromptModal() {
           <button
             type="button"
             onClick={() => setActiveTab("setup")}
-            className={`relative ml-6 flex items-center gap-2 pb-2.5 pt-1 text-xs font-medium transition ${
+            className={`relative ml-4 sm:ml-6 flex items-center gap-2 pb-2.5 pt-1 text-xs font-medium transition shrink-0 ${
               activeTab === "setup"
                 ? "text-white font-semibold"
                 : "text-[#738d7d] hover:text-[#c4d6cb]"
@@ -175,10 +175,10 @@ export default function ExtensionPromptModal() {
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 text-xs">
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 space-y-3 sm:space-y-4 text-xs">
 
           {/* 3 Streamlined Core Benefits */}
-          <div className="grid grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 sm:gap-2.5">
             <div className="rounded-xl border border-[#1e3024] bg-[#121c15] p-3 text-left">
               <div className="flex items-center gap-1.5 text-emerald-400 font-semibold text-[11px] mb-1">
                 <Terminal className="size-3.5 shrink-0" />

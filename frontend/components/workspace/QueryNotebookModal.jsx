@@ -137,45 +137,46 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
   })
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-[--border] bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-[--border] bg-white shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[92dvh]">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[--border] pb-4 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
-              <Bookmark className="size-5" />
+        <div className="flex items-center justify-between border-b border-[--border] p-4 sm:p-5 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
+              <Bookmark className="size-4.5 sm:size-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-[#17241c]">Saved Query Notebook &amp; Snippets</h2>
-                <Badge variant="emerald" className="text-[9.5px] uppercase font-bold">
-                  Shared Cloud
+                <h2 className="text-sm sm:text-base font-bold text-[#17241c] truncate">Saved Query Notebook</h2>
+                <Badge variant="emerald" className="text-[9px] uppercase font-bold shrink-0">
+                  Cloud
                 </Badge>
               </div>
-              <p className="text-xs text-[#607266]">
-                Syncs seamlessly with Chrome Extension &amp; team members for instant reuse.
+              <p className="text-[11px] sm:text-xs text-[#607266] truncate">
+                Syncs with Chrome Extension &amp; team workspace.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Button
               type="button"
               variant={isAdding ? "secondary" : "outline"}
               size="sm"
               onClick={() => setIsAdding((p) => !p)}
-              className="gap-1.5 text-xs font-semibold"
+              className="gap-1.5 text-xs font-semibold h-8"
             >
               <Plus className="size-3.5" />
-              <span>{isAdding ? "Cancel" : "Add Snippet"}</span>
+              <span className="hidden xs:inline">{isAdding ? "Cancel" : "Add Snippet"}</span>
+              <span className="xs:hidden">{isAdding ? "Cancel" : "Add"}</span>
             </Button>
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="text-[#738478]"
+              className="text-[#738478] size-8 p-0"
             >
               <X className="size-4" />
             </Button>
@@ -183,7 +184,7 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
         </div>
 
         {/* Search & Tags Row */}
-        <div className="py-3 border-b border-[--border] space-y-2.5 shrink-0">
+        <div className="px-4 sm:px-6 py-3 border-b border-[--border] space-y-2.5 shrink-0">
           <div className="relative">
             <Search className="size-4 text-[#8a9e93] absolute left-3 top-2.5" />
             <input
@@ -228,7 +229,7 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto pt-4 space-y-3">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
 
           {/* Add Snippet Form */}
           {isAdding && (

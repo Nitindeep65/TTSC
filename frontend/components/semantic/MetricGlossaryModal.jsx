@@ -150,22 +150,22 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl max-h-[92dvh] flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-2xl animate-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-border pb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
-              <BookOpen className="size-5" />
+        <div className="flex items-center justify-between border-b border-border p-4 sm:p-5 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
+              <BookOpen className="size-4.5 sm:size-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-[#17241c]">Semantic Layer &amp; Custom Metrics</h2>
-                <Badge variant="emerald" className="text-[9px] uppercase font-bold">RAG Layer</Badge>
+                <h2 className="text-sm sm:text-base font-bold text-[#17241c] truncate">Semantic Layer &amp; Custom Metrics</h2>
+                <Badge variant="emerald" className="text-[9px] uppercase font-bold shrink-0">RAG</Badge>
               </div>
-              <p className="text-xs text-[#607266]">
-                Define company-specific formulas (e.g. Net MRR, VIP Customers) for zero-hallucination grounding.
+              <p className="text-[11px] sm:text-xs text-[#607266] truncate">
+                Define company-specific formulas for zero-hallucination grounding.
               </p>
             </div>
           </div>
@@ -175,31 +175,31 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
             variant="ghost"
             size="iconSm"
             onClick={onClose}
-            className="text-[#738478]"
+            className="text-[#738478] shrink-0"
           >
             <X className="size-4" />
           </Button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-1.5 border-b border-border pt-4 pb-2 flex-wrap">
+        <div className="flex items-center gap-1.5 border-b border-border px-4 sm:px-6 pt-3 pb-2 flex-wrap shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab("list")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition ${
               activeTab === "list"
                 ? "bg-[#1f2d24] text-white shadow-2xs"
                 : "text-[#55675c] hover:bg-[#edf4ef]"
             }`}
           >
             <Layers className="size-3.5" />
-            <span>Active Glossary ({metrics.length})</span>
+            <span>Glossary ({metrics.length})</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("teach")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition ${
               activeTab === "teach"
                 ? "bg-[#1f2d24] text-white shadow-2xs"
                 : "text-[#55675c] hover:bg-[#edf4ef]"
@@ -212,20 +212,20 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
           <button
             type="button"
             onClick={() => setActiveTab("upload")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition ${
               activeTab === "upload"
                 ? "bg-[#1f2d24] text-white shadow-2xs"
                 : "text-[#55675c] hover:bg-[#edf4ef]"
             }`}
           >
             <FolderKanban className="size-3.5 text-blue-500" />
-            <span>Upload Policy (RAG)</span>
+            <span>Upload Policy</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("manual")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition ${
               activeTab === "manual"
                 ? "bg-[#1f2d24] text-white shadow-2xs"
                 : "text-[#55675c] hover:bg-[#edf4ef]"
@@ -237,7 +237,7 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
         </div>
 
         {/* Tab Body */}
-        <div className="mt-4 max-h-96 overflow-y-auto pr-1">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
           
           {/* TAB 1: List of Active Metrics */}
           {activeTab === "list" && (

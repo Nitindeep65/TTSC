@@ -154,19 +154,19 @@ export default function ConnectDatabaseModal() {
   const selectedProvider = providerTemplates.find((p) => p.id === activeProvider)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-[#dfe7df] bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4 backdrop-blur-xs">
+      <div className="relative w-full max-w-2xl max-h-[92dvh] flex flex-col overflow-hidden rounded-2xl border border-[#dfe7df] bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#e6ede6] bg-[#fbfdfb] px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897]">
-              <Database className="size-5" />
+        <div className="flex items-center justify-between border-b border-[#e6ede6] bg-[#fbfdfb] px-4 py-3 sm:px-6 sm:py-4 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897]">
+              <Database className="size-4.5 sm:size-5" />
             </div>
-            <div>
-              <h2 className="text-base font-semibold text-[#1f2d24]">Connect SQL or NoSQL Database</h2>
-              <p className="text-xs text-[#6e8074]">
-                Introspect live schemas &amp; collections from PostgreSQL, MySQL, MongoDB, Redis, or DynamoDB
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-semibold text-[#1f2d24] truncate">Connect SQL or NoSQL Database</h2>
+              <p className="text-[11px] sm:text-xs text-[#6e8074] truncate">
+                PostgreSQL, MySQL, MongoDB, Redis, or DynamoDB
               </p>
             </div>
           </div>
@@ -174,13 +174,13 @@ export default function ConnectDatabaseModal() {
           <button
             type="button"
             onClick={() => setIsModalOpen(false)}
-            className="flex size-8 items-center justify-center rounded-lg text-[#6e8074] transition hover:bg-[#eef4ef] hover:text-[#1f2d24]"
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[#6e8074] transition hover:bg-[#eef4ef] hover:text-[#1f2d24]"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        <div className="max-h-[80vh] overflow-y-auto p-6 space-y-5">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5">
           
           {/* Active Connection Status Banner */}
           {dbInfo ? (

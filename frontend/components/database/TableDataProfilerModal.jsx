@@ -63,31 +63,31 @@ export default function TableDataProfilerModal({ isOpen, onClose, tableName, con
   )
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-[--border] bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[88vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-[--border] bg-white shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[92dvh]">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-[--border] pb-4 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
-              <Table2 className="size-5" />
+        <div className="flex items-center justify-between border-b border-[--border] p-4 sm:p-5 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
+              <Table2 className="size-4.5 sm:size-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-[#17241c] font-mono">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h2 className="text-sm sm:text-base font-bold text-[#17241c] font-mono truncate">
                   {tableName || "Table"}
                 </h2>
-                <Badge variant="emerald" className="text-[9.5px] uppercase font-bold">
+                <Badge variant="emerald" className="text-[9px] uppercase font-bold shrink-0">
                   Data Profiler
                 </Badge>
                 {profileData && (
-                  <span className="text-xs text-[#8a9e93] font-mono">
-                    ({profileData.row_count} sample rows)
+                  <span className="text-[11px] text-[#8a9e93] font-mono shrink-0 hidden xs:inline">
+                    ({profileData.row_count} rows)
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[#607266]">
-                Safe 5-row live preview &amp; categorical value distribution for zero-hallucination WHERE filters.
+              <p className="text-[11px] sm:text-xs text-[#607266] truncate">
+                Safe 5-row live preview &amp; categorical value distribution.
               </p>
             </div>
           </div>
@@ -97,14 +97,14 @@ export default function TableDataProfilerModal({ isOpen, onClose, tableName, con
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="text-[#738478] hover:text-[#17241c]"
+            className="text-[#738478] hover:text-[#17241c] shrink-0"
           >
             <X className="size-4" />
           </Button>
         </div>
 
         {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto pt-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           
           {loading && (
             <div className="py-16 flex flex-col items-center justify-center gap-2.5 text-[#34c06a]">

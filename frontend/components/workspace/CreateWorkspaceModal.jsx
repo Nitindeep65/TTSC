@@ -66,18 +66,18 @@ export default function CreateWorkspaceModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg max-h-[92dvh] flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-2xl animate-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-border pb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
-              <FolderPlus className="size-5" />
+        <div className="flex items-center justify-between border-b border-border p-4 sm:p-5 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
+              <FolderPlus className="size-4.5 sm:size-5" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-[#17241c]">Create New Workspace</h2>
-              <p className="text-xs text-[#607266]">
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-bold text-[#17241c] truncate">Create New Workspace</h2>
+              <p className="text-[11px] sm:text-xs text-[#607266] truncate">
                 Isolate schemas, queries, and databases per project
               </p>
             </div>
@@ -88,14 +88,14 @@ export default function CreateWorkspaceModal() {
             variant="ghost"
             size="iconSm"
             onClick={() => setIsWorkspaceModalOpen(false)}
-            className="text-[#738478]"
+            className="text-[#738478] shrink-0"
           >
             <X className="size-4" />
           </Button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleCreate} className="mt-5 space-y-4">
+        <form onSubmit={handleCreate} className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
           
           {/* Workspace Name */}
           <div>

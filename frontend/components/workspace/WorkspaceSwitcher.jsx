@@ -66,46 +66,42 @@ export default function WorkspaceSwitcher({ className = "" }) {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
-        className={`group flex items-center gap-2.5 rounded-xl border px-3 py-1.5 transition-all duration-150 active:scale-[0.98] ${
+        className={`group flex items-center gap-1.5 sm:gap-2.5 rounded-xl border px-2 sm:px-3 py-1 sm:py-1.5 transition-all duration-150 active:scale-[0.98] max-w-[130px] xs:max-w-[170px] sm:max-w-[210px] ${
           isOpen
             ? "border-[#34c06a] bg-white shadow-sm ring-2 ring-[#34c06a]/15"
             : "border-border/80 bg-white/95 shadow-2xs hover:border-[#34c06a]/50 hover:bg-white hover:shadow-sm"
         }`}
       >
         {/* Workspace Icon Tile */}
-        <div className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#1b3324] to-[#122218] text-[#4ade80] shadow-2xs transition-transform duration-150 group-hover:scale-105">
-          <FolderKanban className="size-3.5" />
+        <div className="flex size-5 sm:size-6 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#1b3324] to-[#122218] text-[#4ade80] shadow-2xs transition-transform duration-150 group-hover:scale-105">
+          <FolderKanban className="size-3 sm:size-3.5" />
         </div>
 
         {/* Title & Metadata */}
-        <div className="flex flex-col text-left min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span suppressHydrationWarning className="truncate max-w-[135px] text-[12.5px] font-bold text-[#141a17] leading-none">
+        <div className="flex flex-col text-left min-w-0 flex-1">
+          <div className="flex items-center gap-1 min-w-0">
+            <span suppressHydrationWarning className="truncate text-[11.5px] sm:text-[12.5px] font-bold text-[#141a17] leading-tight">
               {activeWorkspace.name}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 mt-1 text-[9.5px] font-medium leading-none">
+          <div className="flex items-center gap-1 text-[8.5px] sm:text-[9.5px] font-medium leading-tight">
             <span className={`size-1.5 rounded-full shrink-0 ${activeEnv.dot}`} />
-            <span suppressHydrationWarning className="text-[#5e7467] font-semibold">
+            <span suppressHydrationWarning className="text-[#5e7467] font-semibold truncate">
               {activeWorkspace.environment || "Production"}
-            </span>
-            <span className="text-[#a0b5a8]">•</span>
-            <span suppressHydrationWarning className="text-[#688071] font-mono">
-              {activeWorkspace.dbInfo ? `${activeWorkspace.dbInfo.tables_count} tbls` : "No DB"}
             </span>
           </div>
         </div>
 
         {/* Animated Chevron */}
-        <ChevronDown className={`size-3.5 text-[#738a7c] shrink-0 ml-1 transition-transform duration-200 ${
+        <ChevronDown className={`size-3 sm:size-3.5 text-[#738a7c] shrink-0 ml-0.5 transition-transform duration-200 ${
           isOpen ? "rotate-180 text-[#1b6b3a]" : "group-hover:text-[#141a17]"
         }`} />
       </button>
 
       {/* ── Elevated Dropdown Menu ── */}
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-80 rounded-2xl border border-border/80 bg-white p-2.5 shadow-[0_16px_40px_-12px_rgba(20,35,25,0.2)] backdrop-blur-md animate-in fade-in zoom-in-95 duration-150 space-y-1.5">
+        <div className="absolute left-0 top-full z-50 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 rounded-2xl border border-border/80 bg-white p-2.5 shadow-[0_16px_40px_-12px_rgba(20,35,25,0.2)] backdrop-blur-md animate-in fade-in zoom-in-95 duration-150 space-y-1.5">
           
           {/* Dropdown Header */}
           <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[#edf3ee]">
@@ -214,4 +210,3 @@ export default function WorkspaceSwitcher({ className = "" }) {
     </div>
   )
 }
-

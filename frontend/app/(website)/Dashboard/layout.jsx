@@ -43,36 +43,40 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
   const isChat = pathname === "/Dashboard/chat"
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-border bg-white/95 px-4 backdrop-blur-md sm:px-6">
-      <div className="flex items-center gap-3">
-        <SidebarTrigger />
-        <div className="h-5 w-px bg-border" />
-        <WorkspaceSwitcher />
+    <header className="sticky top-0 z-40 flex h-14 sm:h-16 w-full shrink-0 items-center justify-between border-b border-border bg-white/95 px-3 sm:px-6 backdrop-blur-md min-w-0 max-w-full overflow-x-hidden">
+      {/* Left: Sidebar trigger & Workspace Switcher */}
+      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1 sm:flex-initial pr-2">
+        <SidebarTrigger className="size-8 shrink-0 text-[#1f2d24] hover:bg-[#edf5ef]" />
+        <div className="hidden xs:block h-4 sm:h-5 w-px bg-border shrink-0" />
+        <div className="min-w-0 flex-1 sm:flex-initial">
+          <WorkspaceSwitcher />
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      {/* Right: Actions & Tools */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
 
-        {/* Metric Glossary */}
+        {/* Metric Glossary (Desktop / Tablet) */}
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={onOpenMetrics}
-          className="gap-1.5 font-semibold text-xs text-[#206642] hidden sm:flex"
+          className="gap-1.5 font-semibold text-xs text-[#206642] hidden xl:flex h-8"
           title="Open Custom Business Metrics & Rules"
         >
           <Wand2 className="size-3.5 text-[#3aa363]" />
           <span>Metrics Glossary</span>
         </Button>
 
-        {/* Chrome Extension Status / Try Extension */}
+        {/* Chrome Extension Status / Try Extension (Large screen) */}
         {isInstalled ? (
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => openModal(false)}
-            className="gap-1.5 font-semibold text-xs border-emerald-500/40 bg-emerald-50 text-[#14532d] hover:bg-emerald-100 hidden lg:flex"
+            className="gap-1.5 font-semibold text-xs border-emerald-500/40 bg-emerald-50 text-[#14532d] hover:bg-emerald-100 hidden 2xl:flex h-8"
             title="QueryCraft Chrome Extension is installed. Press Cmd+Shift+K anywhere on the web."
           >
             <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -85,7 +89,7 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
             variant="outline"
             size="sm"
             onClick={() => openModal(true)}
-            className="gap-1.5 font-semibold text-xs border-emerald-600/30 bg-[#f0f9f3] text-[#164e2d] hover:bg-[#e2f3e8] hover:border-emerald-600/50 shadow-2xs hidden sm:flex"
+            className="gap-1.5 font-semibold text-xs border-emerald-600/30 bg-[#f0f9f3] text-[#164e2d] hover:bg-[#e2f3e8] hover:border-emerald-600/50 shadow-2xs hidden 2xl:flex h-8"
             title="Open on any page with Cmd+Shift+K — Try QueryCraft Chrome Extension"
           >
             <Sparkles className="size-3.5 text-emerald-600" />
@@ -96,84 +100,84 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
           </Button>
         )}
 
-        {/* DB Status */}
+        {/* DB Status / Connect DB Pill */}
         <Button
           type="button"
           suppressHydrationWarning
           variant={dbInfo ? "secondary" : "default"}
           size="sm"
           onClick={() => setIsModalOpen(true)}
-          className="gap-1.5 font-semibold text-xs shadow-2xs"
-          title="Connect your cloud PostgreSQL database"
+          className="gap-1.5 font-semibold text-xs shadow-2xs h-8 px-2 sm:px-3"
+          title={dbInfo ? `Connected to ${dbInfo.host} (${dbInfo.tables_count} tables)` : "Connect your cloud database"}
         >
           {dbInfo ? (
             <>
-              <span className="size-2 rounded-full bg-[#3ba565] animate-pulse" />
-              <Database className="size-3.5 text-[#3ba565]" />
-              <span className="hidden md:inline font-mono">{dbInfo.host}</span>
-              <span className="md:hidden">DB Connected</span>
+              <span className="size-2 rounded-full bg-[#3ba565] animate-pulse shrink-0" />
+              <Database className="size-3.5 text-[#3ba565] shrink-0" />
+              <span className="hidden lg:inline font-mono truncate max-w-[120px]">{dbInfo.host}</span>
+              <span className="hidden sm:inline lg:hidden font-medium">DB</span>
               <Badge variant="emerald" className="px-1.5 py-0 text-[9px] bg-white">
-                {dbInfo.tables_count} tbls
+                {dbInfo.tables_count} <span className="hidden xs:inline">tbls</span>
               </Badge>
             </>
           ) : (
             <>
-              <Cloud className="size-3.5 text-[#71c897]" />
-              <span>Connect Cloud DB</span>
-              <span className="hidden lg:inline rounded bg-white/20 px-1 py-0.2 text-[9px] text-[#b3eac8]">
-                Supabase / Neon / RDS
-              </span>
+              <Cloud className="size-3.5 text-[#71c897] shrink-0" />
+              <span className="hidden sm:inline">Connect DB</span>
+              <span className="sm:hidden text-xs">Connect</span>
             </>
           )}
         </Button>
 
-        {/* View Switcher */}
-        <div className="flex items-center rounded-xl border border-border bg-[#f8fbf8] p-1 text-xs">
+        {/* View Switcher: Tester / Live Chat */}
+        <div className="flex items-center rounded-xl border border-border bg-[#f8fbf8] p-0.5 text-xs">
           <Link
             href="/Dashboard"
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition-all duration-150 ${isQueryTester
+            className={`flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 font-semibold transition-all duration-150 ${isQueryTester
                 ? "bg-[#1f2d24] text-white shadow-2xs"
                 : "text-[#55675c] hover:bg-[#eef4ef] hover:text-[#1f2d24]"
               }`}
+            title="Query Compiler Tester"
           >
             <Terminal className="size-3.5" />
-            <span>Tester</span>
+            <span className="hidden sm:inline">Tester</span>
           </Link>
           <Link
             href="/Dashboard/chat"
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition-all duration-150 ${isChat
+            className={`flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 font-semibold transition-all duration-150 ${isChat
                 ? "bg-[#1f2d24] text-white shadow-2xs"
                 : "text-[#55675c] hover:bg-[#eef4ef] hover:text-[#1f2d24]"
               }`}
+            title="Interactive Multi-Turn AI Chat"
           >
             <MessageSquareText className="size-3.5" />
-            <span>Live Chat</span>
+            <span className="hidden sm:inline">Chat</span>
           </Link>
         </div>
 
-        {/* Settings Button — triggers shared settings panel */}
+        {/* Settings Button */}
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={onOpenSettings}
-          className="gap-1.5 font-semibold text-xs text-[#4a5e53] border-[#e0e8e2] hover:bg-[#edf5ef] hover:text-[#1a2920]"
+          className="gap-1.5 font-semibold text-xs text-[#4a5e53] border-[#e0e8e2] hover:bg-[#edf5ef] hover:text-[#1a2920] h-8 px-2 sm:px-3"
           title="Settings (Cmd+,) — synced with extension"
         >
           <Settings className="size-3.5" />
-          <span className="hidden sm:inline">Settings</span>
+          <span className="hidden md:inline">Settings</span>
         </Button>
 
         {/* Back to Landing */}
-        <Link href="/">
+        <Link href="/" className="hidden sm:block">
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5 font-semibold text-xs text-[#32483a]"
+            className="gap-1.5 font-semibold text-xs text-[#32483a] h-8 px-2 sm:px-3"
             title="Back to Landing Page"
           >
             <ArrowLeft className="size-3.5 text-[#5e7065]" />
-            <span className="hidden sm:inline">Landing</span>
+            <span className="hidden md:inline">Home</span>
           </Button>
         </Link>
       </div>
@@ -215,12 +219,14 @@ function DashboardShell({ children }) {
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenMetrics={() => setIsMetricModalOpen(true)}
       />
-      <SidebarInset className="bg-background">
+      <SidebarInset className="bg-background min-w-0 max-w-full overflow-x-hidden flex-1">
         <DashboardNavbar
           onOpenMetrics={() => setIsMetricModalOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
         />
-        {children}
+        <div className="w-full max-w-full min-w-0 overflow-x-hidden flex-1">
+          {children}
+        </div>
       </SidebarInset>
 
       {/* Modals */}

@@ -210,41 +210,38 @@ export default function SettingsPanel({ isOpen, onClose }) {
 
       {/* Modal Dialog */}
       <div
-        className="relative z-10 w-full max-w-4xl bg-white rounded-2xl border border-[#dfe7df] shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-200"
-        style={{ maxHeight: "88vh", height: "640px" }}
+        className="relative z-10 w-full max-w-4xl max-h-[92dvh] h-[640px] bg-white rounded-2xl border border-[#dfe7df] shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-200"
       >
         {/* ── Left Navigation Sidebar ── */}
         <div className="w-full md:w-64 shrink-0 bg-[#f8faf8] border-b md:border-b-0 md:border-r border-[#e3ebe4] flex flex-col">
           {/* Header */}
-          <div className="p-4 border-b border-[#e3ebe4]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex size-8 items-center justify-center rounded-xl bg-[#1a2920] text-[#5de08a] shadow-xs">
-                  <Settings2 className="size-4" />
-                </div>
-                <div>
-                  <h2 className="text-[14px] font-bold text-[#141a17]">Preferences</h2>
-                  <p className="text-[11px] text-[#718578] leading-none mt-0.5">Global Configuration</p>
-                </div>
+          <div className="p-3 sm:p-4 border-b border-[#e3ebe4] flex items-center justify-between md:block">
+            <div className="flex items-center gap-2.5">
+              <div className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-[#1a2920] text-[#5de08a] shadow-xs shrink-0">
+                <Settings2 className="size-3.5 sm:size-4" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-xs sm:text-[14px] font-bold text-[#141a17] leading-none">Preferences</h2>
+                <p className="text-[10px] sm:text-[11px] text-[#718578] leading-none mt-0.5 hidden xs:block">Global Configuration</p>
               </div>
             </div>
 
             {/* Cloud Sync Status Indicator */}
-            <div className="mt-3 flex items-center justify-between rounded-lg border border-[#d6e5d8] bg-white px-2.5 py-1.5 shadow-2xs">
+            <div className="flex items-center gap-1.5 md:mt-3 rounded-lg border border-[#d6e5d8] bg-white px-2 sm:px-2.5 py-1 sm:py-1.5 shadow-2xs">
               <div className="flex items-center gap-1.5">
-                <span className={`size-2 rounded-full ${isSyncing ? "bg-amber-400 animate-ping" : "bg-[#34c06a]"}`} />
-                <span className="text-[10.5px] font-medium text-[#4a5e53]">
+                <span className={`size-2 rounded-full shrink-0 ${isSyncing ? "bg-amber-400 animate-ping" : "bg-[#34c06a]"}`} />
+                <span className="text-[9.5px] sm:text-[10.5px] font-medium text-[#4a5e53] hidden xs:inline">
                   {isSyncing ? "Syncing..." : "Cloud Synced"}
                 </span>
               </div>
-              <Badge variant="outline" className="px-1 py-0 text-[9px] font-mono text-[#256339] border-[#c0dec7] bg-[#f0f8f2]">
-                Web &amp; Ext
+              <Badge variant="outline" className="px-1 py-0 text-[8px] sm:text-[9px] font-mono text-[#256339] border-[#c0dec7] bg-[#f0f8f2]">
+                Sync
               </Badge>
             </div>
           </div>
 
-          {/* Nav Tab Buttons */}
-          <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+          {/* Nav Tab Buttons: Horizontal scroll on mobile, Vertical list on desktop */}
+          <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto p-1.5 md:p-2 gap-1 md:space-y-1 shrink-0 md:flex-1 no-scrollbar">
             {TABS.map((tab) => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
@@ -253,19 +250,19 @@ export default function SettingsPanel({ isOpen, onClose }) {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-[12.5px] font-semibold text-left transition-all duration-150 ${
+                  className={`flex items-center justify-between rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2.5 text-[11.5px] sm:text-[12.5px] font-semibold text-left transition-all duration-150 shrink-0 whitespace-nowrap md:whitespace-normal md:w-full ${
                     isActive
                       ? "bg-[#1f2d24] text-white shadow-xs"
                       : "text-[#4a5e53] hover:bg-[#eef5f0] hover:text-[#141a17]"
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`size-4 ${isActive ? "text-[#5de08a]" : "text-[#7b9283]"}`} />
+                  <div className="flex items-center gap-2 sm:gap-2.5">
+                    <Icon className={`size-3.5 sm:size-4 ${isActive ? "text-[#5de08a]" : "text-[#7b9283]"}`} />
                     <span>{tab.label}</span>
                   </div>
                   {tab.badge && (
                     <span
-                      className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-md ${
+                      className={`text-[9px] sm:text-[9.5px] font-bold px-1.5 py-0.2 rounded-md hidden sm:inline ml-2 ${
                         isActive
                           ? "bg-white/20 text-[#a5f3bc]"
                           : "bg-[#e5eee7] text-[#55695d]"
@@ -279,8 +276,8 @@ export default function SettingsPanel({ isOpen, onClose }) {
             })}
           </nav>
 
-          {/* Active Workspace Pill in Sidebar Footer */}
-          <div className="p-3 border-t border-[#e3ebe4] bg-white">
+          {/* Active Workspace Pill in Sidebar Footer (desktop only) */}
+          <div className="hidden md:block p-3 border-t border-[#e3ebe4] bg-white">
             <div className="flex items-center gap-2">
               <div
                 className="size-3 rounded-full shrink-0"
@@ -299,9 +296,9 @@ export default function SettingsPanel({ isOpen, onClose }) {
         </div>
 
         {/* ── Right Content Pane ── */}
-        <div className="flex-1 flex flex-col bg-white overflow-hidden">
+        <div className="flex-1 flex flex-col bg-white overflow-hidden min-w-0">
           {/* Header Bar */}
-          <div className="flex items-center justify-between border-b border-[#e3ebe4] px-6 py-4 bg-white/90">
+          <div className="flex items-center justify-between border-b border-[#e3ebe4] px-4 py-3 sm:px-6 sm:py-4 bg-white/90 shrink-0">
             <div>
               <h3 className="text-base font-bold text-[#141a17]">
                 {TABS.find((t) => t.id === activeTab)?.label}
