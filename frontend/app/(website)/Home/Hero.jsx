@@ -27,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
+import { useAuth } from "@/lib/authContext"
 
 const trustMetrics = [
   { value: "Multi-Model", label: "SQL & NoSQL Engines", icon: Layers },
@@ -35,6 +36,7 @@ const trustMetrics = [
 ]
 
 export default function Hero() {
+  const { user } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [demoDialect, setDemoDialect] = useState("sql") // "sql" | "nosql"
 
@@ -98,27 +100,46 @@ export default function Hero() {
 
           {/* Right Action CTAs */}
           <div className="hidden md:flex items-center gap-2.5">
-            <Link href="/Dashboard">
-              <Button variant="ghost" size="sm" className="font-semibold text-xs text-[#2d4334] hover:bg-[#edf5ef] gap-1.5">
-                <Terminal className="size-3.5 text-[#3aa363]" />
-                <span>Workspace</span>
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link href="/Dashboard">
+                  <Button variant="ghost" size="sm" className="font-semibold text-xs text-[#2d4334] hover:bg-[#edf5ef] gap-1.5">
+                    <Terminal className="size-3.5 text-[#3aa363]" />
+                    <span>Workspace</span>
+                  </Button>
+                </Link>
 
-            <Link href="/Dashboard/chat">
-              <Button variant="default" size="sm" className="gap-1.5 font-semibold text-xs shadow-sm hover:shadow-md">
-                <MessageSquareText className="size-3.5 text-[#71c897]" />
-                <span>Launch Studio</span>
-                <ArrowRight className="size-3 text-[#71c897]" />
-              </Button>
-            </Link>
+                <Link href="/Dashboard/chat">
+                  <Button variant="default" size="sm" className="gap-1.5 font-semibold text-xs shadow-sm hover:shadow-md">
+                    <MessageSquareText className="size-3.5 text-[#71c897]" />
+                    <span>Launch Studio</span>
+                    <ArrowRight className="size-3 text-[#71c897]" />
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/Login">
+                  <Button variant="ghost" size="sm" className="font-semibold text-xs text-[#2d4334] hover:bg-[#edf5ef]">
+                    <span>Sign In</span>
+                  </Button>
+                </Link>
+
+                <Link href="/Register">
+                  <Button variant="default" size="sm" className="gap-1.5 font-semibold text-xs shadow-sm hover:shadow-md">
+                    <span>Get Started</span>
+                    <ArrowRight className="size-3 text-[#71c897]" />
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Hamburger */}
           <div className="md:hidden flex items-center gap-2">
-            <Link href="/Dashboard/chat">
+            <Link href={user ? "/Dashboard/chat" : "/Login"}>
               <Button variant="default" size="sm" className="h-8 px-2.5 text-xs">
-                <span>Chat</span>
+                <span>{user ? "Chat" : "Sign In"}</span>
                 <ArrowRight className="size-3" />
               </Button>
             </Link>
@@ -145,13 +166,15 @@ export default function Hero() {
               <a href="#use-cases" onClick={() => setIsMobileMenuOpen(false)} className="rounded-lg p-2 hover:bg-[#f2f7f3] transition">Use Cases</a>
               <a href="#mcp" onClick={() => setIsMobileMenuOpen(false)} className="rounded-lg p-2 hover:bg-[#f2f7f3] transition font-semibold text-[#1f663c]">MCP Protocol</a>
               <a href="#testimonials" onClick={() => setIsMobileMenuOpen(false)} className="rounded-lg p-2 hover:bg-[#f2f7f3] transition">Testimonials</a>
-              <Link href="/Dashboard" onClick={() => setIsMobileMenuOpen(false)} className="rounded-lg p-2 hover:bg-[#f2f7f3] transition">Query Workspace</Link>
+              <Link href={user ? "/Dashboard" : "/Login"} onClick={() => setIsMobileMenuOpen(false)} className="rounded-lg p-2 hover:bg-[#f2f7f3] transition">
+                {user ? "Query Workspace" : "Sign In"}
+              </Link>
             </div>
             <div className="border-t border-border pt-2">
-              <Link href="/Dashboard/chat" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href={user ? "/Dashboard/chat" : "/Register"} onClick={() => setIsMobileMenuOpen(false)}>
                 <Button variant="default" className="w-full gap-2 text-xs">
                   <MessageSquareText className="size-4 text-[#71c897]" />
-                  <span>Open Interactive Chat</span>
+                  <span>{user ? "Open Interactive Chat" : "Create Free Account"}</span>
                 </Button>
               </Link>
             </div>
@@ -191,18 +214,18 @@ export default function Hero() {
 
           {/* Action CTAs */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center pt-1">
-            <Link href="/Dashboard/chat">
+            <Link href={user ? "/Dashboard/chat" : "/Login"}>
               <Button variant="default" size="lg" className="w-full sm:w-auto gap-2.5 font-semibold text-xs sm:text-sm shadow-md hover:shadow-xl hover:scale-[1.02] transition-all duration-200">
                 <MessageSquareText className="size-4 text-[#71c897]" />
-                <span>Launch Interactive Chat</span>
+                <span>{user ? "Launch Interactive Chat" : "Get Started Free"}</span>
                 <ArrowRight className="size-3.5 text-[#71c897]" />
               </Button>
             </Link>
 
-            <Link href="/Dashboard">
+            <Link href={user ? "/Dashboard" : "/Login"}>
               <Button variant="outline" size="lg" className="w-full sm:w-auto gap-2 font-semibold text-xs sm:text-sm hover:scale-[1.02] transition-all duration-200">
                 <Terminal className="size-4 text-[#3aa363]" />
-                <span>Query Compiler Workspace</span>
+                <span>{user ? "Query Compiler Workspace" : "Sign In to Studio"}</span>
               </Button>
             </Link>
           </div>

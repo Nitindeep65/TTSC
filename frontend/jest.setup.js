@@ -1,5 +1,16 @@
 import '@testing-library/jest-dom'
 
+// Mock global fetch
+if (!global.fetch) {
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      json: () => Promise.resolve({}),
+      text: () => Promise.resolve(''),
+      ok: true,
+    })
+  )
+}
+
 // Mock Clipboard API
 Object.assign(navigator, {
   clipboard: {
@@ -40,6 +51,56 @@ jest.mock('axios', () => ({
     create: jest.fn(() => mockAxiosInstance),
   },
 }))
+
+// Mock Firebase Web SDK for fast unit testing
+jest.mock('firebase/app', () => ({
+  initializeApp: jest.fn(() => ({})),
+  getApps: jest.fn(() => []),
+  getApp: jest.fn(() => ({})),
+}))
+
+jest.mock('firebase/auth', () => {
+  function MockAuthProvider() {
+    this.setCustomParameters = jest.fn()
+  }
+  return {
+    getAuth: jest.fn(() => ({})),
+    GoogleAuthProvider: jest.fn().mockImplementation(MockAuthProvider),
+    GithubAuthProvider: jest.fn().mockImplementation(MockAuthProvider),
+    signInWithEmailAndPassword: jest.fn(() =>
+    Promise.resolve({
+      user: {
+        uid: 'test-user-123',
+        email: 'alex@querycraft.dev',
+        displayName: 'Alex Rivera',
+      },
+    })
+  ),
+  createUserWithEmailAndPassword: jest.fn(() =>
+    Promise.resolve({
+      user: {
+        uid: 'test-user-456',
+        email: 'sofia@cloudscale.io',
+        displayName: 'Sofia Davis',
+      },
+    })
+  ),
+  signInWithPopup: jest.fn(() =>
+    Promise.resolve({
+      user: {
+        uid: 'test-oauth-789',
+        email: 'oauth@querycraft.dev',
+        displayName: 'OAuth User',
+      },
+    })
+  ),
+  signOut: jest.fn(() => Promise.resolve()),
+  updateProfile: jest.fn(() => Promise.resolve()),
+  onAuthStateChanged: jest.fn((auth, cb) => {
+    return () => {}
+  }),
+}
+})
 
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,

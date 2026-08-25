@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   SidebarInset,
   SidebarProvider,
@@ -8,11 +8,12 @@ import {
 } from "@/components/ui/Sidebar"
 import { AppSidebar } from "./slidebar"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   ArrowLeft,
   Cloud,
   Database,
+  Loader2,
   MessageSquareText,
   Settings,
   Terminal,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react"
 import { DatabaseProvider, useDatabase } from "@/lib/databaseContext"
 import { SettingsProvider, useSettings } from "@/lib/settingsContext"
+import { useAuth } from "@/lib/authContext"
 import ConnectDatabaseModal from "@/components/database/ConnectDatabaseModal"
 import CreateWorkspaceModal from "@/components/workspace/CreateWorkspaceModal"
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher"
@@ -144,11 +146,32 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
 }
 
 function DashboardShell({ children }) {
+  const router = useRouter()
+  const { user, loading } = useAuth()
   const [isMetricModalOpen, setIsMetricModalOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
-  // Global keyboard shortcut Cmd+, opens Settings (reads from backend-synced shortcuts)
-  // The SettingsPanel itself handles its own key listener for Escape
+  // Route protection: If authentication state is resolved and no user is signed in, redirect to /Login
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/Login")
+    }
+  }, [user, loading, router])
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-[#f8faf8] space-y-3">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-[#1f2d24] text-[#4ade80] shadow-md animate-pulse">
+          <Loader2 className="size-5 animate-spin" />
+        </div>
+        <p className="text-xs font-semibold text-[#5e7467]">Verifying authentication...</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null
+  }
 
   return (
     <SidebarProvider>

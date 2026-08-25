@@ -45,11 +45,13 @@ import {
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useDatabase } from "@/lib/databaseContext"
+import { useAuth } from "@/lib/authContext"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 export function AppSidebar({ onOpenSettings }) {
   const pathname = usePathname()
+  const { user, logout } = useAuth()
   const {
     dbInfo,
     activeWorkspace,
@@ -380,7 +382,7 @@ export function AppSidebar({ onOpenSettings }) {
       </SidebarContent>
 
       {/* ── Sidebar Footer ── */}
-      <SidebarFooter className="border-t border-[--border] bg-white px-3 py-2.5">
+      <SidebarFooter className="border-t border-[--border] bg-white px-3 py-2.5 space-y-2">
         <SidebarMenu className="gap-1">
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -415,6 +417,43 @@ export function AppSidebar({ onOpenSettings }) {
             </SidebarMenuItem>
           )}
         </SidebarMenu>
+
+        {/* User Authentication Status Tile */}
+        <div className="pt-2 border-t border-[#edf2ee]">
+          {user ? (
+            <div className="flex items-center justify-between gap-2 p-1.5 rounded-xl bg-[#f7f9f7] border border-[#e4ece5]">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="size-6 rounded-lg bg-[#1a2920] text-[#5de08a] flex items-center justify-center font-bold text-[10px] shrink-0">
+                  {(user.displayName || user.email || "U").charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-bold text-[#141a17] truncate leading-tight">
+                    {user.displayName || "QueryCraft User"}
+                  </p>
+                  <p className="text-[9.5px] text-[#718578] truncate leading-tight">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => logout()}
+                title="Sign Out"
+                className="size-6 flex items-center justify-center rounded-lg text-[#718578] hover:text-red-600 hover:bg-red-50 transition-colors shrink-0 cursor-pointer"
+              >
+                <LogOut className="size-3" />
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/Login"
+              className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-xl bg-[#1f2d24] text-white text-[11px] font-bold hover:bg-[#2c4033] transition-colors shadow-2xs"
+            >
+              <span>Sign In / Register</span>
+              <ArrowRight className="size-3" />
+            </Link>
+          )}
+        </div>
       </SidebarFooter>
 
     </Sidebar>

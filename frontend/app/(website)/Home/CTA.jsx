@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useAuth } from "@/lib/authContext"
 
 const steps = [
   {
@@ -39,6 +40,8 @@ const steps = [
 ]
 
 export default function CTA() {
+  const { user } = useAuth()
+
   return (
     <section id="cta" className="relative overflow-hidden bg-[#121d16] px-4 py-20 text-white sm:px-6 lg:px-8 lg:py-24">
       {/* Glow Accents */}
@@ -107,26 +110,26 @@ export default function CTA() {
           </div>
 
           <div className="flex flex-col gap-3.5 sm:flex-row shrink-0">
-            <Link href="/Dashboard/chat">
+            <Link href={user ? "/Dashboard/chat" : "/Login"}>
               <Button
                 variant="primary"
                 size="lg"
                 className="gap-2.5 px-7 py-4 text-sm font-bold shadow-xl shadow-[#4ca873]/25 hover:scale-[1.03] transition-all duration-200"
               >
                 <MessageSquareText className="size-4.5" />
-                <span>Launch Live Studio</span>
+                <span>{user ? "Launch Live Studio" : "Get Started Free"}</span>
                 <ArrowRight className="size-4" />
               </Button>
             </Link>
 
-            <Link href="/Dashboard">
+            <Link href={user ? "/Dashboard" : "/Login"}>
               <Button
                 variant="outline"
                 size="lg"
                 className="gap-2.5 border-white/20 bg-white/5 px-7 py-4 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:scale-[1.03] transition-all duration-200"
               >
                 <Terminal className="size-4.5 text-[#71c897]" />
-                <span>Query Workspace</span>
+                <span>{user ? "Query Workspace" : "Sign In to Studio"}</span>
               </Button>
             </Link>
           </div>

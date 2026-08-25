@@ -15,6 +15,8 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "500", "600", "700"],
 });
 
+import AuthProviderWrapper from "@/components/providers/AuthProviderWrapper";
+
 export const metadata = {
   title: "QueryCraft — Universal Text-to-SQL & NoSQL Database Engine",
   description: "Transform natural language into safe, production-ready PostgreSQL, MySQL, MongoDB MQL, DynamoDB, and Redis queries with live schema grounding and conversational clarification.",
@@ -27,7 +29,9 @@ export default function RootLayout({ children }) {
       className={`${plusJakartaSans.variable} ${jetbrainsMono.variable} h-full antialiased scroll-smooth overflow-x-hidden`}
     >
       <body className="min-h-full flex flex-col font-sans bg-[#f7f8f5] text-[#17241c] selection:bg-[#4ca873]/25 selection:text-[#114227] overflow-x-hidden">
-        {children}
+        <AuthProviderWrapper>
+          {children}
+        </AuthProviderWrapper>
       </body>
     </html>
   );

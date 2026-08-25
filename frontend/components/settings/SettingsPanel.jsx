@@ -29,9 +29,11 @@ import {
   RefreshCw,
   HardDrive,
   Copy,
+  LogOut,
 } from "lucide-react"
 import { useSettings } from "@/lib/settingsContext"
 import { useDatabase } from "@/lib/databaseContext"
+import { useAuth } from "@/lib/authContext"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { API_BASE_URL, settingsApi } from "@/lib/api"
@@ -70,6 +72,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
   } = useSettings()
 
   const { activeWorkspace, dbInfo } = useDatabase()
+  const { user: authUser, logout: authLogout } = useAuth()
 
   const [activeTab, setActiveTab] = useState("account")
   const [toast, setToast] = useState(null)
@@ -77,8 +80,8 @@ export default function SettingsPanel({ isOpen, onClose }) {
 
   // Local Editable Form States
   const [localAccount, setLocalAccount] = useState(() => ({
-    displayName: settings.account?.displayName || "QueryCraft User",
-    email: settings.account?.email || "demo@querycraft.dev",
+    displayName: authUser?.displayName || settings.account?.displayName || "QueryCraft User",
+    email: authUser?.email || settings.account?.email || "demo@querycraft.dev",
     role: settings.account?.role || "Data Architect",
   }))
   const [localPreferences, setLocalPreferences] = useState(() => ({
@@ -385,17 +388,35 @@ export default function SettingsPanel({ isOpen, onClose }) {
                         </select>
                       </div>
 
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          saveAccount(localAccount)
-                          showToast("Profile credentials saved and synced", "success")
-                        }}
-                        className="w-full sm:w-auto gap-2 font-bold text-xs bg-[#1f2d24] hover:bg-[#2e4235]"
-                      >
-                        <Save className="size-3.5" />
-                        <span>Save Profile</span>
-                      </Button>
+                      <div className="flex items-center gap-3 pt-1">
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            saveAccount(localAccount)
+                            showToast("Profile credentials saved and synced", "success")
+                          }}
+                          className="gap-2 font-bold text-xs bg-[#1f2d24] hover:bg-[#2e4235]"
+                        >
+                          <Save className="size-3.5" />
+                          <span>Save Profile</span>
+                        </Button>
+
+                        {authUser && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              authLogout()
+                              showToast("Logged out successfully", "warning")
+                              onClose()
+                            }}
+                            className="gap-1.5 font-bold text-xs text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <LogOut className="size-3.5" />
+                            <span>Sign Out</span>
+                          </Button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Active Workspace Overview Card */}

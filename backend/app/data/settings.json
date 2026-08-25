@@ -10,17 +10,11 @@
     "compactOnStart": false,
     "autoFocus": true
   },
-  "shortcuts": {
-    "openDB": {
-      "mod": "Cmd",
-      "key": "s"
-    }
-  },
+  "shortcuts": {},
   "apiBase": "http://127.0.0.1:8000",
   "usage": {
-    "queries": 10,
+    "queries": 0,
     "heals": 0,
-    "verified": 0,
-    "dbs": 1
+    "verified": 0
   }
 }

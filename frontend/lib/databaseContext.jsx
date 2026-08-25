@@ -48,26 +48,29 @@ export function DatabaseProvider({ children }) {
 
   // 1. Restore Workspaces & Active Workspace on Mount (client-only)
   useEffect(() => {
-    try {
-      const savedWorkspaces = localStorage.getItem(STORAGE_KEY_WORKSPACES)
-      const savedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE_WS)
+    const restoreSavedData = () => {
+      try {
+        const savedWorkspaces = localStorage.getItem(STORAGE_KEY_WORKSPACES)
+        const savedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE_WS)
 
-      if (savedWorkspaces) {
-        const parsed = JSON.parse(savedWorkspaces)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setWorkspaces(parsed)
-          if (savedActiveId && parsed.some((w) => w.id === savedActiveId)) {
-            setActiveWorkspaceId(savedActiveId)
-          } else {
-            setActiveWorkspaceId(parsed[0].id)
+        if (savedWorkspaces) {
+          const parsed = JSON.parse(savedWorkspaces)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setWorkspaces(parsed)
+            if (savedActiveId && parsed.some((w) => w.id === savedActiveId)) {
+              setActiveWorkspaceId(savedActiveId)
+            } else {
+              setActiveWorkspaceId(parsed[0].id)
+            }
           }
         }
+      } catch {
+        // ignore
+      } finally {
+        setIsHydrated(true)
       }
-    } catch {
-      // ignore
-    } finally {
-      setIsHydrated(true)
     }
+    queueMicrotask(restoreSavedData)
   }, [])
 
   // 2. Derive Active Workspace

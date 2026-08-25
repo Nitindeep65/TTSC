@@ -159,12 +159,14 @@ TTS/
 │   │   │   └── use-mobile.js                   # Mobile viewport detection hook
 │   │   └── lib/
 │   │       ├── api.js                          # Centralized Next.js frontend API client (env NEXT_PUBLIC_API_URL)
+│   │       ├── authContext.jsx                 # Firebase Authentication Context (Email, Google, GitHub, session)
 │   │       ├── databaseContext.jsx             # Active workspace, connection, live query state
+│   │       ├── firebase.js                     # Firebase Web SDK initialization & providers
 │   │       ├── settingsContext.jsx             # Synced settings & preferences context
 │   │       └── utils.js                        # Tailwind merge & clsx utility
-│   ├── .env.local                              # NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+│   ├── .env.local                              # NEXT_PUBLIC_API_URL, Firebase credentials
 │   ├── .env.example                            # Example env configuration
-│   └── package.json                            # Next.js, React 19, Lucide, TailwindCSS v4
+│   └── package.json                            # Next.js, React 19, Firebase, Lucide, TailwindCSS v4
 │
 ├── extension/                      # Manifest V3 Chrome Extension (SQL/NoSQL Studio & Copilot)
 │   ├── background.js               # Service Worker: Global shortcuts & context menu actions
