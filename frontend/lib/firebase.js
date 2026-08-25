@@ -22,22 +22,10 @@ const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || ""
 const messagingSenderId = process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || ""
 const appId = process.env.NEXT_PUBLIC_FIREBASE_APP_ID || ""
 
-/**
- * Flag indicating whether production Firebase credentials are provided in .env.local
- */
-export const isFirebaseConfigured = Boolean(
-  apiKey &&
-  apiKey.startsWith("AIza") &&
-  apiKey !== "AIzaSyDummyKeyForBuildEnvironment" &&
-  !apiKey.includes("Demo") &&
-  !apiKey.includes("Placeholder") &&
-  (authDomain || projectId)
-)
-
 const firebaseConfig = {
-  apiKey: apiKey || "AIzaSyDummyKeyForBuildEnvironment",
-  authDomain: authDomain || "localhost",
-  projectId: projectId || "querycraft-app",
+  apiKey: apiKey,
+  authDomain: authDomain,
+  projectId: projectId,
   storageBucket: storageBucket,
   messagingSenderId: messagingSenderId,
   appId: appId,
@@ -50,8 +38,15 @@ let auth = null
 try {
   if (getApps().length > 0) {
     app = getApp()
-  } else {
+  } else if (apiKey) {
     app = initializeApp(firebaseConfig)
+  } else {
+    // Build/Test fallback to allow compilation
+    app = initializeApp({
+      apiKey: "AIzaSyDummyBuildPlaceholderOnly",
+      authDomain: "querycraft.firebaseapp.com",
+      projectId: "querycraft-prod",
+    })
   }
   auth = getAuth(app)
 } catch {
@@ -78,7 +73,6 @@ export {
 const firebaseClient = {
   app,
   auth,
-  isFirebaseConfigured,
   googleProvider,
   githubProvider,
 }

@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react"
 import {
   auth,
-  isFirebaseConfigured,
   googleProvider,
   githubProvider,
   signInWithEmailAndPassword,
@@ -21,11 +20,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState("")
 
-  // Real-time Firebase Authentication state listener with Local Preview fallback
+  // Real-time Firebase Authentication listener
   useEffect(() => {
     let unsubscribe = () => {}
 
-    if (auth && isFirebaseConfigured) {
+    if (auth) {
       try {
         unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
           if (firebaseUser) {
@@ -43,183 +42,133 @@ export function AuthProvider({ children }) {
           }
           setLoading(false)
         })
-      } catch {
+      } catch (err) {
+        console.error("Firebase auth state error:", err)
         setLoading(false)
       }
     } else {
-      // Local preview mode: restore saved session if present
-      try {
-        const saved = localStorage.getItem("tts_user_session")
-        if (saved) {
-          setUser(JSON.parse(saved))
-        }
-      } catch {}
       setLoading(false)
     }
 
     return () => unsubscribe()
   }, [])
 
-  // Sign In with Email & Password
+  // Helper check for missing env vars
+  const checkFirebaseEnv = () => {
+    if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NODE_ENV !== "test") {
+      throw new Error(
+        "Missing Firebase Environment Variables in Deployment: Please configure NEXT_PUBLIC_FIREBASE_API_KEY and NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN in your Vercel Project Settings > Environment Variables, then Redeploy."
+      )
+    }
+  }
+
+  // Sign In with Email & Password (Realtime Firebase)
   const loginWithEmail = async (email, password) => {
     setAuthError("")
-    if (isFirebaseConfigured && auth) {
-      try {
-        const res = await signInWithEmailAndPassword(auth, email.trim(), password)
-        const loggedUser = {
-          uid: res.user.uid,
-          email: res.user.email,
-          displayName:
-            res.user.displayName || res.user.email?.split("@")[0] || "QueryCraft User",
-          photoURL: res.user.photoURL || null,
-        }
-        setUser(loggedUser)
-        return loggedUser
-      } catch (err) {
-        const msg = formatFirebaseError(err.code || err.message)
-        setAuthError(msg)
-        throw new Error(msg)
+    checkFirebaseEnv()
+    if (!auth) throw new Error("Firebase Auth is not initialized.")
+
+    try {
+      const res = await signInWithEmailAndPassword(auth, email.trim(), password)
+      const loggedUser = {
+        uid: res.user.uid,
+        email: res.user.email,
+        displayName:
+          res.user.displayName || res.user.email?.split("@")[0] || "QueryCraft User",
+        photoURL: res.user.photoURL || null,
       }
-    } else {
-      // Local development preview session
-      const previewUser = {
-        uid: `usr_${Date.now()}`,
-        email: email.trim() || "developer@querycraft.dev",
-        displayName: email.includes("@") ? email.split("@")[0] : "QueryCraft User",
-        photoURL: null,
-        isDemo: true,
-      }
-      setUser(previewUser)
-      try {
-        localStorage.setItem("tts_user_session", JSON.stringify(previewUser))
-      } catch {}
-      return previewUser
+      setUser(loggedUser)
+      return loggedUser
+    } catch (err) {
+      const msg = formatFirebaseError(err.code || err.message)
+      setAuthError(msg)
+      throw new Error(msg)
     }
   }
 
-  // Sign Up with Email, Password & Display Name
+  // Sign Up with Email & Password (Realtime Firebase)
   const registerWithEmail = async (email, password, displayName) => {
     setAuthError("")
-    if (isFirebaseConfigured && auth) {
-      try {
-        const res = await createUserWithEmailAndPassword(auth, email.trim(), password)
-        if (displayName && res.user) {
-          await updateProfile(res.user, { displayName: displayName.trim() })
-        }
-        const newUser = {
-          uid: res.user.uid,
-          email: res.user.email,
-          displayName:
-            displayName?.trim() || res.user.email?.split("@")[0] || "QueryCraft User",
-          photoURL: res.user.photoURL || null,
-        }
-        setUser(newUser)
-        return newUser
-      } catch (err) {
-        const msg = formatFirebaseError(err.code || err.message)
-        setAuthError(msg)
-        throw new Error(msg)
+    checkFirebaseEnv()
+    if (!auth) throw new Error("Firebase Auth is not initialized.")
+
+    try {
+      const res = await createUserWithEmailAndPassword(auth, email.trim(), password)
+      if (displayName && res.user) {
+        await updateProfile(res.user, { displayName: displayName.trim() })
       }
-    } else {
-      // Local development preview session
-      const previewUser = {
-        uid: `usr_${Date.now()}`,
-        email: email.trim() || "alex@querycraft.dev",
-        displayName: displayName?.trim() || (email.includes("@") ? email.split("@")[0] : "Alex Rivera"),
-        photoURL: null,
-        isDemo: true,
+      const newUser = {
+        uid: res.user.uid,
+        email: res.user.email,
+        displayName:
+          displayName?.trim() || res.user.email?.split("@")[0] || "QueryCraft User",
+        photoURL: res.user.photoURL || null,
       }
-      setUser(previewUser)
-      try {
-        localStorage.setItem("tts_user_session", JSON.stringify(previewUser))
-      } catch {}
-      return previewUser
+      setUser(newUser)
+      return newUser
+    } catch (err) {
+      const msg = formatFirebaseError(err.code || err.message)
+      setAuthError(msg)
+      throw new Error(msg)
     }
   }
 
-  // Sign In with Google OAuth Popup
+  // Sign In with Google (Realtime Firebase Popup)
   const loginWithGoogle = async () => {
     setAuthError("")
-    if (isFirebaseConfigured && auth) {
-      try {
-        const res = await signInWithPopup(auth, googleProvider)
-        const loggedUser = {
-          uid: res.user.uid,
-          email: res.user.email,
-          displayName: res.user.displayName || "Google User",
-          photoURL: res.user.photoURL || null,
-        }
-        setUser(loggedUser)
-        return loggedUser
-      } catch (err) {
-        const msg = formatFirebaseError(err.code || err.message)
-        setAuthError(msg)
-        throw new Error(msg)
+    checkFirebaseEnv()
+    if (!auth) throw new Error("Firebase Auth is not initialized.")
+
+    try {
+      const res = await signInWithPopup(auth, googleProvider)
+      const loggedUser = {
+        uid: res.user.uid,
+        email: res.user.email,
+        displayName: res.user.displayName || "Google User",
+        photoURL: res.user.photoURL || null,
       }
-    } else {
-      // Local development preview session
-      const previewUser = {
-        uid: `google_${Date.now()}`,
-        email: "alex.developer@gmail.com",
-        displayName: "Alex Rivera (Google)",
-        photoURL: null,
-        isDemo: true,
-      }
-      setUser(previewUser)
-      try {
-        localStorage.setItem("tts_user_session", JSON.stringify(previewUser))
-      } catch {}
-      return previewUser
+      setUser(loggedUser)
+      return loggedUser
+    } catch (err) {
+      const msg = formatFirebaseError(err.code || err.message)
+      setAuthError(msg)
+      throw new Error(msg)
     }
   }
 
-  // Sign In with GitHub OAuth Popup
+  // Sign In with GitHub (Realtime Firebase Popup)
   const loginWithGithub = async () => {
     setAuthError("")
-    if (isFirebaseConfigured && auth) {
-      try {
-        const res = await signInWithPopup(auth, githubProvider)
-        const loggedUser = {
-          uid: res.user.uid,
-          email: res.user.email,
-          displayName: res.user.displayName || "GitHub User",
-          photoURL: res.user.photoURL || null,
-        }
-        setUser(loggedUser)
-        return loggedUser
-      } catch (err) {
-        const msg = formatFirebaseError(err.code || err.message)
-        setAuthError(msg)
-        throw new Error(msg)
+    checkFirebaseEnv()
+    if (!auth) throw new Error("Firebase Auth is not initialized.")
+
+    try {
+      const res = await signInWithPopup(auth, githubProvider)
+      const loggedUser = {
+        uid: res.user.uid,
+        email: res.user.email,
+        displayName: res.user.displayName || "GitHub User",
+        photoURL: res.user.photoURL || null,
       }
-    } else {
-      // Local development preview session
-      const previewUser = {
-        uid: `github_${Date.now()}`,
-        email: "octocat@github.com",
-        displayName: "Octocat (GitHub)",
-        photoURL: null,
-        isDemo: true,
-      }
-      setUser(previewUser)
-      try {
-        localStorage.setItem("tts_user_session", JSON.stringify(previewUser))
-      } catch {}
-      return previewUser
+      setUser(loggedUser)
+      return loggedUser
+    } catch (err) {
+      const msg = formatFirebaseError(err.code || err.message)
+      setAuthError(msg)
+      throw new Error(msg)
     }
   }
 
-  // Sign Out
+  // Sign Out (Realtime Firebase)
   const logout = async () => {
-    if (auth && isFirebaseConfigured) {
+    if (auth) {
       try {
         await signOut(auth)
-      } catch {}
+      } catch (err) {
+        console.error("Firebase signout error:", err)
+      }
     }
     setUser(null)
-    try {
-      localStorage.removeItem("tts_user_session")
-    } catch {}
   }
 
   return (
@@ -228,7 +177,6 @@ export function AuthProvider({ children }) {
         user,
         loading,
         authError,
-        isFirebaseConfigured,
         loginWithEmail,
         registerWithEmail,
         loginWithGoogle,
@@ -257,19 +205,19 @@ function formatFirebaseError(codeOrMessage) {
     str.includes("auth/auth-domain-config-required") ||
     str.includes("auth/invalid-auth-domain")
   ) {
-    return "Firebase Auth Domain is missing. Set NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN in frontend/.env.local (e.g. your-project.firebaseapp.com) and restart Next.js dev server."
+    return "Firebase Auth Domain is missing in deployment. Set NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN in Vercel Project Settings > Environment Variables."
   }
   if (
     str.includes("auth/invalid-api-key") ||
     str.includes("auth/api-key-not-valid")
   ) {
-    return "Invalid Firebase API Key. Please verify NEXT_PUBLIC_FIREBASE_API_KEY in frontend/.env.local."
+    return "Invalid Firebase API Key. Please verify NEXT_PUBLIC_FIREBASE_API_KEY in Vercel Project Settings > Environment Variables."
   }
   if (str.includes("auth/operation-not-allowed")) {
-    return "This sign-in provider is disabled in Firebase. Enable it in Firebase Console > Authentication > Sign-in method."
+    return "This sign-in provider is disabled in Firebase. Enable Google / Email in Firebase Console > Authentication > Sign-in method."
   }
   if (str.includes("auth/unauthorized-domain")) {
-    return "This domain is not authorized. Add 'localhost' in Firebase Console > Authentication > Settings > Authorized domains."
+    return "This domain is not authorized. Add your Vercel deployment domain (e.g. *.vercel.app) in Firebase Console > Authentication > Settings > Authorized domains."
   }
   if (
     str.includes("auth/invalid-credential") ||
@@ -290,7 +238,7 @@ function formatFirebaseError(codeOrMessage) {
     return "Sign-in popup was closed before completing."
   }
   if (str.includes("auth/popup-blocked")) {
-    return "Sign-in popup was blocked by browser. Please allow popups for localhost."
+    return "Sign-in popup was blocked by browser. Please allow popups for this site."
   }
   return (
     str
