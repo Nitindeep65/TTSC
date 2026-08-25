@@ -271,6 +271,7 @@ export async function executeLlmClarification({
         max_tokens: 700,
         response_format: { type: "json_object" },
       }),
+      signal: AbortSignal.timeout(15000),
     })
 
     if (!response.ok) {
@@ -447,6 +448,7 @@ Respond ONLY with valid JSON:
         max_tokens: 500,
         response_format: { type: "json_object" },
       }),
+      signal: AbortSignal.timeout(12000),
     })
 
     if (res.ok) {

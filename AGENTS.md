@@ -185,6 +185,7 @@ TTS/
 │   │   │   ├── dbDriver.js                     # Native 'pg' client for live introspection & execution
 │   │   │   ├── extensionContext.jsx            # Extension detection & spotlight manager
 │   │   │   ├── firebase.js                     # Firebase Web SDK initialization & providers
+│   │   │   ├── serverBackendHelper.js          # Safe microservice proxying & timeout guard
 │   │   │   ├── serverLlm.js                    # Serverless Llama 3.1 70B AI engine & validator
 │   │   │   ├── settingsContext.jsx             # Synced settings & preferences context
 │   │   │   ├── soundUtils.js                   # Audio feedback utilities

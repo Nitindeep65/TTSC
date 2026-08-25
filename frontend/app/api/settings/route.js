@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { proxyToBackendIfAvailable } from "@/lib/serverBackendHelper"
 
 const DEFAULT_SETTINGS = {
   account: { displayName: "QueryCraft User", email: "demo@querycraft.dev", plan: "free" },
@@ -10,17 +11,9 @@ const DEFAULT_SETTINGS = {
 
 export async function GET(request) {
   try {
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL
-    if (backendUrl && !backendUrl.includes("127.0.0.1") && !backendUrl.includes("localhost")) {
-      try {
-        const res = await fetch(`${backendUrl.replace(/\/$/, "")}/api/settings/`)
-        if (res.ok) {
-          const data = await res.json()
-          return NextResponse.json(data)
-        }
-      } catch (e) {
-        // fallback below
-      }
+    const proxyData = await proxyToBackendIfAvailable("/api/settings", "GET")
+    if (proxyData) {
+      return NextResponse.json(proxyData)
     }
     return NextResponse.json(DEFAULT_SETTINGS)
   } catch {

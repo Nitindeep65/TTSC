@@ -1,25 +1,14 @@
 import { NextResponse } from "next/server"
 import { executeLlmDiagnosis } from "@/lib/serverLlm"
+import { proxyToBackendIfAvailable } from "@/lib/serverBackendHelper"
 
 export async function POST(request) {
   try {
     const body = await request.json()
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL
 
-    if (backendUrl && !backendUrl.includes("127.0.0.1") && !backendUrl.includes("localhost")) {
-      try {
-        const res = await fetch(`${backendUrl.replace(/\/$/, "")}/api/database/diagnose`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        })
-        if (res.ok) {
-          const data = await res.json()
-          return NextResponse.json(data)
-        }
-      } catch (err) {
-        console.warn("Backend proxy error for diagnose, using serverless diagnosis:", err.message)
-      }
+    const proxyData = await proxyToBackendIfAvailable("/api/database/diagnose", "POST", body)
+    if (proxyData) {
+      return NextResponse.json(proxyData)
     }
 
     // Serverless SQL Doctor LLM diagnosis

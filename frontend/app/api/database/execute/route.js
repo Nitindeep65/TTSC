@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { executePostgreSqlQuery, isLocalhostUri } from "@/lib/dbDriver"
+import { proxyToBackendIfAvailable } from "@/lib/serverBackendHelper"
 
 function generateSimulatedQueryResults(sqlQuery) {
   const sql = (sqlQuery || "").toLowerCase()
@@ -67,26 +68,14 @@ function generateSimulatedQueryResults(sqlQuery) {
 export async function POST(request) {
   try {
     const body = await request.json()
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL
     const uri = body.connection_uri || ""
     const sql = body.sql_query || ""
     const limit = body.limit || 50
 
     // 1. Try forwarding to backend if available
-    if (backendUrl && !backendUrl.includes("127.0.0.1") && !backendUrl.includes("localhost")) {
-      try {
-        const res = await fetch(`${backendUrl.replace(/\/$/, "")}/api/database/execute`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        })
-        if (res.ok) {
-          const data = await res.json()
-          return NextResponse.json(data)
-        }
-      } catch (err) {
-        console.warn("Backend proxy error for execute:", err.message)
-      }
+    const proxyData = await proxyToBackendIfAvailable("/api/database/execute", "POST", body)
+    if (proxyData) {
+      return NextResponse.json(proxyData)
     }
 
     // 2. Check for local database attempted from cloud

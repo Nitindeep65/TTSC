@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { proxyToBackendIfAvailable } from "@/lib/serverBackendHelper"
 
 const DEFAULT_SCHEMA = [
   {
@@ -40,19 +41,10 @@ const DEFAULT_SCHEMA = [
 
 export async function GET(request) {
   try {
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL
-
-    if (backendUrl && !backendUrl.includes("127.0.0.1") && !backendUrl.includes("localhost")) {
-      try {
-        const { search } = new URL(request.url)
-        const res = await fetch(`${backendUrl.replace(/\/$/, "")}/api/clarification/schema${search}`)
-        if (res.ok) {
-          const data = await res.json()
-          return NextResponse.json(data)
-        }
-      } catch (err) {
-        console.warn("Backend proxy error for schema:", err.message)
-      }
+    const { search } = new URL(request.url)
+    const proxyData = await proxyToBackendIfAvailable(`/api/clarification/schema${search}`, "GET")
+    if (proxyData) {
+      return NextResponse.json(proxyData)
     }
 
     return NextResponse.json({

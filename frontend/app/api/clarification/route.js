@@ -1,26 +1,15 @@
 import { NextResponse } from "next/server"
 import { executeLlmClarification } from "@/lib/serverLlm"
+import { proxyToBackendIfAvailable } from "@/lib/serverBackendHelper"
 
 export async function POST(request) {
   try {
     const body = await request.json()
-    const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL
 
-    // If a deployed cloud backend is configured and reachable, proxy to it
-    if (backendUrl && !backendUrl.includes("127.0.0.1") && !backendUrl.includes("localhost")) {
-      try {
-        const res = await fetch(`${backendUrl.replace(/\/$/, "")}/api/clarification`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        })
-        if (res.ok) {
-          const data = await res.json()
-          return NextResponse.json(data)
-        }
-      } catch (proxyErr) {
-        console.warn("Backend proxy error, falling back to serverless LLM engine:", proxyErr.message)
-      }
+    // 1. If an external backend microservice is configured and reachable, proxy with 6s timeout
+    const proxyData = await proxyToBackendIfAvailable("/api/clarification", "POST", body)
+    if (proxyData) {
+      return NextResponse.json(proxyData)
     }
 
     // Serverless Llama 3.1 70B AI Compilation & Clarification
