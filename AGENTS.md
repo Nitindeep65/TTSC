@@ -111,6 +111,7 @@ TTS/
 │   │   │   └── sql_graph.py        # LangGraph multi-agent StateGraph workflow & self-healing loop
 │   │   └── main.py                 # FastAPI application initialization & CORS config
 │   ├── pyproject.toml              # Dependencies & build definition
+│   ├── requirements.txt            # Production pip dependencies for deployment
 │   ├── uv.lock                     # UV package lock
 │   └── .env                        # NVIDIA NIM API Key, model name, base URL
 │
@@ -175,6 +176,7 @@ TTS/
 │   ├── popup.css                   # Refined dark aesthetic styles with global .hidden utility
 │   └── icons/                      # 16, 32, 48, 128px extension icons
 │
+├── vercel.json                     # Vercel multi-service monorepo deployment routing
 ├── README.md                       # High-level overview & setup instructions
 ├── agent.md                        # Quick agent cheatsheet & architectural summary
 └── AGENTS.md                       # Complete developer & agent architecture context (this file)
