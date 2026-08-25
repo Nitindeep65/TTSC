@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useTour } from "@/lib/tourContext"
 
 const ROLES = [
   {
@@ -49,6 +50,12 @@ export default function OnboardingModal({ isOpen, onComplete }) {
   const [step, setStep] = useState(1)
   const [selectedRole, setSelectedRole] = useState("analyst")
 
+  let tour = null
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    tour = useTour()
+  } catch {}
+
   if (!isOpen) return null
 
   const handleNext = () => {
@@ -56,6 +63,7 @@ export default function OnboardingModal({ isOpen, onComplete }) {
       setStep((prev) => prev + 1)
     } else {
       onComplete?.({ role: selectedRole })
+      tour?.startTour?.()
     }
   }
 

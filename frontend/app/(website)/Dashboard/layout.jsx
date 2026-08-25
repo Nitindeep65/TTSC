@@ -32,6 +32,8 @@ import MetricGlossaryModal from "@/components/semantic/MetricGlossaryModal"
 import SettingsPanel from "@/components/settings/SettingsPanel"
 import ExtensionPromptModal from "@/components/extension/ExtensionPromptModal"
 import OnboardingModal from "@/components/onboarding/OnboardingModal"
+import SpotlightTooltip from "@/components/onboarding/SpotlightTooltip"
+import { TourProvider, useTour } from "@/lib/tourContext"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -39,6 +41,7 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
   const pathname = usePathname()
   const { dbInfo, setIsModalOpen } = useDatabase()
   const { isInstalled, openModal } = useExtension()
+  const { isTourActive, currentStep } = useTour()
 
   const isQueryTester = pathname === "/Dashboard"
   const isChat = pathname === "/Dashboard/chat"
@@ -49,7 +52,14 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
       <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1 sm:flex-initial pr-2">
         <SidebarTrigger className="size-8 shrink-0 text-[#1f2d24] hover:bg-[#edf5ef]" />
         <div className="hidden xs:block h-4 sm:h-5 w-px bg-border shrink-0" />
-        <div className="min-w-0 flex-1 sm:flex-initial">
+        <div
+          id="tour-connect-db"
+          className={`min-w-0 flex-1 sm:flex-initial transition-all duration-300 ${
+            isTourActive && currentStep === 3
+              ? "relative z-[60] ring-4 ring-emerald-500 rounded-xl bg-white shadow-2xl p-0.5"
+              : ""
+          }`}
+        >
           <WorkspaceSwitcher />
         </div>
       </div>
@@ -273,6 +283,9 @@ function DashboardShell({ children }) {
         isOpen={showOnboarding}
         onComplete={handleOnboardingComplete}
       />
+
+      {/* Interactive Spotlight Tour Overlay & Tooltip */}
+      <SpotlightTooltip />
     </SidebarProvider>
   )
 }
@@ -280,12 +293,14 @@ function DashboardShell({ children }) {
 export default function Layout({ children }) {
   return (
     <DatabaseProvider>
-      {/* SettingsProvider & ExtensionProvider wrap dashboard components */}
+      {/* SettingsProvider, ExtensionProvider & TourProvider wrap dashboard components */}
       <SettingsProvider>
         <ExtensionProvider>
-          <DashboardShell>
-            {children}
-          </DashboardShell>
+          <TourProvider>
+            <DashboardShell>
+              {children}
+            </DashboardShell>
+          </TourProvider>
         </ExtensionProvider>
       </SettingsProvider>
     </DatabaseProvider>

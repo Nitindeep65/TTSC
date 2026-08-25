@@ -162,6 +162,9 @@ TTS/
 │   │   │   │   └── TableDataProfilerModal.jsx  # 5-row sample preview & distinct distribution
 │   │   │   ├── extension/
 │   │   │   │   └── ExtensionPromptModal.jsx    # Interactive Spotlight demo & 3-step setup
+│   │   │   ├── onboarding/
+│   │   │   │   ├── OnboardingModal.jsx         # 3-step role personalization & sandbox modal
+│   │   │   │   └── SpotlightTooltip.jsx        # Floating 3-step interactive UI spotlight tour
 │   │   │   ├── semantic/
 │   │   │   │   └── MetricGlossaryModal.jsx     # Semantic layer glossary, "Teach AI", policy upload
 │   │   │   ├── settings/
@@ -185,10 +188,11 @@ TTS/
 │   │   │   ├── serverLlm.js                    # Serverless Llama 3.1 70B AI engine & validator
 │   │   │   ├── settingsContext.jsx             # Synced settings & preferences context
 │   │   │   ├── soundUtils.js                   # Audio feedback utilities
+│   │   │   ├── tourContext.jsx                 # Spotlight walkthrough tour context & state
 │   │   │   └── utils.js                        # Tailwind merge & clsx utility
-│   │   ├── __tests__/                          # Jest Automated Test Suites (7 suites / 36 tests)
-│   │   │   ├── components/                     # ExtensionPromptModal, DataVisualizer tests
-│   │   │   └── lib/                            # serverLlm, databaseContext, authContext, api tests
+│   │   ├── __tests__/                          # Jest Automated Test Suites (9 suites / 46 tests)
+│   │   │   ├── components/                     # OnboardingModal, SpotlightTour, ExtensionPromptModal, DataVisualizer tests
+│   │   │   └── lib/                            # serverLlm, databaseContext, authContext, api, soundUtils tests
 │   │   ├── .env.local                          # NVIDIA NIM API Key, model, Firebase credentials
 │   │   ├── .env.example                        # Example env configuration
 │   │   └── package.json                        # Next.js 16.3, React 19, pg, Firebase, Lucide, TailwindCSS v4
@@ -252,7 +256,7 @@ QueryCraft provides dual deployment paths:
 
 ## 4. Current Verification & Quality Assurance
 
-* **Automated Unit & Integration Tests**: `7 passed, 7 total` (36 tests in `frontend/__tests__`).
+* **Automated Unit & Integration Tests**: `9 passed, 9 total` (46 tests in `frontend/__tests__`).
 * **Production Build**: `next build` compiles all 16 static and dynamic routes cleanly with Turbopack.
 * **Firebase Authentication**: Active email/password, Google OAuth, GitHub OAuth, and session tokens.
 * **Chrome Extension Hotkey**: `Cmd + Shift + K` global Spotlight Copilot.

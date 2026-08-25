@@ -48,6 +48,7 @@ import DataVisualizer from "@/components/visualization/DataVisualizer"
 import MetricGlossaryModal from "@/components/semantic/MetricGlossaryModal"
 import TableDataProfilerModal from "@/components/database/TableDataProfilerModal"
 import QueryNotebookModal from "@/components/workspace/QueryNotebookModal"
+import { useTour } from "@/lib/tourContext"
 
 const STARTER_PROMPTS = [
   {
@@ -112,6 +113,14 @@ function generateClarificationChips(text) {
 export default function Chatbox() {
   const { connectionUri, dbInfo, setIsModalOpen } = useDatabase()
   const { user } = useAuth()
+
+  let tour = null
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    tour = useTour()
+  } catch {}
+  const isTourActive = tour?.isTourActive || false
+  const currentStep = tour?.currentStep || 1
 
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState("")
@@ -331,9 +340,14 @@ export default function Chatbox() {
               </Button>
             )}
             <Button
+              id="tour-schema-toggle"
               variant={isHelperOpen ? "secondary" : "outline"} size="sm"
               onClick={() => setIsHelperOpen(p => !p)}
-              className="gap-1 text-xs h-7 sm:h-8 px-2 sm:px-2.5 font-semibold border-[--border]"
+              className={`gap-1 text-xs h-7 sm:h-8 px-2 sm:px-2.5 font-semibold border-[--border] transition-all duration-300 ${
+                isTourActive && currentStep === 2
+                  ? "relative z-[60] ring-4 ring-emerald-500 bg-white shadow-2xl scale-105"
+                  : ""
+              }`}
               title="Toggle database schema explorer"
             >
               {isHelperOpen ? <PanelRightClose className="size-3.5 text-[#34c06a]" /> : <PanelRightOpen className="size-3.5" />}
@@ -362,7 +376,14 @@ export default function Chatbox() {
                   }
                 </p>
 
-                <div className="mt-6 sm:mt-10 w-full max-w-2xl px-1">
+                <div
+                  id="tour-starter-prompts"
+                  className={`mt-6 sm:mt-10 w-full max-w-2xl px-1 transition-all duration-300 ${
+                    isTourActive && currentStep === 1
+                      ? "relative z-[60] p-4 sm:p-5 rounded-2xl bg-white ring-4 ring-emerald-500 shadow-2xl"
+                      : ""
+                  }`}
+                >
                   <div className="mb-3 flex items-center justify-between">
                     <span className="flex items-center gap-1.5 text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-[#8a9e93]">
                       <Lightbulb className="size-3.5 text-amber-500" />
