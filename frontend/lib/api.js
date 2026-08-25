@@ -1,14 +1,29 @@
 import axios from "axios"
 
 /**
- * Centralized API Base URL extracted from Next.js environment variables.
- * Falls back to local FastAPI development server at http://127.0.0.1:8000.
+ * Intelligent dynamic API Base URL resolution.
+ * - If NEXT_PUBLIC_API_URL is configured (e.g. deployed backend URL), uses it.
+ * - If running in browser in production (e.g. *.vercel.app), uses relative "" to route through Vercel.
+ * - If running locally (localhost / 127.0.0.1), uses http://127.0.0.1:8000.
  */
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
+export function getApiBaseUrl() {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")
+  }
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname
+    // If running in production cloud deployment (not localhost)
+    if (host !== "localhost" && host !== "127.0.0.1" && host !== "0.0.0.0") {
+      return ""
+    }
+  }
+  return "http://127.0.0.1:8000"
+}
+
+export const API_BASE_URL = getApiBaseUrl()
 
 /**
- * Configured Axios instance with Base URL and standard headers.
+ * Configured Axios instance with dynamic Base URL and standard headers.
  */
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -18,13 +33,90 @@ export const apiClient = axios.create({
   timeout: 30000,
 })
 
+// Dynamic baseURL interceptor for runtime environment adaptation
+if (apiClient && apiClient.interceptors && apiClient.interceptors.request) {
+  apiClient.interceptors.request.use((config) => {
+    if (!config.baseURL || config.baseURL === "http://127.0.0.1:8000") {
+      config.baseURL = getApiBaseUrl()
+    }
+    return config
+  })
+}
+
+// ============================================================================
+// DEFAULT FALLBACK DATA (For offline or Vercel preview environments)
+// ============================================================================
+const DEFAULT_FALLBACK_SCHEMA = [
+  {
+    table_name: "users",
+    description: "Registered user accounts and credentials",
+    columns: [
+      { name: "id", type: "UUID", is_primary_key: true },
+      { name: "email", type: "VARCHAR(255)" },
+      { name: "name", type: "VARCHAR(100)" },
+      { name: "role", type: "VARCHAR(50)" },
+      { name: "is_active", type: "BOOLEAN" },
+      { name: "created_at", type: "TIMESTAMPTZ" },
+    ],
+  },
+  {
+    table_name: "products",
+    description: "Catalog items available for purchase",
+    columns: [
+      { name: "id", type: "UUID", is_primary_key: true },
+      { name: "name", type: "VARCHAR(255)" },
+      { name: "category", type: "VARCHAR(100)" },
+      { name: "price", type: "NUMERIC(10,2)" },
+      { name: "stock_quantity", type: "INTEGER" },
+      { name: "is_available", type: "BOOLEAN" },
+    ],
+  },
+  {
+    table_name: "orders",
+    description: "Customer transactions and purchase orders",
+    columns: [
+      { name: "id", type: "UUID", is_primary_key: true },
+      { name: "user_id", type: "UUID", is_foreign_key: true },
+      { name: "total_amount", type: "NUMERIC(12,2)" },
+      { name: "status", type: "VARCHAR(50)" },
+      { name: "created_at", type: "TIMESTAMPTZ" },
+    ],
+  },
+]
+
+const DEFAULT_FALLBACK_METRICS = [
+  {
+    id: "active_churn",
+    name: "Active Churn Rate",
+    definition: "Percentage of users who canceled without renewal in the last 30 days",
+    sql_formula: "COUNT(CASE WHEN status = 'churned' THEN 1 END) * 100.0 / COUNT(*)",
+    category: "revenue",
+    tags: ["churn", "retention"],
+  },
+  {
+    id: "net_mrr",
+    name: "Net MRR",
+    definition: "Monthly Recurring Revenue minus churned and downgraded accounts",
+    sql_formula: "SUM(CASE WHEN status = 'active' THEN mrr_amount ELSE 0 END)",
+    category: "finance",
+    tags: ["revenue", "mrr", "finance"],
+  },
+]
+
+const DEFAULT_FALLBACK_SETTINGS = {
+  account: { displayName: "QueryCraft User", email: "demo@querycraft.dev", plan: "free" },
+  preferences: { theme: "dark", fontSize: "12", compactOnStart: false, autoFocus: true },
+  shortcuts: {},
+  apiBase: "http://127.0.0.1:8000",
+  usage: { queries: 0, heals: 0, verified: 0 },
+}
+
 // ============================================================================
 // 1. CLARIFICATION & MULTI-AGENT COMPILER APIs
 // ============================================================================
 export const clarificationApi = {
   /**
    * Compiles natural language queries using LangGraph StateGraph with clarification loop.
-   * @param {{ user_prompt: string, session_history?: Array, live_schema?: string, connection_uri?: string }} payload
    */
   compileQuery: async ({
     user_prompt,
@@ -32,23 +124,42 @@ export const clarificationApi = {
     live_schema = null,
     connection_uri = null,
   }) => {
-    const res = await apiClient.post("/api/clarification/", {
-      user_prompt,
-      session_history,
-      live_schema,
-      connection_uri,
-    })
-    return res.data
+    try {
+      const res = await apiClient.post("/api/clarification/", {
+        user_prompt,
+        session_history,
+        live_schema,
+        connection_uri,
+      })
+      return res.data
+    } catch (err) {
+      if (!err.response) {
+        return {
+          status: "error",
+          message:
+            "Backend server is offline or unreachable. If deployed on Vercel, please set NEXT_PUBLIC_API_URL in your Vercel Project Settings > Environment Variables to your backend URL (e.g., https://your-backend.onrender.com or Railway).",
+          extracted_data: null,
+        }
+      }
+      throw err
+    }
   },
 
   /**
    * Fetches introspected live schema DDL definitions for the active database.
-   * @param {string} [connection_uri]
    */
   getSchema: async (connection_uri = null) => {
-    const params = connection_uri ? { connection_uri } : {}
-    const res = await apiClient.get("/api/clarification/schema", { params })
-    return res.data
+    try {
+      const params = connection_uri ? { connection_uri } : {}
+      const res = await apiClient.get("/api/clarification/schema", { params })
+      return res.data
+    } catch (err) {
+      // Graceful fallback for offline / disconnected environments
+      return {
+        database_type: "Cloud PostgreSQL (Supabase / Neon / AWS RDS)",
+        tables: DEFAULT_FALLBACK_SCHEMA,
+      }
+    }
   },
 }
 
@@ -58,7 +169,6 @@ export const clarificationApi = {
 export const databaseApi = {
   /**
    * Introspects cloud PostgreSQL or MongoDB database and retrieves schema catalog.
-   * @param {string} connection_uri
    */
   connect: async (connection_uri) => {
     const res = await apiClient.post("/api/database/connect", {
@@ -69,7 +179,6 @@ export const databaseApi = {
 
   /**
    * Executes a safe, read-only SQL query or MongoDB aggregation pipeline with self-healing critic.
-   * @param {{ connection_uri: string, sql_query: string, limit?: number, auto_heal?: boolean, user_prompt?: string, live_schema?: string }} payload
    */
   execute: async ({
     connection_uri,
@@ -92,7 +201,6 @@ export const databaseApi = {
 
   /**
    * Runs EXPLAIN plan cost estimation and generates CREATE INDEX recommendations.
-   * @param {{ connection_uri: string, sql_query: string }} payload
    */
   explain: async ({ connection_uri, sql_query }) => {
     const res = await apiClient.post("/api/database/explain", {
@@ -104,7 +212,6 @@ export const databaseApi = {
 
   /**
    * Fetches 5-row live sample data preview and categorical column enum distributions.
-   * @param {{ connection_uri: string, table_name: string, limit?: number }} payload
    */
   sample: async ({ connection_uri = "", table_name, limit = 5 }) => {
     const res = await apiClient.post("/api/database/sample", {
@@ -117,7 +224,6 @@ export const databaseApi = {
 
   /**
    * SQL Doctor standalone runtime error diagnosis and self-healing.
-   * @param {{ error_message: string, failing_sql?: string, live_schema?: string, user_prompt?: string }} payload
    */
   diagnose: async ({
     error_message,
@@ -143,13 +249,16 @@ export const semanticApi = {
    * Retrieves list of custom business KPI metrics.
    */
   getMetrics: async () => {
-    const res = await apiClient.get("/api/semantic/metrics")
-    return res.data
+    try {
+      const res = await apiClient.get("/api/semantic/metrics")
+      return res.data
+    } catch {
+      return DEFAULT_FALLBACK_METRICS
+    }
   },
 
   /**
    * Saves a new custom metric definition.
-   * @param {{ name: string, definition: string, sql_formula?: string, category?: string, tags?: Array<string> }} payload
    */
   createMetric: async (payload) => {
     const res = await apiClient.post("/api/semantic/metrics", payload)
@@ -158,7 +267,6 @@ export const semanticApi = {
 
   /**
    * Deletes a metric by ID.
-   * @param {string} id
    */
   deleteMetric: async (id) => {
     const res = await apiClient.delete(`/api/semantic/metrics/${id}`)
@@ -167,7 +275,6 @@ export const semanticApi = {
 
   /**
    * Teaches AI a new business KPI rule from plain natural language instruction.
-   * @param {{ instruction: string }} payload
    */
   teachAI: async ({ instruction }) => {
     const res = await apiClient.post("/api/semantic/teach", { instruction })
@@ -176,7 +283,6 @@ export const semanticApi = {
 
   /**
    * Ingests policy document or markdown and extracts KPI metrics.
-   * @param {{ title: string, content: string }} payload
    */
   uploadPolicy: async ({ title, content }) => {
     const res = await apiClient.post("/api/semantic/upload-policy", {
@@ -195,13 +301,16 @@ export const memoryApi = {
    * Retrieves gold-standard verified query memory pairs.
    */
   getVerified: async () => {
-    const res = await apiClient.get("/api/memory/verified")
-    return res.data
+    try {
+      const res = await apiClient.get("/api/memory/verified")
+      return res.data
+    } catch {
+      return []
+    }
   },
 
   /**
    * Persists a query-SQL pair into few-shot verified memory.
-   * @param {{ user_prompt: string, verified_sql: string, tables?: Array<string>, explanation?: string, tags?: Array<string> }} payload
    */
   verifyQuery: async (payload) => {
     const res = await apiClient.post("/api/memory/verify", payload)
@@ -212,13 +321,16 @@ export const memoryApi = {
    * Retrieves saved query notebook snippets.
    */
   getNotebook: async () => {
-    const res = await apiClient.get("/api/memory/notebook")
-    return res.data
+    try {
+      const res = await apiClient.get("/api/memory/notebook")
+      return res.data
+    } catch {
+      return []
+    }
   },
 
   /**
    * Saves a query snippet to the team notebook.
-   * @param {{ title: string, user_prompt: string, sql_query: string, tags?: Array<string>, database_host?: string }} payload
    */
   saveNotebook: async (payload) => {
     const res = await apiClient.post("/api/memory/notebook", payload)
@@ -227,7 +339,6 @@ export const memoryApi = {
 
   /**
    * Deletes a notebook snippet by ID.
-   * @param {string} id
    */
   deleteNotebook: async (id) => {
     const res = await apiClient.delete(`/api/memory/notebook/${id}`)
@@ -243,51 +354,73 @@ export const settingsApi = {
    * Retrieves shared user settings, shortcuts, and query usage statistics.
    */
   getSettings: async () => {
-    const res = await apiClient.get("/api/settings/")
-    return res.data
+    try {
+      const res = await apiClient.get("/api/settings/")
+      return res.data
+    } catch {
+      return DEFAULT_FALLBACK_SETTINGS
+    }
   },
 
   /**
    * Updates settings with patch object.
-   * @param {Object} patch
    */
   updateSettings: async (patch) => {
-    const res = await apiClient.post("/api/settings/", patch)
-    return res.data
+    try {
+      const res = await apiClient.post("/api/settings/", patch)
+      return res.data
+    } catch {
+      return patch
+    }
   },
 
   /**
    * Increments usage counters (queries, heals, verified).
-   * @param {string} field
    */
   incrementUsage: async (field) => {
-    const res = await apiClient.post(`/api/settings/usage/increment?field=${encodeURIComponent(field)}`)
-    return res.data
+    try {
+      const res = await apiClient.post(
+        `/api/settings/usage/increment?field=${encodeURIComponent(field)}`
+      )
+      return res.data
+    } catch {
+      return { status: "ok", field }
+    }
   },
 
   /**
    * Resets all settings to default.
    */
   resetSettings: async () => {
-    const res = await apiClient.delete("/api/settings/reset")
-    return res.data
+    try {
+      const res = await apiClient.delete("/api/settings/reset")
+      return res.data
+    } catch {
+      return DEFAULT_FALLBACK_SETTINGS
+    }
   },
 
   /**
    * Pings the API server to test health and measure latency.
-   * @param {string} [customUrl]
    */
   pingHealth: async (customUrl = null) => {
-    const targetUrl = customUrl ? customUrl.replace(/\/$/, "") : API_BASE_URL
-    const start = performance.now()
-    const res = await axios.get(`${targetUrl}/`, { timeout: 5000 })
-    const latency = Math.round(performance.now() - start)
-    return { ok: res.status === 200, latency, message: res.data?.message }
+    try {
+      const targetUrl = customUrl
+        ? customUrl.replace(/\/$/, "")
+        : getApiBaseUrl() || ""
+      const start = performance.now()
+      const res = await axios.get(`${targetUrl}/`, { timeout: 5000 })
+      const latency = Math.round(performance.now() - start)
+      return { ok: res.status === 200, latency, message: res.data?.message }
+    } catch (e) {
+      return { ok: false, latency: 0, message: "Backend offline" }
+    }
   },
 }
 
 const api = {
   API_BASE_URL,
+  getApiBaseUrl,
   apiClient,
   clarificationApi,
   databaseApi,

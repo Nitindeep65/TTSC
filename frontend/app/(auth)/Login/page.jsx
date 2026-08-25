@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { Loader2, Sparkles } from "lucide-react"
 import { useAuth } from "@/lib/authContext"
 
 export default function LoginPage() {
@@ -83,30 +84,42 @@ export default function LoginPage() {
         Sign Up
       </Link>
 
-      {/* ── Left Column: Shadcn Zinc Dark Side ── */}
-      <div className="relative hidden h-full flex-col bg-zinc-900 p-10 text-white dark:border-r lg:flex">
-        <div className="absolute inset-0 bg-zinc-900" />
-        <div className="relative z-20 flex items-center text-lg font-medium">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-2 h-6 w-6"
-          >
-            <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
-          </svg>
-          QueryCraft Inc
+      {/* ── Left Column: Card Visual Showcase ── */}
+      <div className="relative hidden h-full min-h-screen flex-col overflow-hidden bg-[#0a120d] p-10 text-white dark:border-r lg:flex justify-between">
+        {/* Background Card Image filling entire left column */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/pics/Card.png"
+            alt="QueryCraft AI Studio"
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
+          {/* Subtle dark gradient overlay to ensure text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#09120c]/90 via-[#09120c]/30 to-[#09120c]/60" />
         </div>
-        <div className="relative z-20 mt-auto">
+
+        {/* Brand Header */}
+        <div className="relative z-20 flex items-center gap-2.5">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-[#1b3825]/80 text-[#4ade80] shadow-md border border-emerald-500/30 backdrop-blur-md">
+            <Sparkles className="size-4.5" />
+          </span>
+          <span className="text-lg font-bold tracking-tight text-white drop-shadow-sm">
+            QueryCraft
+          </span>
+        </div>
+
+        {/* Bottom Testimonial / Value Badge */}
+        <div className="relative z-20 mt-auto rounded-2xl border border-white/15 bg-black/40 p-5 backdrop-blur-md shadow-lg">
           <blockquote className="space-y-2">
-            <p className="text-lg">
-              &ldquo;This library has saved me countless hours of work and helped me deliver stunning designs to my clients faster than ever before.&rdquo;
+            <p className="text-sm sm:text-base font-medium text-white/95 leading-relaxed">
+              &ldquo;QueryCraft transformed our engineering workflow. Complex SQL and MongoDB aggregations generated in seconds with zero hallucinations.&rdquo;
             </p>
-            <footer className="text-sm text-zinc-400">Sofia Davis</footer>
+            <footer className="flex items-center gap-2 text-xs text-emerald-300 font-semibold">
+              <span className="size-1.5 rounded-full bg-emerald-400" />
+              <span>Sofia Davis — Lead Data Architect</span>
+            </footer>
           </blockquote>
         </div>
       </div>
