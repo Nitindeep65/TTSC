@@ -85,42 +85,18 @@ export default function LoginPage() {
       </Link>
 
       {/* ── Left Column: Card Visual Showcase ── */}
-      <div className="relative hidden h-full min-h-screen flex-col overflow-hidden bg-[#0a120d] p-10 text-white dark:border-r lg:flex justify-between">
-        {/* Background Card Image filling entire left column */}
-        <div className="absolute inset-0 z-0">
-          <Image
+      <div className="relative hidden h-full min-h-screen flex-col items-center justify-center overflow-hidden bg-[#070e0a] p-6 lg:p-10 dark:border-r lg:flex">
+        {/* Ambient subtle glow matching Card.png palette */}
+        <div className="pointer-events-none absolute -left-20 -top-20 size-80 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -right-20 size-80 rounded-full bg-[#1b432a]/20 blur-3xl" />
+
+        {/* Card.png Graphic filling the container */}
+        <div className="relative z-10 flex w-full max-w-[540px] items-center justify-center">
+          <img
             src="/pics/Card.png"
-            alt="QueryCraft AI Studio"
-            fill
-            priority
-            className="object-cover object-center"
-            sizes="(max-width: 1024px) 100vw, 50vw"
+            alt="QueryCraft — Craft Better Queries, Get Smarter Results"
+            className="w-full h-auto max-h-[90vh] object-contain rounded-2xl shadow-2xl ring-1 ring-emerald-500/20"
           />
-          {/* Subtle dark gradient overlay to ensure text contrast */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#09120c]/90 via-[#09120c]/30 to-[#09120c]/60" />
-        </div>
-
-        {/* Brand Header */}
-        <div className="relative z-20 flex items-center gap-2.5">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-[#1b3825]/80 text-[#4ade80] shadow-md border border-emerald-500/30 backdrop-blur-md">
-            <Sparkles className="size-4.5" />
-          </span>
-          <span className="text-lg font-bold tracking-tight text-white drop-shadow-sm">
-            QueryCraft
-          </span>
-        </div>
-
-        {/* Bottom Testimonial / Value Badge */}
-        <div className="relative z-20 mt-auto rounded-2xl border border-white/15 bg-black/40 p-5 backdrop-blur-md shadow-lg">
-          <blockquote className="space-y-2">
-            <p className="text-sm sm:text-base font-medium text-white/95 leading-relaxed">
-              &ldquo;QueryCraft transformed our engineering workflow. Complex SQL and MongoDB aggregations generated in seconds with zero hallucinations.&rdquo;
-            </p>
-            <footer className="flex items-center gap-2 text-xs text-emerald-300 font-semibold">
-              <span className="size-1.5 rounded-full bg-emerald-400" />
-              <span>Sofia Davis — Lead Data Architect</span>
-            </footer>
-          </blockquote>
         </div>
       </div>
 
