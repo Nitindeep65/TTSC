@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { executeLlmDiagnosis } from "@/lib/serverLlm"
 
 export async function POST(request) {
   try {
@@ -17,17 +18,19 @@ export async function POST(request) {
           return NextResponse.json(data)
         }
       } catch (err) {
-        console.warn("Backend proxy error for diagnose:", err.message)
+        console.warn("Backend proxy error for diagnose, using serverless diagnosis:", err.message)
       }
     }
 
-    return NextResponse.json({
-      original_sql: body.failing_sql || "",
-      healed_sql: `-- Auto-Healed Query\nSELECT u.name, o.total_amount\nFROM users u\nJOIN orders o ON u.id = o.user_id\nLIMIT 50;`,
-      diagnosis: "Fixed column reference: replaced non-existent column with validated foreign key relationship.",
-      sqlstate_code: "42703",
-      can_execute: true,
+    // Serverless SQL Doctor LLM diagnosis
+    const diagnosisResult = await executeLlmDiagnosis({
+      error_message: body.error_message || "Syntax or execution error",
+      failing_sql: body.failing_sql || "",
+      live_schema: body.live_schema || null,
+      user_prompt: body.user_prompt || "",
     })
+
+    return NextResponse.json(diagnosisResult)
   } catch (error) {
     return NextResponse.json(
       { error: error.message || "Diagnosis error" },
