@@ -25,10 +25,20 @@ const localStorageMock = (function () {
 })()
 
 // Mock axios
-jest.mock('axios', () => ({
+const mockAxiosInstance = {
   get: jest.fn().mockResolvedValue({ data: {} }),
   post: jest.fn().mockResolvedValue({ data: {} }),
   delete: jest.fn().mockResolvedValue({ data: {} }),
+}
+
+jest.mock('axios', () => ({
+  __esModule: true,
+  ...mockAxiosInstance,
+  create: jest.fn(() => mockAxiosInstance),
+  default: {
+    ...mockAxiosInstance,
+    create: jest.fn(() => mockAxiosInstance),
+  },
 }))
 
 Object.defineProperty(window, 'localStorage', {

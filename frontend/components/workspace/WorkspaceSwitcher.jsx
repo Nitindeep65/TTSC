@@ -80,18 +80,18 @@ export default function WorkspaceSwitcher({ className = "" }) {
         {/* Title & Metadata */}
         <div className="flex flex-col text-left min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="truncate max-w-[135px] text-[12.5px] font-bold text-[#141a17] leading-none">
+            <span suppressHydrationWarning className="truncate max-w-[135px] text-[12.5px] font-bold text-[#141a17] leading-none">
               {activeWorkspace.name}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5 mt-1 text-[9.5px] font-medium leading-none">
             <span className={`size-1.5 rounded-full shrink-0 ${activeEnv.dot}`} />
-            <span className="text-[#5e7467] font-semibold">
+            <span suppressHydrationWarning className="text-[#5e7467] font-semibold">
               {activeWorkspace.environment || "Production"}
             </span>
             <span className="text-[#a0b5a8]">•</span>
-            <span className="text-[#688071] font-mono">
+            <span suppressHydrationWarning className="text-[#688071] font-mono">
               {activeWorkspace.dbInfo ? `${activeWorkspace.dbInfo.tables_count} tbls` : "No DB"}
             </span>
           </div>

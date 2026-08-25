@@ -157,9 +157,12 @@ TTS/
 │   │   ├── hooks/
 │   │   │   └── use-mobile.js                   # Mobile viewport detection hook
 │   │   └── lib/
+│   │       ├── api.js                          # Centralized Next.js frontend API client (env NEXT_PUBLIC_API_URL)
 │   │       ├── databaseContext.jsx             # Active workspace, connection, live query state
 │   │       ├── settingsContext.jsx             # Synced settings & preferences context
 │   │       └── utils.js                        # Tailwind merge & clsx utility
+│   ├── .env.local                              # NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+│   ├── .env.example                            # Example env configuration
 │   └── package.json                            # Next.js, React 19, Lucide, TailwindCSS v4
 │
 ├── extension/                      # Manifest V3 Chrome Extension (SQL/NoSQL Studio & Copilot)

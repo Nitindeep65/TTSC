@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import axios from "axios"
+import { clarificationApi } from "@/lib/api"
 import { useDatabase } from "@/lib/databaseContext"
 
 const sqlExamples = [
@@ -90,13 +90,13 @@ export default function Dashboard() {
         payload.connection_uri = connectionUri
       }
 
-      const response = await axios.post("http://127.0.0.1:8000/api/clarification/", payload)
+      const data = await clarificationApi.compileQuery(payload)
 
-      setApiResponse(response.data)
+      setApiResponse(data)
       setHasResult(true)
     } catch (error) {
       setErrorMessage(
-        error.response?.data?.detail || "Could not reach FastAPI server at http://127.0.0.1:8000. Ensure the backend server is running."
+        error.response?.data?.detail || error.message || "Could not reach backend API. Ensure the backend server is running."
       )
       setHasResult(true)
     } finally {

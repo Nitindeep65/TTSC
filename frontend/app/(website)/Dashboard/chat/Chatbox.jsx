@@ -38,7 +38,7 @@ import {
   X,
   Zap,
 } from "lucide-react"
-import axios from "axios"
+import { clarificationApi, databaseApi, memoryApi } from "@/lib/api"
 import { useDatabase } from "@/lib/databaseContext"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -47,8 +47,6 @@ import DataVisualizer from "@/components/visualization/DataVisualizer"
 import MetricGlossaryModal from "@/components/semantic/MetricGlossaryModal"
 import TableDataProfilerModal from "@/components/database/TableDataProfilerModal"
 import QueryNotebookModal from "@/components/workspace/QueryNotebookModal"
-
-const API = "http://127.0.0.1:8000"
 
 const STARTER_PROMPTS = [
   {
@@ -141,7 +139,7 @@ export default function Chatbox() {
     if (dbInfo?.tables?.length > 0) {
       setSchemaTables(dbInfo.tables)
     } else {
-      axios.get(`${API}/api/clarification/schema`).then(r => r.data?.tables && setSchemaTables(r.data.tables)).catch(() => { })
+      clarificationApi.getSchema().then(data => data?.tables && setSchemaTables(data.tables)).catch(() => {})
     }
   }, [dbInfo])
 
@@ -174,7 +172,7 @@ export default function Chatbox() {
       if (dbInfo?.schema_sql) payload.live_schema = dbInfo.schema_sql
       if (connectionUri) payload.connection_uri = connectionUri
 
-      const { data } = await axios.post(`${API}/api/clarification/`, payload)
+      const data = await clarificationApi.compileQuery(payload)
 
       if (data.status === "needs_clarification") {
         setMessages(p => [...p, {
@@ -196,7 +194,7 @@ export default function Chatbox() {
     } catch {
       setMessages(p => [...p, {
         role: "assistant", status: "error",
-        content: "Could not reach backend at 127.0.0.1:8000. Make sure FastAPI is running.",
+        content: "Could not reach backend API. Ensure the backend server is running.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       }])
     } finally {
@@ -214,7 +212,7 @@ export default function Chatbox() {
     if (!connectionUri) { setIsModalOpen(true); return }
     setExecutingIndex(idx)
     try {
-      const { data } = await axios.post(`${API}/api/database/execute`, {
+      const data = await databaseApi.execute({
         connection_uri: connectionUri, sql_query: sql, limit: 50,
         auto_heal: true, user_prompt: msg?.rawContent, live_schema: dbInfo?.schema_sql,
       })
@@ -230,7 +228,7 @@ export default function Chatbox() {
     if (!connectionUri) { setIsModalOpen(true); return }
     setExplainingIndex(idx)
     try {
-      const { data } = await axios.post(`${API}/api/database/explain`, { connection_uri: connectionUri, sql_query: sql })
+      const data = await databaseApi.explain({ connection_uri: connectionUri, sql_query: sql })
       setExplainData(data)
     } catch (err) {
       alert("EXPLAIN error: " + (err.response?.data?.detail || err.message))
@@ -241,7 +239,7 @@ export default function Chatbox() {
 
   const handleSaveVerified = async (msg, idx) => {
     try {
-      await axios.post(`${API}/api/memory/verify`, {
+      await memoryApi.verifyQuery({
         user_prompt: msg.rawContent || msg.message || "Verified Query",
         verified_sql: msg.sql_query,
         tables: msg.tables || [], explanation: msg.explanation, tags: msg.tables || [],
@@ -252,7 +250,7 @@ export default function Chatbox() {
 
   const handleSaveToNotebook = async (msg, idx) => {
     try {
-      await axios.post(`${API}/api/memory/notebook`, {
+      await memoryApi.saveNotebook({
         title: msg.message || "Saved Snippet",
         user_prompt: msg.rawContent || msg.message || "Saved SQL Query",
         sql_query: msg.sql_query,

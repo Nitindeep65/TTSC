@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import axios from "axios"
+import { databaseApi } from "@/lib/api"
 import {
   Columns,
   Database,
@@ -16,8 +16,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
-const API = "http://127.0.0.1:8000"
-
 export default function TableDataProfilerModal({ isOpen, onClose, tableName, connectionUri }) {
   const [loading, setLoading] = useState(false)
   const [profileData, setProfileData] = useState(null)
@@ -30,13 +28,13 @@ export default function TableDataProfilerModal({ isOpen, onClose, tableName, con
       setLoading(true)
       setError("")
       try {
-        const res = await axios.post(`${API}/api/database/sample`, {
+        const data = await databaseApi.sample({
           connection_uri: connectionUri || "",
           table_name: tbl,
           limit: 5,
         })
         if (!ignore) {
-          setProfileData(res.data)
+          setProfileData(data)
         }
       } catch (err) {
         if (!ignore) {

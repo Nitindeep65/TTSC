@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import axios from "axios"
+import React, { useState, useEffect, useCallback } from "react"
+import { memoryApi } from "@/lib/api"
 import {
   Bookmark,
   Check,
@@ -21,8 +21,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
-const API = "http://127.0.0.1:8000"
-
 export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, activeDbName }) {
   const [queries, setQueries] = useState([])
   const [loading, setLoading] = useState(false)
@@ -41,8 +39,8 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
   const fetchNotebook = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await axios.get(`${API}/api/memory/notebook`)
-      setQueries(res.data.queries || [])
+      const data = await memoryApi.getNotebook()
+      setQueries(data.queries || [])
     } catch {
       // ignore
     } finally {
@@ -56,9 +54,9 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
       if (isOpen) {
         setLoading(true)
         try {
-          const res = await axios.get(`${API}/api/memory/notebook`)
+          const data = await memoryApi.getNotebook()
           if (!ignore) {
-            setQueries(res.data.queries || [])
+            setQueries(data.queries || [])
           }
         } catch {
           // ignore
@@ -84,7 +82,7 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
   const handleDelete = async (id) => {
     if (!confirm("Remove this query snippet from notebook?")) return
     try {
-      await axios.delete(`${API}/api/memory/notebook/${id}`)
+      await memoryApi.deleteNotebook(id)
       fetchNotebook()
     } catch {
       alert("Failed to delete notebook snippet.")
@@ -102,7 +100,7 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
         .filter(Boolean)
         .map((t) => (t.startsWith("#") ? t : `#${t}`))
 
-      await axios.post(`${API}/api/memory/notebook`, {
+      await memoryApi.saveNotebook({
         title: newTitle.trim() || newPrompt.trim().slice(0, 40),
         user_prompt: newPrompt.trim(),
         sql_query: newSql.trim(),

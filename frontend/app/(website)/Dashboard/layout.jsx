@@ -61,6 +61,7 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
         {/* DB Status */}
         <Button
           type="button"
+          suppressHydrationWarning
           variant={dbInfo ? "secondary" : "default"}
           size="sm"
           onClick={() => setIsModalOpen(true)}
@@ -151,7 +152,7 @@ function DashboardShell({ children }) {
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar onOpenSettings={() => setIsSettingsOpen(true)} />
       <SidebarInset className="bg-background">
         <DashboardNavbar
           onOpenMetrics={() => setIsMetricModalOpen(true)}

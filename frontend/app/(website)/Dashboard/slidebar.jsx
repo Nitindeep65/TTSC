@@ -34,6 +34,7 @@ import {
   Plus,
   Radio,
   RefreshCw,
+  Settings,
   ShieldCheck,
   Sparkles,
   Terminal,
@@ -47,7 +48,7 @@ import { useDatabase } from "@/lib/databaseContext"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
-export function AppSidebar() {
+export function AppSidebar({ onOpenSettings }) {
   const pathname = usePathname()
   const {
     dbInfo,
@@ -161,16 +162,16 @@ export function AppSidebar() {
               <FolderKanban className="size-3.5" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[12px] font-bold text-[#141a17] leading-none">
+              <p suppressHydrationWarning className="truncate text-[12px] font-bold text-[#141a17] leading-none">
                 {activeWorkspace.name}
               </p>
               <div className="flex items-center gap-1.5 mt-1">
                 <span className="size-1.5 rounded-full bg-[#34c06a]" />
-                <span className="text-[10px] font-medium text-[#6e8477]">
+                <span suppressHydrationWarning className="text-[10px] font-medium text-[#6e8477]">
                   {activeWorkspace.environment || "Production"}
                 </span>
                 <span className="text-[#a0b5a8]">•</span>
-                <span className="text-[10px] font-mono text-[#6e8477] truncate">
+                <span suppressHydrationWarning className="text-[10px] font-mono text-[#6e8477] truncate">
                   {dbInfo ? `${dbInfo.tables_count} tbls` : "No DB"}
                 </span>
               </div>
@@ -401,6 +402,18 @@ export function AppSidebar() {
               <span>Interactive Chat</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          {onOpenSettings && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={onOpenSettings}
+                tooltip="Open Global Settings & Shortcuts (Cmd+,)"
+                className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[11.5px] font-semibold text-[#4a5e53] hover:bg-[#edf5ef] hover:text-[#141a17] transition-colors cursor-pointer"
+              >
+                <Settings className="size-3.5 text-[#6e8779]" />
+                <span>Settings</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarFooter>
 

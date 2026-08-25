@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import axios from "axios"
+import React, { useState, useEffect, useCallback } from "react"
+import { semanticApi } from "@/lib/api"
 import {
   BookOpen,
   Check,
@@ -43,8 +43,8 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
   const fetchMetrics = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/semantic/metrics")
-      setMetrics(res.data.metrics || [])
+      const data = await semanticApi.getMetrics()
+      setMetrics(data.metrics || [])
     } catch {
       // ignore
     } finally {
@@ -58,9 +58,9 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
       if (isOpen) {
         setLoading(true)
         try {
-          const res = await axios.get("http://127.0.0.1:8000/api/semantic/metrics")
+          const data = await semanticApi.getMetrics()
           if (!ignore) {
-            setMetrics(res.data.metrics || [])
+            setMetrics(data.metrics || [])
           }
         } catch {
           // ignore
@@ -82,9 +82,7 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
     if (!teachPrompt.trim()) return
     setIsTeaching(true)
     try {
-      await axios.post("http://127.0.0.1:8000/api/semantic/teach", {
-        instruction: teachPrompt.trim(),
-      })
+      await semanticApi.teachAI({ instruction: teachPrompt.trim() })
       setTeachPrompt("")
       setActiveTab("list")
       fetchMetrics()
@@ -100,7 +98,7 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
     if (!manualName.trim() || !manualDef.trim()) return
     setIsSavingManual(true)
     try {
-      await axios.post("http://127.0.0.1:8000/api/semantic/metrics", {
+      await semanticApi.createMetric({
         name: manualName.trim(),
         definition: manualDef.trim(),
         sql_formula: manualSql.trim() || null,
@@ -124,9 +122,9 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
     if (!policyText.trim()) return
     setIsUploadingPolicy(true)
     try {
-      await axios.post("http://127.0.0.1:8000/api/semantic/upload-policy", {
-        document_title: policyTitle.trim() || "Policy Document",
-        document_text: policyText.trim(),
+      await semanticApi.uploadPolicy({
+        title: policyTitle.trim() || "Policy Document",
+        content: policyText.trim(),
       })
       setPolicyTitle("")
       setPolicyText("")
@@ -142,9 +140,9 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
   const handleDeleteMetric = async (id) => {
     if (!confirm("Remove this business metric rule?")) return
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/semantic/metrics/${id}`)
+      await semanticApi.deleteMetric(id)
       fetchMetrics()
-    } catch (e) {
+    } catch {
       alert("Failed to delete metric.")
     }
   }

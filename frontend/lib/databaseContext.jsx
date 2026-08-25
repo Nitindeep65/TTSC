@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from "react"
-import axios from "axios"
+import { databaseApi } from "@/lib/api"
 
 const defaultInitialWorkspace = {
   id: "ws-default",
@@ -38,35 +38,37 @@ const STORAGE_KEY_WORKSPACES = "tts_cloud_workspaces_v2"
 const STORAGE_KEY_ACTIVE_WS = "tts_active_workspace_id_v2"
 
 export function DatabaseProvider({ children }) {
-  const [workspaces, setWorkspaces] = useState(() => {
-    if (typeof window === "undefined") return [defaultInitialWorkspace]
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_WORKSPACES)
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed
-      }
-    } catch {
-      // ignore
-    }
-    return [defaultInitialWorkspace]
-  })
-
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState(() => {
-    if (typeof window === "undefined") return "ws-default"
-    try {
-      const savedId = localStorage.getItem(STORAGE_KEY_ACTIVE_WS)
-      if (savedId) return savedId
-    } catch {
-      // ignore
-    }
-    return "ws-default"
-  })
-
+  const [workspaces, setWorkspaces] = useState([defaultInitialWorkspace])
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState("ws-default")
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectionError, setConnectionError] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
+
+  // 1. Restore Workspaces & Active Workspace on Mount (client-only)
+  useEffect(() => {
+    try {
+      const savedWorkspaces = localStorage.getItem(STORAGE_KEY_WORKSPACES)
+      const savedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE_WS)
+
+      if (savedWorkspaces) {
+        const parsed = JSON.parse(savedWorkspaces)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setWorkspaces(parsed)
+          if (savedActiveId && parsed.some((w) => w.id === savedActiveId)) {
+            setActiveWorkspaceId(savedActiveId)
+          } else {
+            setActiveWorkspaceId(parsed[0].id)
+          }
+        }
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsHydrated(true)
+    }
+  }, [])
 
   // 2. Derive Active Workspace
   const activeWorkspace =
@@ -100,10 +102,7 @@ export function DatabaseProvider({ children }) {
     // If connectionUri is provided, test and introspect it
     if (connectionUri && connectionUri.trim()) {
       try {
-        const res = await axios.post("http://127.0.0.1:8000/api/database/connect", {
-          connection_uri: connectionUri.trim(),
-        })
-        introspectedInfo = res.data
+        introspectedInfo = await databaseApi.connect(connectionUri)
       } catch (err) {
         // failed introspection - still create workspace but keep error
       }
@@ -153,11 +152,7 @@ export function DatabaseProvider({ children }) {
     setConnectionError("")
 
     try {
-      const res = await axios.post("http://127.0.0.1:8000/api/database/connect", {
-        connection_uri: uri.trim(),
-      })
-
-      const data = res.data
+      const data = await databaseApi.connect(uri)
 
       // Update in active workspace
       const updated = workspaces.map((w) =>
@@ -195,12 +190,11 @@ export function DatabaseProvider({ children }) {
     if (!connectionUri) {
       throw new Error("No database currently connected to this workspace.")
     }
-    const res = await axios.post("http://127.0.0.1:8000/api/database/execute", {
+    return await databaseApi.execute({
       connection_uri: connectionUri,
       sql_query: sqlQuery,
       limit: limit,
     })
-    return res.data
   }
 
   return (
@@ -229,6 +223,7 @@ export function DatabaseProvider({ children }) {
         isWorkspaceModalOpen,
         setIsWorkspaceModalOpen,
         executeLiveQuery,
+        isHydrated,
       }}
     >
       {children}

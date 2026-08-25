@@ -1,14 +1,13 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react"
-
-const API = "http://127.0.0.1:8000"
+import { settingsApi, API_BASE_URL } from "@/lib/api"
 
 const DEFAULT_SETTINGS = {
   account:     { displayName: "QueryCraft User", email: "demo@querycraft.dev", plan: "free" },
   preferences: { theme: "dark", fontSize: "12", compactOnStart: false, autoFocus: true },
   shortcuts:   {},
-  apiBase:     "http://127.0.0.1:8000",
+  apiBase:     API_BASE_URL,
   usage:       { queries: 0, heals: 0, verified: 0 },
 }
 
@@ -31,14 +30,25 @@ export function SettingsProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
 
+  const fetchSettings = useCallback(async () => {
+    try {
+      const data = await settingsApi.getSettings()
+      setSettings((prev) => ({ ...prev, ...data }))
+      return data
+    } catch {
+      // Backend offline — use defaults silently
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     let ignore = false
     async function load() {
       try {
-        const res = await fetch(`${API}/api/settings/`)
-        if (res.ok && !ignore) {
-          const data = await res.json()
-          setSettings(prev => ({ ...prev, ...data }))
+        const data = await settingsApi.getSettings()
+        if (!ignore) {
+          setSettings((prev) => ({ ...prev, ...data }))
         }
       } catch {
         // Backend offline — use defaults silently
@@ -54,16 +64,9 @@ export function SettingsProvider({ children }) {
   const pushSettings = useCallback(async (patch) => {
     setIsSyncing(true)
     try {
-      const res = await fetch(`${API}/api/settings/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
-      })
-      if (res.ok) {
-        const updated = await res.json()
-        setSettings(updated)
-        return updated
-      }
+      const updated = await settingsApi.updateSettings(patch)
+      setSettings(updated)
+      return updated
     } catch {
       // Offline — update local state only
       setSettings(prev => {
@@ -90,7 +93,7 @@ export function SettingsProvider({ children }) {
 
   const incrementUsage = useCallback(async (field) => {
     try {
-      await fetch(`${API}/api/settings/usage/increment?field=${field}`, { method: "POST" })
+      await settingsApi.incrementUsage(field)
       await fetchSettings()
     } catch {
       setSettings(prev => ({
@@ -98,12 +101,12 @@ export function SettingsProvider({ children }) {
         usage: { ...prev.usage, [field]: (prev.usage[field] || 0) + 1 }
       }))
     }
-  }, [])
+  }, [fetchSettings])
 
   const resetAllSettings = async () => {
     try {
-      const res = await fetch(`${API}/api/settings/reset`, { method: "DELETE" })
-      if (res.ok) setSettings(await res.json())
+      const reset = await settingsApi.resetSettings()
+      setSettings(reset)
     } catch {
       setSettings(DEFAULT_SETTINGS)
     }
