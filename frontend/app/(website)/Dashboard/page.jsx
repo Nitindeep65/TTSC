@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { clarificationApi } from "@/lib/api"
 import { useDatabase } from "@/lib/databaseContext"
+import { useAuth } from "@/lib/authContext"
 
 const sqlExamples = [
   "Show top 5 customers by total order spend in 2024",
@@ -51,6 +52,7 @@ function generateClarificationChips(text) {
 
 export default function Dashboard() {
   const { dbInfo, connectionUri, setIsModalOpen, executeLiveQuery } = useDatabase()
+  const { user } = useAuth()
 
   const [query, setQuery] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
@@ -81,6 +83,8 @@ export default function Dashboard() {
       const payload = {
         user_prompt: promptToSend.trim(),
         session_history: [],
+        user_id: user?.uid || "guest",
+        user_email: user?.email || "demo@querycraft.dev",
       }
 
       if (dbInfo?.schema_sql) {

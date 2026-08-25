@@ -15,9 +15,40 @@ import {
 } from "./firebase"
 
 const AuthContext = createContext(null)
+const USER_CACHE_KEY = "tts_logged_in_user_v1"
+
+function formatUserObject(firebaseUser, customName) {
+  if (!firebaseUser) return null
+  const name = customName?.trim() || firebaseUser.displayName?.trim() || firebaseUser.email?.split("@")[0] || "QueryCraft User"
+  const initials = name
+    .split(" ")
+    .filter(Boolean)
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "U"
+
+  return {
+    uid: firebaseUser.uid,
+    email: firebaseUser.email,
+    displayName: name,
+    photoURL: firebaseUser.photoURL || null,
+    initials,
+    role: "Data Architect",
+    plan: "Developer Free",
+  }
+}
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem(USER_CACHE_KEY)
+        if (cached) return JSON.parse(cached)
+      } catch (e) {}
+    }
+    return null
+  })
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState("")
 
@@ -29,17 +60,16 @@ export function AuthProvider({ children }) {
       try {
         unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
           if (firebaseUser) {
-            setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName:
-                firebaseUser.displayName ||
-                firebaseUser.email?.split("@")[0] ||
-                "QueryCraft User",
-              photoURL: firebaseUser.photoURL || null,
-            })
+            const formatted = formatUserObject(firebaseUser)
+            setUser(formatted)
+            try {
+              localStorage.setItem(USER_CACHE_KEY, JSON.stringify(formatted))
+            } catch (e) {}
           } else {
             setUser(null)
+            try {
+              localStorage.removeItem(USER_CACHE_KEY)
+            } catch (e) {}
           }
           setLoading(false)
         })
@@ -72,14 +102,11 @@ export function AuthProvider({ children }) {
 
     try {
       const res = await signInWithEmailAndPassword(auth, email.trim(), password)
-      const loggedUser = {
-        uid: res.user.uid,
-        email: res.user.email,
-        displayName:
-          res.user.displayName || res.user.email?.split("@")[0] || "QueryCraft User",
-        photoURL: res.user.photoURL || null,
-      }
+      const loggedUser = formatUserObject(res.user)
       setUser(loggedUser)
+      try {
+        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(loggedUser))
+      } catch (e) {}
       return loggedUser
     } catch (err) {
       const msg = formatFirebaseError(err.code || err.message)
@@ -99,14 +126,11 @@ export function AuthProvider({ children }) {
       if (displayName && res.user) {
         await updateProfile(res.user, { displayName: displayName.trim() })
       }
-      const newUser = {
-        uid: res.user.uid,
-        email: res.user.email,
-        displayName:
-          displayName?.trim() || res.user.email?.split("@")[0] || "QueryCraft User",
-        photoURL: res.user.photoURL || null,
-      }
+      const newUser = formatUserObject(res.user, displayName)
       setUser(newUser)
+      try {
+        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(newUser))
+      } catch (e) {}
       return newUser
     } catch (err) {
       const msg = formatFirebaseError(err.code || err.message)
@@ -123,13 +147,11 @@ export function AuthProvider({ children }) {
 
     try {
       const res = await signInWithPopup(auth, googleProvider)
-      const loggedUser = {
-        uid: res.user.uid,
-        email: res.user.email,
-        displayName: res.user.displayName || "Google User",
-        photoURL: res.user.photoURL || null,
-      }
+      const loggedUser = formatUserObject(res.user, res.user.displayName || "Google User")
       setUser(loggedUser)
+      try {
+        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(loggedUser))
+      } catch (e) {}
       return loggedUser
     } catch (err) {
       const msg = formatFirebaseError(err.code || err.message)
@@ -146,13 +168,11 @@ export function AuthProvider({ children }) {
 
     try {
       const res = await signInWithPopup(auth, githubProvider)
-      const loggedUser = {
-        uid: res.user.uid,
-        email: res.user.email,
-        displayName: res.user.displayName || "GitHub User",
-        photoURL: res.user.photoURL || null,
-      }
+      const loggedUser = formatUserObject(res.user, res.user.displayName || "GitHub User")
       setUser(loggedUser)
+      try {
+        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(loggedUser))
+      } catch (e) {}
       return loggedUser
     } catch (err) {
       const msg = formatFirebaseError(err.code || err.message)
@@ -170,6 +190,9 @@ export function AuthProvider({ children }) {
         console.error("Firebase signout error:", err)
       }
     }
+    try {
+      localStorage.removeItem(USER_CACHE_KEY)
+    } catch (e) {}
     setUser(null)
   }
 

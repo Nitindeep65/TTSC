@@ -40,6 +40,7 @@ import {
 } from "lucide-react"
 import { clarificationApi, databaseApi, memoryApi } from "@/lib/api"
 import { useDatabase } from "@/lib/databaseContext"
+import { useAuth } from "@/lib/authContext"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
@@ -110,6 +111,7 @@ function generateClarificationChips(text) {
 
 export default function Chatbox() {
   const { connectionUri, dbInfo, setIsModalOpen } = useDatabase()
+  const { user } = useAuth()
 
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState("")
@@ -159,8 +161,18 @@ export default function Chatbox() {
     const userText = query.trim()
     const historyPayload = messages.map(m => ({ role: m.role, content: m.rawContent || m.content }))
 
+    const userName = user?.displayName || user?.email?.split("@")[0] || "You"
+    const userEmail = user?.email || ""
+    const userInitials = (user?.displayName || user?.email || "U").charAt(0).toUpperCase()
+    const userPhoto = user?.photoURL || null
+
     setMessages(p => [...p, {
-      role: "user", content: userText,
+      role: "user",
+      content: userText,
+      userName,
+      userEmail,
+      userInitials,
+      userPhoto,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     }])
     setInputText("")
@@ -168,7 +180,12 @@ export default function Chatbox() {
     setIsLoading(true)
 
     try {
-      const payload = { user_prompt: userText, session_history: historyPayload }
+      const payload = {
+        user_prompt: userText,
+        session_history: historyPayload,
+        user_id: user?.uid || "guest",
+        user_email: user?.email || "demo@querycraft.dev",
+      }
       if (dbInfo?.schema_sql) payload.live_schema = dbInfo.schema_sql
       if (connectionUri) payload.connection_uri = connectionUri
 
@@ -335,7 +352,7 @@ export default function Chatbox() {
                   <Sparkles className="size-7" />
                 </div>
                 <h1 className="text-3xl font-bold text-[#141a17] tracking-tight">
-                  What would you like to query?
+                  {user ? `Welcome, ${user.displayName || "Architect"} — What would you like to query?` : "What would you like to query?"}
                 </h1>
                 <p className="mt-3 max-w-xl text-[14px] text-[#667872] leading-relaxed">
                   {dbInfo
@@ -385,10 +402,22 @@ export default function Chatbox() {
 
                 <div className={`flex flex-col gap-1.5 ${msg.role === "user" ? "max-w-xl items-end" : "flex-1 max-w-full"}`}>
 
-                  {/* User bubble */}
+                  {/* User bubble with author tag */}
                   {msg.role === "user" && (
-                    <div className="rounded-2xl rounded-tr-md bg-[#1a2920] px-5 py-3.5 text-[14px] font-medium text-white shadow-sm leading-relaxed max-w-xl">
-                      {msg.content}
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-1.5 px-1">
+                        <span className="text-[11px] font-bold text-[#141a17]">
+                          {msg.userName || user?.displayName || "You"}
+                        </span>
+                        {(msg.userEmail || user?.email) && (
+                          <span className="text-[10px] text-[#718578] font-mono">
+                            ({msg.userEmail || user?.email})
+                          </span>
+                        )}
+                      </div>
+                      <div className="rounded-2xl rounded-tr-md bg-[#1a2920] px-5 py-3.5 text-[14px] font-medium text-white shadow-sm leading-relaxed max-w-xl">
+                        {msg.content}
+                      </div>
                     </div>
                   )}
 
@@ -555,8 +584,15 @@ export default function Chatbox() {
                 </div>
 
                 {msg.role === "user" && (
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e8ede9] text-[#4a5e53] shadow-sm mt-0.5">
-                    <User className="size-4.5" />
+                  <div
+                    className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#1a2920] text-[#5de08a] shadow-sm mt-0.5 font-bold text-xs ring-1 ring-emerald-500/20"
+                    title={msg.userEmail || user?.email || msg.userName || "You"}
+                  >
+                    {msg.userPhoto ? (
+                      <img src={msg.userPhoto} alt="User" className="size-full rounded-xl object-cover" />
+                    ) : (
+                      <span>{msg.userInitials || (user?.displayName || user?.email || "U").charAt(0).toUpperCase()}</span>
+                    )}
                   </div>
                 )}
               </div>

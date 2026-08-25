@@ -5,6 +5,22 @@
   if (window.__QUERYCRAFT_INJECTED__) return;
   window.__QUERYCRAFT_INJECTED__ = true;
 
+  // Signal extension presence to host web page
+  try {
+    if (typeof document !== "undefined" && document.documentElement) {
+      document.documentElement.setAttribute("data-querycraft-extension-installed", "true");
+      document.documentElement.setAttribute("data-querycraft-version", "1.0.0");
+    }
+    window.postMessage({ type: "QUERYCRAFT_EXTENSION_LOADED", version: "1.0.0" }, "*");
+  } catch (e) {}
+
+  // Respond to ping queries from QueryCraft web application
+  window.addEventListener("message", (event) => {
+    if (event.data && event.data.type === "QUERYCRAFT_PING") {
+      window.postMessage({ type: "QUERYCRAFT_PONG", version: "1.0.0" }, "*");
+    }
+  });
+
   let API_BASE = "http://127.0.0.1:8000";
   let hostEl = null;
   let shadowRoot = null;

@@ -56,6 +56,15 @@ function Navbar() {
           <span className="mx-2 h-5 w-px bg-[#dfe6df]" />
 
           <Link
+            href="/Dashboard?showExtension=true"
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#206642] hover:bg-[#eaf5ed] transition"
+            title="QueryCraft Chrome Extension & Spotlight Copilot"
+          >
+            <Sparkles className="size-3.5 text-[#3aa363]" />
+            <span>Extension</span>
+          </Link>
+
+          <Link
             href="/Dashboard/chat"
             className="flex items-center gap-2 rounded-lg border border-[#cfddd0] bg-white px-3.5 py-2 text-xs font-semibold text-[#2d4334] shadow-xs transition hover:border-[#4ca873] hover:bg-[#f3f9f4]"
           >

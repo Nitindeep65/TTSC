@@ -16,23 +16,28 @@ import {
   Loader2,
   MessageSquareText,
   Settings,
+  Sparkles,
   Terminal,
   Wand2,
+  Zap,
 } from "lucide-react"
 import { DatabaseProvider, useDatabase } from "@/lib/databaseContext"
 import { SettingsProvider, useSettings } from "@/lib/settingsContext"
+import { ExtensionProvider, useExtension } from "@/lib/extensionContext"
 import { useAuth } from "@/lib/authContext"
 import ConnectDatabaseModal from "@/components/database/ConnectDatabaseModal"
 import CreateWorkspaceModal from "@/components/workspace/CreateWorkspaceModal"
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher"
 import MetricGlossaryModal from "@/components/semantic/MetricGlossaryModal"
 import SettingsPanel from "@/components/settings/SettingsPanel"
+import ExtensionPromptModal from "@/components/extension/ExtensionPromptModal"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
 function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
   const pathname = usePathname()
   const { dbInfo, setIsModalOpen } = useDatabase()
+  const { isInstalled, openModal } = useExtension()
 
   const isQueryTester = pathname === "/Dashboard"
   const isChat = pathname === "/Dashboard/chat"
@@ -59,6 +64,37 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
           <Wand2 className="size-3.5 text-[#3aa363]" />
           <span>Metrics Glossary</span>
         </Button>
+
+        {/* Chrome Extension Status / Try Extension */}
+        {isInstalled ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => openModal(false)}
+            className="gap-1.5 font-semibold text-xs border-emerald-500/40 bg-emerald-50 text-[#14532d] hover:bg-emerald-100 hidden lg:flex"
+            title="QueryCraft Chrome Extension is installed. Press Cmd+Shift+K anywhere on the web."
+          >
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <Zap className="size-3.5 text-emerald-600" />
+            <span>Copilot Active</span>
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => openModal(true)}
+            className="gap-1.5 font-semibold text-xs border-emerald-600/30 bg-[#f0f9f3] text-[#164e2d] hover:bg-[#e2f3e8] hover:border-emerald-600/50 shadow-2xs hidden sm:flex"
+            title="Open on any page with Cmd+Shift+K — Try QueryCraft Chrome Extension"
+          >
+            <Sparkles className="size-3.5 text-emerald-600" />
+            <span>Try Extension</span>
+            <span className="rounded bg-emerald-600/10 px-1 py-0.2 text-[9px] font-mono text-emerald-800">
+              Cmd+Shift+K
+            </span>
+          </Button>
+        )}
 
         {/* DB Status */}
         <Button
@@ -197,6 +233,9 @@ function DashboardShell({ children }) {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
       />
+
+      {/* Extension Promotion / Setup Modal */}
+      <ExtensionPromptModal />
     </SidebarProvider>
   )
 }
@@ -204,11 +243,13 @@ function DashboardShell({ children }) {
 export default function Layout({ children }) {
   return (
     <DatabaseProvider>
-      {/* SettingsProvider wraps everything — settings are available to all child components */}
+      {/* SettingsProvider & ExtensionProvider wrap dashboard components */}
       <SettingsProvider>
-        <DashboardShell>
-          {children}
-        </DashboardShell>
+        <ExtensionProvider>
+          <DashboardShell>
+            {children}
+          </DashboardShell>
+        </ExtensionProvider>
       </SettingsProvider>
     </DatabaseProvider>
   )

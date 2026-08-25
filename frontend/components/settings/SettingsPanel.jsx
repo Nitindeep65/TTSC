@@ -97,16 +97,27 @@ export default function SettingsPanel({ isOpen, onClose }) {
   const [pingStatus, setPingStatus] = useState(null) // { loading, ok, latency, message, error }
   const overlayRef = useRef(null)
 
+  // Sync state with authUser
+  useEffect(() => {
+    if (authUser) {
+      setLocalAccount((prev) => ({
+        ...prev,
+        displayName: authUser.displayName || prev.displayName,
+        email: authUser.email || prev.email,
+      }))
+    }
+  }, [authUser])
+
   // Sync state on open or remote update
   useEffect(() => {
     let ignore = false
     if (isOpen) {
-      fetchSettings().then(() => {
+      fetchSettings().then((remoteSettings) => {
         if (!ignore) {
           setLocalAccount({
-            displayName: settings.account?.displayName || "QueryCraft User",
-            email: settings.account?.email || "demo@querycraft.dev",
-            role: settings.account?.role || "Data Architect",
+            displayName: authUser?.displayName || remoteSettings?.account?.displayName || settings.account?.displayName || "QueryCraft User",
+            email: authUser?.email || remoteSettings?.account?.email || settings.account?.email || "demo@querycraft.dev",
+            role: remoteSettings?.account?.role || settings.account?.role || "Data Architect",
           })
           setLocalPreferences({
             theme: settings.preferences?.theme || "dark",
@@ -122,7 +133,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
     return () => {
       ignore = true
     }
-  }, [isOpen, fetchSettings, settings])
+  }, [isOpen, fetchSettings, settings, authUser])
 
   // Keyboard shortcut recording listener
   useEffect(() => {
