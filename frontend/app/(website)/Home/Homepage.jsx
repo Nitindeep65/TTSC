@@ -6,6 +6,7 @@ import ProblemSection from "./ProblemSection"
 import Features from "./Features"
 import MCPSection from "./MCPSection"
 import DailyUseCases from "./DailyUseCases"
+import V3Roadmap from "./V3Roadmap"
 import Testimonial from "./Testimonial"
 import CTA from "./CTA"
 import Footer from "@/components/resuable/Footer"
@@ -19,6 +20,7 @@ export default function Homepage() {
         <Features />
         <MCPSection />
         <DailyUseCases />
+        <V3Roadmap />
         <Testimonial />
         <CTA />
       </main>
