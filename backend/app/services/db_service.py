@@ -436,6 +436,55 @@ def _raw_execute_select(connection_uri: str, query: str, limit: int = 50) -> Tup
         db_name = parsed.path.lstrip('/').split('?')[0] or "test"
         db = client[db_name]
         
+        def _parse_mongo_payload(text_str: str):
+            s = text_str.strip()
+            try:
+                from bson import ObjectId
+            except Exception:
+                def ObjectId(val=None): return str(val)
+
+            # 1. Try strict JSON parse first
+            try:
+                return json.loads(s)
+            except Exception:
+                pass
+
+            # 2. Quote unquoted JS object keys and normalize JS booleans/dates
+            def quote_keys(m):
+                prefix = m.group(1)
+                key = m.group(2)
+                if key.startswith('"') and key.endswith('"'):
+                    return f"{prefix}{key}:"
+                return f'{prefix}"{key}":'
+
+            s_clean = re.sub(r'([{,\[\s])([a-zA-Z0-9_$]+)\s*:', quote_keys, s)
+            s_clean = re.sub(r':\s*true\b', ': true', s_clean)
+            s_clean = re.sub(r':\s*false\b', ': false', s_clean)
+            s_clean = re.sub(r':\s*null\b', ': null', s_clean)
+            s_clean = re.sub(r'\bnew\s+ObjectId\(\s*["\']?([a-fA-F0-9]+)["\']?\s*\)', r'"\1"', s_clean)
+            s_clean = re.sub(r'\bObjectId\(\s*["\']?([a-fA-F0-9]+)["\']?\s*\)', r'"\1"', s_clean)
+            s_clean = re.sub(r'\bISODate\(\s*["\']?([^"\']+)["\']?\s*\)', r'"\1"', s_clean)
+            s_clean = re.sub(r'\bnew\s+Date\([^)]*\)', r'"2024-01-01T00:00:00Z"', s_clean)
+            s_clean = re.sub(r'\bDate\([^)]*\)', r'"2024-01-01T00:00:00Z"', s_clean)
+
+            try:
+                return json.loads(s_clean)
+            except Exception:
+                pass
+
+            # 3. Python dict literal evaluation fallback
+            import datetime
+            py_s = re.sub(r'\btrue\b', 'True', s_clean)
+            py_s = re.sub(r'\bfalse\b', 'False', py_s)
+            py_s = re.sub(r'\bnull\b', 'None', py_s)
+            eval_globals = {
+                "__builtins__": None,
+                "True": True, "False": False, "None": None,
+                "ObjectId": ObjectId,
+                "Date": lambda *args: datetime.datetime.now(),
+            }
+            return eval(py_s, eval_globals, {})
+
         # Try to parse query like db.collection.find(...) or db.collection.aggregate([...])
         clean_q = query.strip()
         match_agg = re.match(r"^db\.([a-zA-Z0-9_]+)\.aggregate\(\s*(\[.*\])\s*\)", clean_q, re.DOTALL)
@@ -443,24 +492,18 @@ def _raw_execute_select(connection_uri: str, query: str, limit: int = 50) -> Tup
         
         if match_agg:
             col_name, pipeline_str = match_agg.groups()
-            try:
-                pipeline = json.loads(pipeline_str)
-            except Exception:
-                import ast
-                pipeline = ast.literal_eval(pipeline_str)
+            pipeline = _parse_mongo_payload(pipeline_str)
+            if not isinstance(pipeline, list):
+                pipeline = [pipeline] if pipeline else []
             # Append limit if not present
-            if not any("$limit" in stage for stage in pipeline):
+            if not any("$limit" in stage for stage in pipeline if isinstance(stage, dict)):
                 pipeline.append({"$limit": limit})
             results = list(db[col_name].aggregate(pipeline))
         elif match_find:
             col_name, filter_str = match_find.groups()
-            filter_dict = {}
-            if filter_str:
-                try:
-                    filter_dict = json.loads(filter_str)
-                except Exception:
-                    import ast
-                    filter_dict = ast.literal_eval(filter_str)
+            filter_dict = _parse_mongo_payload(filter_str) if filter_str else {}
+            if not isinstance(filter_dict, dict):
+                filter_dict = {}
             results = list(db[col_name].find(filter_dict).limit(limit))
         else:
             # Fallback: find in first collection
