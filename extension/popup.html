@@ -142,10 +142,10 @@
               <path d="M3 12a9 3 0 0 0 18 0" />
             </svg>
           </div>
-          <h2 class="empty-title">PostgreSQL Query Engine</h2>
+          <h2 class="empty-title">Universal SQL &amp; NoSQL Engine</h2>
           <p class="empty-desc">
-            Grounded on <span id="welcomeDbName" class="font-medium text-white">Demo DB</span> schema with
-            <strong>Self-Healing Critic</strong> &amp; <strong>Visual Charts</strong>.
+            Grounded on <span id="welcomeDbName" class="font-medium text-white">Demo DB</span> with
+            <strong>Self-Healing Critic</strong>, <strong>PostgreSQL SQL</strong> &amp; <strong>MongoDB MQL</strong>.
           </p>
 
           <div class="quick-prompts">
@@ -156,6 +156,11 @@
                 <span class="chip-query">Top 5 customers by spend in 2024</span>
               </button>
               <button type="button" class="prompt-chip"
+                data-prompt="Calculate total revenue and unit sales per product category from nested order items in MongoDB">
+                <span class="chip-badge" style="background:#00ed64;color:#0b2e17;">MongoDB</span>
+                <span class="chip-query">Nested order items aggregation</span>
+              </button>
+              <button type="button" class="prompt-chip"
                 data-prompt="Show daily completed order revenue for the last 30 days as a trend chart">
                 <span class="chip-badge">Chart Trend</span>
                 <span class="chip-query">Daily revenue trend (last 30 days)</span>
@@ -164,11 +169,6 @@
                 data-prompt="List available products with stock quantity below 20 ordered by price ASC">
                 <span class="chip-badge">Filter</span>
                 <span class="chip-query">Low stock products below 20</span>
-              </button>
-              <button type="button" class="prompt-chip"
-                data-prompt="Calculate total revenue generated per payment method in 2024">
-                <span class="chip-badge">Group By</span>
-                <span class="chip-query">Revenue by payment method</span>
               </button>
             </div>
           </div>
@@ -291,13 +291,19 @@
             </div>
             <div class="field-row">
               <label>Provider Preset</label>
-              <div class="presets-row">
+              <div class="presets-row" style="flex-wrap:wrap;gap:4px;">
                 <button type="button" class="preset-btn"
                   data-uri="postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres">Supabase</button>
                 <button type="button" class="preset-btn"
                   data-uri="postgresql://[USER]:[PASSWORD]@ep-[ID].region.aws.neon.tech/neondb?sslmode=require">Neon</button>
                 <button type="button" class="preset-btn"
+                  data-uri="mongodb+srv://[USER]:[PASSWORD]@[CLUSTER].mongodb.net/[DBNAME]?retryWrites=true&w=majority">MongoDB</button>
+                <button type="button" class="preset-btn"
+                  data-uri="redis://default:[PASSWORD]@[ENDPOINT]:6379">Redis</button>
+                <button type="button" class="preset-btn"
                   data-uri="postgresql://[USER]:[PASSWORD]@[ENDPOINT].rds.amazonaws.com:5432/[DBNAME]">RDS</button>
+                <button type="button" class="preset-btn"
+                  data-uri="mysql://[USER]:[PASSWORD]@[HOST]:3306/[DBNAME]">MySQL</button>
                 <button type="button" class="preset-btn"
                   data-uri="postgresql://postgres:postgres@localhost:5432/postgres">Local</button>
               </div>
@@ -306,7 +312,7 @@
               <label>Connection String</label>
               <div class="uri-input-wrap">
                 <input type="password" id="inputConnectionUri" required
-                  placeholder="postgresql://user:pass@host:5432/db" />
+                  placeholder="postgresql://... or mongodb+srv://... or redis://..." />
                 <button type="button" class="eye-toggle" id="btnToggleUriEye">👁</button>
               </div>
             </div>

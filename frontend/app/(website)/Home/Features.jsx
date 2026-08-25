@@ -20,72 +20,99 @@ import {
   TableProperties,
   Zap,
 } from "lucide-react"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
 const featureList = [
   {
-    icon: Cloud,
-    badge: "Cloud Introspection",
-    title: "Live Database Schema Grounding",
+    icon: Database,
+    badge: "Multi-Model Engines",
+    title: "Universal SQL & NoSQL Compiler",
     description:
-      "Connect your Supabase, Neon, or AWS RDS instance. The engine inspects information_schema in real-time, respecting UUIDs, JSONB, NUMERIC types, and foreign key relationships.",
-    highlight: "Zero Hallucination Guarantee",
+      "Native support for relational SQL (PostgreSQL, MySQL, Supabase, Neon) as well as document and key-value stores (MongoDB Atlas, DynamoDB, Redis). Generates optimized queries tailored to your target engine.",
+    highlight: "Postgres · MySQL · Mongo · Redis",
+    snippet: "-- Relational SQL or MongoDB MQL:\ndb.orders.aggregate([{ $match: { status: 'completed' } }])",
   },
   {
     icon: HelpCircle,
-    badge: "Multi-Turn Engine",
+    badge: "Conversational AI",
     title: "Proactive Clarification Layer",
     description:
-      "When queries have ambiguous date windows, missing transaction status filters (completed vs pending), or vague rankings, the engine pauses and asks targeted questions first.",
-    highlight: "No Risky Assumptions",
+      "When requests lack date ranges, transaction status filters, or explicit ranking parameters, the engine pauses and asks targeted clarifying questions before generating code.",
+    highlight: "Zero Risky Assumptions",
+    snippet: "Clarify: \"Top customers\" by total spend or order count? Timeframe: 30 days or YTD?",
+  },
+  {
+    icon: Cloud,
+    badge: "Live Introspection",
+    title: "Schema & Collection Grounding",
+    description:
+      "Directly inspects live database catalogs — relational tables, UUIDs, JSONB columns, foreign keys, and MongoDB document schemas. Never hallucinates non-existent fields or invalid types.",
+    highlight: "Zero Hallucination Guarantee",
+    snippet: "Schema: users(id, email), orders(total_amount, status)\nCollections: products, sessions",
+  },
+  {
+    icon: Zap,
+    badge: "Self-Healing AI",
+    title: "Dual Critic Loop (SQL & MQL)",
+    description:
+      "If a query encounters a PostgreSQL syntax error or MongoDB aggregation stage failure, our LLM critic diagnoses the root cause in real-time and compiles a verified replacement automatically.",
+    highlight: "Automated Error Recovery",
+    snippet: "PostgreSQL 42703 / Mongo pipeline error\n→ Diagnosis → Auto-healed ✓",
   },
   {
     icon: ShieldCheck,
-    badge: "Production Safety",
-    title: "Strict Read-Only & LIMIT 50 Guards",
+    badge: "Universal Safety",
+    title: "Read-Only Sandboxing & Limits",
     description:
-      "Enforces pure SELECT queries. Any attempt to generate INSERT, UPDATE, DELETE, or DROP is intercepted, and resource protection limits prevent cloud egress spikes.",
-    highlight: "Read-Only SELECT Enforced",
+      "Strictly enforces read-only access (SELECT in SQL, find/aggregate in NoSQL, GET in Redis). Intercepts INSERT, DELETE, DROP, and auto-appends LIMIT 50 safeguards.",
+    highlight: "Read-Only Enforced Everywhere",
+    snippet: "BLOCKED: INSERT / UPDATE / DROP\nALLOWED: SELECT / find() / aggregate()\nLIMIT: Auto 50",
   },
   {
-    icon: Play,
-    badge: "Instant Verification",
-    title: "Direct Query Execution in Browser",
+    icon: Layers,
+    badge: "Business Intelligence",
+    title: "Cross-Engine Semantic Layer",
     description:
-      "Run generated SQL queries directly against your cloud database in an isolated read-only transaction and inspect tabular rows right inside the chat interface.",
-    highlight: "1-Click Live Execution",
+      "Define business KPI formulas, glossary terms, and active customer rules once. QueryCraft applies them across both relational joins and nested NoSQL document pipelines effortlessly.",
+    highlight: "Unified Business Definitions",
+    snippet: "KPI Rule: net_revenue = total_amount - refund_amount\nApplied across all queries.",
   },
 ]
 
 export default function Features() {
   return (
-    <section className="border-b border-border bg-white px-4 py-20 sm:px-6 lg:px-8 lg:py-24" id="features">
+    <section className="border-b border-border bg-[#f7f9f7] px-4 py-20 sm:px-6 lg:px-8 lg:py-24" id="features">
       <div className="mx-auto max-w-7xl">
-        
+
         {/* Header */}
-        <div className="mx-auto max-w-3xl text-center space-y-3">
+        <div className="mx-auto max-w-3xl text-center space-y-3 mb-16">
           <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold">
             <Sparkles className="size-3.5 text-[#3aa363]" />
-            <span>Engineered for Production PostgreSQL</span>
+            <span>Universal Multi-Engine Intelligence</span>
           </Badge>
 
           <h2 className="text-3xl font-semibold tracking-tight text-[#17241c] sm:text-4xl">
-            The Text-to-SQL engine that doesn't guess.
+            One engine for all your{" "}
+            <span className="bg-gradient-to-r from-[#1f663c] to-[#4ca873] bg-clip-text text-transparent">
+              SQL &amp; NoSQL databases.
+            </span>
           </h2>
 
           <p className="text-base text-[#5c6e63] leading-relaxed">
-            Most Text-to-SQL tools hallucinate missing columns or assume silent date defaults. We verify conversational intent against your live schema before compiling queries.
+            From relational tables to nested document collections, QueryCraft clarifies intent, grounds queries in live schemas, and executes safe analytics anywhere.
           </p>
         </div>
 
         {/* Feature Cards Grid */}
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 min-w-0">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 min-w-0">
           {featureList.map((f, idx) => (
-            <Card
+            <div
               key={idx}
-              className="group relative flex flex-col justify-between p-6 hover-lift hover:border-[#71c897]/80 hover:shadow-lg hover:shadow-[#1f2d24]/5"
+              className="group relative flex flex-col justify-between rounded-2xl border border-[#e0e8e2] bg-white p-6 hover-lift hover:border-[#71c897]/80 hover:shadow-lg hover:shadow-[#1f2d24]/5 transition-all duration-200 overflow-hidden"
             >
+              {/* Hover accent */}
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-[#3aa363] to-[#71c897] opacity-0 transition-opacity duration-200 group-hover:opacity-100 rounded-b-2xl" />
+
               <div>
                 <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs group-hover:scale-110 transition-transform duration-200">
                   <f.icon className="size-5.5" />
@@ -104,11 +131,18 @@ export default function Features() {
                 </p>
               </div>
 
-              <div className="mt-6 border-t border-[#eaf0eb] pt-3.5 flex items-center gap-1.5 text-xs font-semibold text-[#206642]">
+              {/* Code snippet on hover */}
+              <div className="mt-4 overflow-hidden rounded-lg border border-[#e4ede5] bg-[#f5fbf6] opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-32 transition-all duration-300">
+                <pre className="p-3 font-mono text-[10px] leading-relaxed text-[#2a5238] overflow-x-auto whitespace-pre-wrap">
+                  <code>{f.snippet}</code>
+                </pre>
+              </div>
+
+              <div className="mt-5 border-t border-[#eaf0eb] pt-3.5 flex items-center gap-1.5 text-xs font-semibold text-[#206642]">
                 <CheckCircle2 className="size-3.5 text-[#3ba565]" />
                 <span>{f.highlight}</span>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
 

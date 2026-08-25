@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Unplug,
   X,
+  Cpu,
 } from "lucide-react"
 import { useDatabase } from "@/lib/databaseContext"
 
@@ -26,7 +27,8 @@ const providerTemplates = [
   {
     id: "supabase",
     name: "Supabase",
-    badge: "Cloud DB",
+    category: "sql",
+    badge: "PostgreSQL",
     color: "#3ecf8e",
     placeholder: "postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres",
     helper: "Found in Supabase Dashboard -> Project Settings -> Database -> Connection string (URI).",
@@ -34,25 +36,68 @@ const providerTemplates = [
   },
   {
     id: "neon",
-    name: "Neon Serverless",
-    badge: "Serverless",
+    name: "Neon",
+    category: "sql",
+    badge: "Serverless Postgres",
     color: "#00e599",
     placeholder: "postgresql://[USER]:[PASSWORD]@ep-[ID].region.aws.neon.tech/neondb?sslmode=require",
     helper: "Found in Neon Console -> Dashboard -> Connection Details -> Connection string.",
     docUrl: "https://neon.tech/docs/connect/connect-from-any-app",
   },
   {
+    id: "mongodb",
+    name: "MongoDB Atlas",
+    category: "nosql",
+    badge: "NoSQL Document",
+    color: "#00ed64",
+    placeholder: "mongodb+srv://[USER]:[PASSWORD]@[CLUSTER].mongodb.net/[DBNAME]?retryWrites=true&w=majority",
+    helper: "Found in MongoDB Atlas -> Clusters -> Connect -> Drivers / Connection String.",
+    docUrl: "https://www.mongodb.com/docs/drivers/node/current/fundamentals/connection/",
+  },
+  {
+    id: "redis",
+    name: "Redis / Upstash",
+    category: "cache",
+    badge: "Key-Value Cache",
+    color: "#dc382d",
+    placeholder: "redis://default:[PASSWORD]@[ENDPOINT]:6379",
+    helper: "Found in Redis Cloud / Upstash Console -> Details -> Redis Connection URI.",
+    docUrl: "https://redis.io/docs/latest/develop/connect/clients/",
+  },
+  {
+    id: "dynamodb",
+    name: "Amazon DynamoDB",
+    category: "nosql",
+    badge: "AWS NoSQL",
+    color: "#ff9900",
+    placeholder: "https://dynamodb.[REGION].amazonaws.com (or local endpoint http://localhost:8000)",
+    helper: "AWS Region endpoint or local DynamoDB emulator connection endpoint.",
+    docUrl: "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html",
+  },
+  {
     id: "rds",
-    name: "AWS RDS PostgreSQL",
-    badge: "AWS",
+    name: "AWS RDS Postgres",
+    category: "sql",
+    badge: "AWS Relational",
     color: "#ff9900",
     placeholder: "postgresql://[USER]:[PASSWORD]@[ENDPOINT].rds.amazonaws.com:5432/[DBNAME]",
     helper: "Found in AWS RDS Console -> Databases -> Connectivity & Security -> Endpoint.",
     docUrl: "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html",
   },
   {
+    id: "mysql",
+    name: "MySQL / MariaDB",
+    category: "sql",
+    badge: "Relational SQL",
+    color: "#00758f",
+    placeholder: "mysql://[USER]:[PASSWORD]@[HOST]:3306/[DBNAME]",
+    helper: "Standard MySQL connection URI with host, port, user credentials, and database name.",
+    docUrl: "https://dev.mysql.com/doc/refman/8.0/en/connecting.html",
+  },
+  {
     id: "custom",
     name: "Custom PostgreSQL",
+    category: "sql",
     badge: "Self-Hosted",
     color: "#336791",
     placeholder: "postgresql://postgres:password@your-host.com:5432/mydb",
@@ -73,6 +118,7 @@ export default function ConnectDatabaseModal() {
     setIsModalOpen,
   } = useDatabase()
 
+  const [activeCategory, setActiveCategory] = useState("all") // "all" | "sql" | "nosql" | "cache"
   const [activeProvider, setActiveProvider] = useState("supabase")
   const [inputUri, setInputUri] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -90,12 +136,15 @@ export default function ConnectDatabaseModal() {
     setActiveProvider(providerId)
     const tmpl = providerTemplates.find((p) => p.id === providerId)
     if (tmpl && !connectionUri) {
-      // Don't overwrite if user already typed something custom
       if (!inputUri || providerTemplates.some((p) => p.placeholder === inputUri)) {
         setInputUri("")
       }
     }
   }
+
+  const filteredProviders = activeCategory === "all"
+    ? providerTemplates
+    : providerTemplates.filter((p) => p.category === activeCategory)
 
   const handleConnect = async (e) => {
     e?.preventDefault()
@@ -121,9 +170,9 @@ export default function ConnectDatabaseModal() {
               <Database className="size-5" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-[#1f2d24]">Connect Cloud PostgreSQL</h2>
+              <h2 className="text-base font-semibold text-[#1f2d24]">Connect SQL or NoSQL Database</h2>
               <p className="text-xs text-[#6e8074]">
-                Introspect live tables &amp; columns from Supabase, Neon, or AWS RDS
+                Introspect live schemas &amp; collections from PostgreSQL, MySQL, MongoDB, Redis, or DynamoDB
               </p>
             </div>
           </div>
@@ -145,7 +194,7 @@ export default function ConnectDatabaseModal() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-semibold text-[#1f663c]">
                   <CheckCircle2 className="size-4 text-[#3ba565]" />
-                  <span>Currently Connected to Cloud Database</span>
+                  <span>Currently Connected to Database</span>
                 </div>
                 <button
                   type="button"
@@ -167,24 +216,57 @@ export default function ConnectDatabaseModal() {
                   <span className="truncate block font-semibold">{dbInfo.database}</span>
                 </div>
                 <div className="rounded-lg bg-white/80 p-2 border border-[#d6ebd9]">
-                  <span className="block text-[9px] uppercase tracking-wider text-[#70947c]">User</span>
+                  <span className="block text-[9px] uppercase tracking-wider text-[#70947c]">User / Auth</span>
                   <span className="truncate block font-semibold">{dbInfo.user}</span>
                 </div>
                 <div className="rounded-lg bg-white/80 p-2 border border-[#d6ebd9]">
-                  <span className="block text-[9px] uppercase tracking-wider text-[#70947c]">Tables</span>
-                  <span className="block font-semibold text-[#227244]">{dbInfo.tables_count} live tables</span>
+                  <span className="block text-[9px] uppercase tracking-wider text-[#70947c]">Entities</span>
+                  <span className="block font-semibold text-[#227244]">{dbInfo.tables_count} live schemas</span>
                 </div>
               </div>
             </div>
           ) : null}
 
-          {/* Provider Selector Tabs */}
+          {/* Engine Category Tabs & Provider Grid */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#697b70] mb-2">
-              Select Cloud Provider
-            </label>
+            <div className="flex items-center justify-between mb-2.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#697b70]">
+                Select Database Engine
+              </label>
+              <div className="flex items-center gap-1 bg-[#f0f4f1] p-0.5 rounded-lg text-[10px] font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory("all")}
+                  className={`px-2 py-0.5 rounded-md transition ${activeCategory === "all" ? "bg-white text-[#1f2d24] shadow-xs" : "text-[#627568]"}`}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory("sql")}
+                  className={`px-2 py-0.5 rounded-md transition ${activeCategory === "sql" ? "bg-white text-[#1f2d24] shadow-xs" : "text-[#627568]"}`}
+                >
+                  Relational SQL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory("nosql")}
+                  className={`px-2 py-0.5 rounded-md transition ${activeCategory === "nosql" ? "bg-white text-[#1f2d24] shadow-xs" : "text-[#627568]"}`}
+                >
+                  NoSQL Document
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory("cache")}
+                  className={`px-2 py-0.5 rounded-md transition ${activeCategory === "cache" ? "bg-white text-[#1f2d24] shadow-xs" : "text-[#627568]"}`}
+                >
+                  Key-Value
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {providerTemplates.map((p) => {
+              {filteredProviders.map((p) => {
                 const isSelected = activeProvider === p.id
                 return (
                   <button
@@ -214,7 +296,7 @@ export default function ConnectDatabaseModal() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label htmlFor="conn-uri" className="text-xs font-semibold text-[#1f2d24]">
-                  PostgreSQL Connection URI
+                  {selectedProvider?.name} Connection URI
                 </label>
                 {selectedProvider?.docUrl && (
                   <a
@@ -260,11 +342,11 @@ export default function ConnectDatabaseModal() {
               <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-800 space-y-1">
                 <div className="flex items-center gap-1.5 font-semibold">
                   <AlertCircle className="size-4 text-red-600" />
-                  <span>Connection Failed</span>
+                  <span>Connection Notice</span>
                 </div>
                 <p className="text-[11px] font-mono leading-relaxed">{connectionError}</p>
                 <p className="text-[10px] text-red-600 pt-1">
-                  Tip: Verify your database password, ensure port 5432 is open, and check that your cloud provider allows connections from anywhere (0.0.0.0/0).
+                  Tip: Verify your network connection string, ensure cloud firewall allows incoming connections (0.0.0.0/0), and check authentication credentials.
                 </p>
               </div>
             )}
@@ -287,12 +369,12 @@ export default function ConnectDatabaseModal() {
                 {isConnecting ? (
                   <>
                     <Loader2 className="size-3.5 animate-spin text-[#71c897]" />
-                    <span>Connecting &amp; Introspecting...</span>
+                    <span>Discovering Schemas...</span>
                   </>
                 ) : (
                   <>
                     <Cloud className="size-3.5 text-[#71c897]" />
-                    <span>Connect &amp; Introspect Live Schema</span>
+                    <span>Connect &amp; Introspect Live Catalog</span>
                   </>
                 )}
               </button>

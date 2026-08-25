@@ -52,28 +52,28 @@ const API = "http://127.0.0.1:8000"
 
 const STARTER_PROMPTS = [
   {
-    type: "Clarification",
+    type: "SQL Clarification",
     text: "Show top customers",
     desc: "AI pauses to clarify metric, date range, and status before generating SQL",
     color: "amber",
   },
   {
-    type: "Complete Query",
+    type: "Complete SQL",
     text: "Find completed orders from the last 7 days with customer names and total amount",
     desc: "Immediately compiles a safe, optimised PostgreSQL SELECT query",
     color: "emerald",
+  },
+  {
+    type: "NoSQL (MongoDB MQL)",
+    text: "Calculate total revenue and unit sales per product category from nested order items in MongoDB",
+    desc: "Compiles a clean MongoDB Aggregation pipeline with $match, $unwind & $group",
+    color: "purple",
   },
   {
     type: "Chart + Trend",
     text: "Show daily completed order revenue for the last 30 days as a trend chart",
     desc: "NLP detects chart intent → renders interactive line chart automatically",
     color: "blue",
-  },
-  {
-    type: "Inventory",
-    text: "List available products with stock quantity below 20 ordered by price",
-    desc: "Generates filtered inventory query with automatic LIMIT applied",
-    color: "purple",
   },
 ]
 

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { Database, Sparkles, Terminal, ShieldCheck, Cloud, Server } from "lucide-react"
+import { Database, Sparkles, Terminal, ShieldCheck, Cloud, Server, Layers } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -18,22 +18,22 @@ export default function Footer() {
               </span>
               <div>
                 <span className="block text-base font-semibold tracking-tight text-[#17241c]">
-                  Text to SQL Studio
+                  QueryCraft Studio
                 </span>
                 <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#3aa363]">
-                  Cloud PostgreSQL Intelligence
+                  Universal SQL &amp; NoSQL Database Engine
                 </span>
               </div>
             </Link>
 
             <p className="max-w-sm text-xs sm:text-sm leading-relaxed text-[#5e7065]">
-              Translate natural language business questions into precise, multi-table PostgreSQL queries with an intelligent clarification layer.
+              Translate natural language business questions into precise, production-ready PostgreSQL, MySQL, MongoDB MQL, and Redis queries with live schema grounding and conversational clarification.
             </p>
 
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d2e4d6] bg-[#edf6ef] px-3 py-1 text-xs font-semibold text-[#206642]">
                 <span className="size-2 rounded-full bg-[#4ca873] animate-pulse" />
-                Llama-3.1 70B Engine
+                Multi-Model LLM Engine
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[#dfe7df] bg-white px-3 py-1 text-xs font-semibold text-[#485b50]">
                 <ShieldCheck className="size-3.5 text-[#3aa363]" />
@@ -42,27 +42,31 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Supported Cloud Databases Col */}
+          {/* Supported Databases Col (SQL & NoSQL) */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-[0.14em] text-[#788a80]">
-              Cloud Integrations
+              Database Engines
             </h4>
             <ul className="mt-3.5 space-y-2 text-xs font-medium text-[#4c5e53]">
               <li className="flex items-center gap-2">
                 <span className="size-2 rounded-full bg-[#3ecf8e]" />
-                <span>Supabase PostgreSQL</span>
+                <span>Supabase &amp; PostgreSQL</span>
               </li>
               <li className="flex items-center gap-2">
                 <span className="size-2 rounded-full bg-[#00e599]" />
                 <span>Neon Serverless</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="size-2 rounded-full bg-[#ff9900]" />
-                <span>AWS RDS PostgreSQL</span>
+                <span className="size-2 rounded-full bg-[#00ed64]" />
+                <span>MongoDB Atlas (NoSQL)</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="size-2 rounded-full bg-[#336791]" />
-                <span>Timescale &amp; Render</span>
+                <span className="size-2 rounded-full bg-[#dc382d]" />
+                <span>Redis Key-Value</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-[#ff9900]" />
+                <span>AWS RDS &amp; DynamoDB</span>
               </li>
             </ul>
           </div>
@@ -80,12 +84,12 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/Dashboard" className="transition hover:text-[#17241c] hover:underline">
-                  Single-Turn Query Compiler
+                  Multi-Database Workspace
                 </Link>
               </li>
               <li>
-                <Link href="/Login" className="transition hover:text-[#17241c] hover:underline">
-                  Sign In / Register
+                <Link href="/#problem" className="transition hover:text-[#17241c] hover:underline">
+                  Architecture &amp; Safety
                 </Link>
               </li>
             </ul>
@@ -95,11 +99,11 @@ export default function Footer() {
 
         {/* Bottom copyright */}
         <div className="flex flex-col items-center justify-between gap-4 border-t border-[#e8efe9] pt-6 sm:flex-row text-xs text-[#788a80]">
-          <p>© {new Date().getFullYear()} Text to SQL Engine. Production-Grade PostgreSQL Clarifier.</p>
+          <p>© {new Date().getFullYear()} QueryCraft Studio. Universal SQL &amp; NoSQL Clarifier.</p>
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5 text-[#206642] font-medium">
               <ShieldCheck className="size-4 text-[#3ba565]" />
-              Safe read-only execution with LIMIT 50 guards
+              Safe read-only execution across relational &amp; document stores
             </span>
           </div>
         </div>

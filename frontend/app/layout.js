@@ -16,8 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata = {
-  title: "Text to SQL Engine | Natural Language Database Intelligence",
-  description: "Transform natural language business questions into precise, optimized PostgreSQL queries with an intelligent multi-turn clarification engine.",
+  title: "QueryCraft — Universal Text-to-SQL & NoSQL Database Engine",
+  description: "Transform natural language into safe, production-ready PostgreSQL, MySQL, MongoDB MQL, DynamoDB, and Redis queries with live schema grounding and conversational clarification.",
 };
 
 export default function RootLayout({ children }) {

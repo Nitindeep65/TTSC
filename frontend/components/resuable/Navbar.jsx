@@ -3,12 +3,14 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ArrowRight, Database, Menu, MessageSquareText, Sparkles, Terminal, X } from "lucide-react"
+import { ArrowRight, Database, Menu, MessageSquareText, Sparkles, Terminal, X, Layers } from "lucide-react"
 
 const navLinks = [
   { name: "Overview", href: "/" },
-  { name: "Query Tester", href: "/Dashboard" },
-  { name: "Interactive Chat", href: "/Dashboard/chat" },
+  { name: "Problem", href: "/#problem" },
+  { name: "Features", href: "/#features" },
+  { name: "Use Cases", href: "/#use-cases" },
+  { name: "MCP Protocol", href: "/#mcp" },
   { name: "Testimonials", href: "/#testimonials" },
 ]
 
@@ -26,8 +28,10 @@ function Navbar() {
             <Sparkles className="size-5" />
           </span>
           <span className="flex flex-col leading-none">
-            <span className="text-base font-semibold tracking-tight text-[#1f2d24]">Text to SQL</span>
-            <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#4ca873]">AI Query Engine</span>
+            <span className="text-base font-semibold tracking-tight text-[#1f2d24]">QueryCraft</span>
+            <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#4ca873]">
+              Universal SQL &amp; NoSQL Studio
+            </span>
           </span>
         </Link>
 
@@ -38,7 +42,7 @@ function Navbar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`rounded-lg px-3.5 py-2 text-sm font-medium transition-all ${
+                className={`rounded-lg px-3 py-2 text-xs font-medium transition-all ${
                   isActive
                     ? "bg-[#eaf5ed] font-semibold text-[#226343]"
                     : "text-[#5b6a60] hover:bg-[#edf4ee] hover:text-[#1f2d24]"
@@ -49,19 +53,19 @@ function Navbar() {
             )
           })}
           
-          <span className="mx-2.5 h-5 w-px bg-[#dfe6df]" />
+          <span className="mx-2 h-5 w-px bg-[#dfe6df]" />
 
           <Link
             href="/Dashboard/chat"
-            className="flex items-center gap-2 rounded-lg border border-[#cfddd0] bg-white px-4 py-2 text-sm font-medium text-[#2d4334] shadow-xs transition hover:border-[#4ca873] hover:bg-[#f3f9f4]"
+            className="flex items-center gap-2 rounded-lg border border-[#cfddd0] bg-white px-3.5 py-2 text-xs font-semibold text-[#2d4334] shadow-xs transition hover:border-[#4ca873] hover:bg-[#f3f9f4]"
           >
-            <MessageSquareText className="size-4 text-[#4ca873]" />
+            <MessageSquareText className="size-3.5 text-[#4ca873]" />
             Live Chat
           </Link>
 
           <Link
             href="/Dashboard"
-            className="ml-1 flex items-center gap-2 rounded-lg bg-[#1f2d24] px-4.5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#2e4736] hover:shadow-md"
+            className="ml-1 flex items-center gap-2 rounded-lg bg-[#1f2d24] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#2e4736] hover:shadow-md"
           >
             Workspace
             <ArrowRight className="size-3.5 text-[#71c897]" />

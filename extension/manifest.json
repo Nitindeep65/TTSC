@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "QueryCraft - AI Text-to-SQL Studio",
+  "name": "QueryCraft - Universal SQL & NoSQL Studio",
   "version": "1.0.0",
-  "description": "Multi-Database Text-to-SQL Clarification Engine & Live Query Studio for PostgreSQL (Supabase, Neon, AWS RDS).",
+  "description": "Multi-Database Clarification Engine & Live Query Studio for SQL (PostgreSQL, MySQL, Supabase, Neon) & NoSQL (MongoDB Atlas, Redis, DynamoDB).",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "QueryCraft - Text-to-SQL Studio",
+    "default_title": "QueryCraft - Universal SQL & NoSQL Studio",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
@@ -69,4 +69,3 @@
     "https://*/*"
   ]
 }
-

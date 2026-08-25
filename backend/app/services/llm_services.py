@@ -214,14 +214,14 @@ def build_system_prompt(
             lines.append("")
         few_shot_section = "\n".join(lines) + "\n"
 
-    return f"""You are an expert Text-to-SQL Clarification and Query Engine specializing in cloud PostgreSQL environments (Supabase, Neon, AWS RDS). 
+    return f"""You are an expert Universal Text-to-Database Clarification and Query Engine specializing in SQL (PostgreSQL, MySQL, Supabase, Neon, AWS RDS) and NoSQL Document/Key-Value environments (MongoDB, Redis, DynamoDB).
 
-Your objective is to analyze user requests, evaluate conversational context, clarify ambiguities, and generate safe, optimized, production-ready PostgreSQL queries based strictly on the live schema provided via MCP.
+Your objective is to analyze user requests, evaluate conversational context, clarify ambiguities, and generate safe, optimized, production-ready queries (PostgreSQL SQL by default, or MongoDB MQL / Redis commands if requested) based strictly on the live schema provided via MCP.
 
 ---
 
 ### INPUT CONTEXT PROVIDED
-- LIVE DATABASE SCHEMA: Live tables, column names, data types, and constraints retrieved from the connected cloud database.
+- LIVE DATABASE SCHEMA & COLLECTIONS: Tables/collections, column/field names, data types, and constraints retrieved from the connected database.
 {schema_to_use}
 {metrics_section}
 {few_shot_section}
@@ -229,27 +229,28 @@ Your objective is to analyze user requests, evaluate conversational context, cla
 
 ### CORE EVALUATION RULES
 
-1. SCHEMA GROUNDING (ZERO HALLUCINATION):
-   - Only reference tables and columns explicitly present in the provided schema.
-   - Respect PostgreSQL data types (e.g., UUID, TIMESTAMPTZ, JSONB, NUMERIC). Cast types explicitly when necessary (e.g., column::date or column::text, json_column->>'key').
+1. SCHEMA & COLLECTION GROUNDING (ZERO HALLUCINATION):
+   - Only reference tables, columns, or collections/fields explicitly present in the provided schema.
+   - Respect data types (e.g., UUID, TIMESTAMPTZ, JSONB, BSON object types).
    - Strictly adhere to any Business Metric definitions provided above.
 
-2. CLARIFICATION CRITERIA (WHEN TO PAUSE SQL GENERATION):
+2. CLARIFICATION CRITERIA (WHEN TO PAUSE QUERY GENERATION):
    - Set "status" to "needs_clarification" if any of the following are missing or ambiguous:
-     * Time windows or date ranges on cumulative/historical tables (e.g., orders, payments, user registrations).
+     * MULTI-DATABASE CLUSTER DISAMBIGUATION: If the connected cluster contains multiple databases (e.g. "ByteRipple", "cloudpeek", "portfolio", "test") and the user's prompt does not specify which database to target (or if collections with similar names exist across databases), ask a clear clarification question:
+       "Which database in your cluster would you like to query? (Available databases: db1, db2, ...)"
+     * Time windows or date ranges on cumulative/historical tables or collections.
      * Status filters on transactional entities (e.g., active vs. inactive, completed vs. pending vs. cancelled).
      * Ambiguous ranking/aggregation definitions (e.g., "top users" -> by total spend, by order count, or by activity?).
      * Vague pagination or threshold requirements.
    - In "message", ask a concise, targeted question addressing the missing parameters. Set "extracted_data" to null.
 
-3. COMPLETION CRITERIA (WHEN TO GENERATE SQL):
-   - Set "status" to "complete" ONLY when all required filters, joins, aggregations, and metrics are clearly specified across the conversation history.
+3. COMPLETION CRITERIA (WHEN TO GENERATE QUERY):
+   - Set "status" to "complete" ONLY when all required filters, joins/stages, aggregations, and metrics are clearly specified across the conversation history.
    - In "message", provide a brief, professional confirmation.
 
-4. CLOUD POSTGRESQL SAFETY & PERFORMANCE CONSTRAINTS:
-   - READ-ONLY ENFORCEMENT: Output ONLY `SELECT` statements. Never generate `INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `TRUNCATE`, or administrative statements.
-   - RESOURCE PROTECTION: Always apply an explicit `LIMIT` (default to 50 if unspecified) on open-ended list queries to prevent cloud egress and memory spikes.
-   - OPTIMIZED JOINS: Utilize indexed foreign keys for joins where indicated. Use `ILIKE` for case-insensitive text search.
+4. SAFETY & RESOURCE CONSTRAINTS (SQL & NoSQL):
+   - READ-ONLY ENFORCEMENT: Output ONLY `SELECT` statements for SQL, or read-only `find()` / `aggregate()` for MongoDB, or read-only commands for Redis. Never generate `INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`, `TRUNCATE`, `$out`, `$merge`, `SET`, or `DEL`.
+   - RESOURCE PROTECTION: Always apply an explicit `LIMIT` (default to 50 if unspecified) on open-ended queries to prevent memory spikes.
 
 ---
 
@@ -260,9 +261,9 @@ Respond ONLY with a valid, raw JSON object matching this schema (no markdown for
   "status": "needs_clarification" | "complete",
   "message": "Direct acknowledgment and specific clarification question, OR friendly confirmation message",
   "extracted_data": {{
-    "sql_query": "SELECT ... FROM ... WHERE ...;",
-    "tables_identified": ["table_name_1", "table_name_2"],
-    "explanation": "1-2 sentence plain-English explanation of joins, filters, aggregations, and limits applied."
+    "sql_query": "SELECT ... FROM ... WHERE ...; (or db.collection.aggregate([...]))",
+    "tables_identified": ["table_or_collection_1", "table_or_collection_2"],
+    "explanation": "1-2 sentence plain-English explanation of joins/pipeline stages, filters, aggregations, and limits applied."
   }} | null
 }}"""
 
@@ -286,37 +287,51 @@ def sanitize_and_parse_json(raw_text: str) -> Dict[str, Any]:
 
 
 def validate_and_enforce_sql_safety(sql_query: str) -> str:
-    """Enforces read-only PostgreSQL execution and safety constraints."""
+    """Enforces read-only execution and safety constraints for SQL and NoSQL."""
     query = sql_query.strip()
     
     disallowed_patterns = [
         r"\bINSERT\s+INTO\b",
         r"\bUPDATE\s+\w+\s+SET\b",
         r"\bDELETE\s+FROM\b",
-        r"\bDROP\s+(?:TABLE|DATABASE|INDEX|VIEW|SCHEMA)\b",
+        r"\bDROP\s+(?:TABLE|DATABASE|INDEX|VIEW|SCHEMA|COLLECTION)\b",
         r"\bALTER\s+(?:TABLE|DATABASE|INDEX|VIEW|SCHEMA)\b",
         r"\bTRUNCATE\b",
         r"\bGRANT\b",
         r"\bREVOKE\b",
         r"\bEXEC\b",
         r"\bEXECUTE\b",
+        r"\b\$out\b",
+        r"\b\$merge\b",
+        r"\.insertOne\(",
+        r"\.insertMany\(",
+        r"\.updateOne\(",
+        r"\.updateMany\(",
+        r"\.deleteOne\(",
+        r"\.deleteMany\(",
+        r"\.drop\(",
+        r"\bFLUSHALL\b",
+        r"\bFLUSHDB\b",
     ]
     
     for pattern in disallowed_patterns:
         if re.search(pattern, query, re.IGNORECASE):
-            raise ValueError(f"Dangerous operation detected in generated query matching '{pattern}'. Only SELECT queries are permitted.")
+            raise ValueError(f"Dangerous operation detected in generated query matching '{pattern}'. Only read-only queries are permitted.")
             
-    if not (re.match(r"^\s*(?:SELECT|WITH)\b", query, re.IGNORECASE)):
-        raise ValueError("Generated query is not a valid SELECT statement.")
-        
-    is_pure_scalar_agg = bool(re.search(r"^\s*SELECT\s+(?:COUNT|SUM|AVG|MIN|MAX)\(", query, re.IGNORECASE) and not re.search(r"\bGROUP\s+BY\b", query, re.IGNORECASE))
+    is_nosql = bool(re.match(r"^\s*(?:db\.|SCAN\b|GET\b|HGETALL\b|LRANGE\b|SMEMBERS\b)", query, re.IGNORECASE))
     
-    if not is_pure_scalar_agg and not re.search(r"\bLIMIT\s+\d+\b", query, re.IGNORECASE):
-        if query.endswith(";"):
-            query = query[:-1].rstrip() + " LIMIT 50;"
-        else:
-            query = query + " LIMIT 50;"
+    if not is_nosql:
+        if not (re.match(r"^\s*(?:SELECT|WITH)\b", query, re.IGNORECASE)):
+            raise ValueError("Generated query is not a valid read-only SELECT or NoSQL query statement.")
             
+        is_pure_scalar_agg = bool(re.search(r"^\s*SELECT\s+(?:COUNT|SUM|AVG|MIN|MAX)\(", query, re.IGNORECASE) and not re.search(r"\bGROUP\s+BY\b", query, re.IGNORECASE))
+        
+        if not is_pure_scalar_agg and not re.search(r"\bLIMIT\s+\d+\b", query, re.IGNORECASE):
+            if query.endswith(";"):
+                query = query[:-1].rstrip() + " LIMIT 50;"
+            else:
+                query = query + " LIMIT 50;"
+                
     return query
 
 

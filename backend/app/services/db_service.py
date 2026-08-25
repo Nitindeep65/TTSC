@@ -1,5 +1,7 @@
 import re
 import logging
+import json
+import urllib.parse
 from typing import Dict, List, Any, Optional, Tuple
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -7,7 +9,7 @@ from app.Models.schema import TableInfo, ColumnInfo, SchemaInfoResponse, HealedQ
 
 logger = logging.getLogger(__name__)
 
-# Query to introspect all tables, columns, data types, primary keys, and foreign keys
+# Query to introspect all PostgreSQL tables, columns, data types, primary keys, and foreign keys
 INTROSPECTION_QUERY = """
 SELECT 
     t.table_name,
@@ -61,8 +63,66 @@ ORDER BY t.table_name, c.ordinal_position;
 """
 
 
+def detect_engine_type(connection_uri: str) -> str:
+    """Identifies the database engine from the URI scheme."""
+    uri = connection_uri.strip().lower()
+    if uri.startswith("mongodb://") or uri.startswith("mongodb+srv://"):
+        return "mongodb"
+    if uri.startswith("redis://") or uri.startswith("rediss://"):
+        return "redis"
+    if uri.startswith("mysql://"):
+        return "mysql"
+    return "postgres"
+
+
 def parse_connection_info(connection_uri: str) -> Dict[str, str]:
     """Extracts safe metadata (host, port, dbname, user) from connection string."""
+    engine = detect_engine_type(connection_uri)
+    
+    if engine == "mongodb":
+        try:
+            # Handle mongodb+srv://user:pass@host/dbname?params
+            clean_uri = connection_uri.strip()
+            parsed = urllib.parse.urlparse(clean_uri)
+            user = urllib.parse.unquote(parsed.username) if parsed.username else "mongodb_user"
+            host = parsed.hostname or "mongodb-cluster"
+            port = str(parsed.port) if parsed.port else "27017"
+            
+            db_name = parsed.path.lstrip('/')
+            if '?' in db_name:
+                db_name = db_name.split('?')[0]
+            if not db_name:
+                # Check for appName in query params
+                qs = urllib.parse.parse_qs(parsed.query)
+                if 'appName' in qs:
+                    db_name = qs['appName'][0]
+                else:
+                    db_name = "default_db"
+
+            return {
+                "host": host,
+                "port": port,
+                "database": db_name,
+                "user": user,
+                "engine": "mongodb"
+            }
+        except Exception:
+            return {"host": "mongodb-cluster", "database": "mongodb", "user": "user", "engine": "mongodb"}
+
+    elif engine == "redis":
+        try:
+            parsed = urllib.parse.urlparse(connection_uri.strip())
+            return {
+                "host": parsed.hostname or "localhost",
+                "port": str(parsed.port or 6379),
+                "database": parsed.path.lstrip('/') or "0",
+                "user": parsed.username or "default",
+                "engine": "redis"
+            }
+        except Exception:
+            return {"host": "redis-host", "database": "0", "user": "default", "engine": "redis"}
+
+    # Default: PostgreSQL
     try:
         pattern = r"postgres(?:ql)?://(?:([^:@]+)(?::([^@]+))?@)?([^:/]+)(?::(\d+))?(?:/([^?]+))?"
         match = re.match(pattern, connection_uri)
@@ -73,14 +133,42 @@ def parse_connection_info(connection_uri: str) -> Dict[str, str]:
                 "port": port or "5432",
                 "database": dbname or "postgres",
                 "user": user or "postgres",
+                "engine": "postgres"
             }
     except Exception:
         pass
-    return {"host": "cloud-postgres", "database": "postgres", "user": "postgres"}
+    return {"host": "cloud-postgres", "database": "postgres", "user": "postgres", "engine": "postgres"}
 
 
 def test_db_connection(connection_uri: str) -> Dict[str, Any]:
-    """Tests connection to the cloud PostgreSQL database."""
+    """Tests connection to the cloud PostgreSQL or MongoDB database."""
+    engine = detect_engine_type(connection_uri)
+    
+    if engine == "mongodb":
+        try:
+            from pymongo import MongoClient
+            client = MongoClient(connection_uri, serverSelectionTimeoutMS=7000)
+            # Test ping
+            client.admin.command('ping')
+            info = parse_connection_info(connection_uri)
+            return {
+                "status": "connected",
+                "version": "MongoDB (NoSQL Document Store)",
+                "host": info.get("host"),
+                "database": info.get("database"),
+                "user": info.get("user"),
+                "engine": "mongodb"
+            }
+        except Exception as e:
+            err_msg = str(e)
+            logger.error(f"MongoDB connection failed: {err_msg}")
+            if "authentication failed" in err_msg.lower() or "bad auth" in err_msg.lower():
+                raise ValueError("MongoDB authentication failed: Please verify your database user password and permissions in MongoDB Atlas -> Database Access.")
+            if "serverselectiontimeouterror" in err_msg.lower() or "timed out" in err_msg.lower():
+                raise ValueError("MongoDB network timeout: Please ensure your IP address is whitelisted (0.0.0.0/0) in MongoDB Atlas -> Network Access.")
+            raise ValueError(f"Failed to connect to MongoDB: {err_msg}")
+
+    # PostgreSQL Connection
     conn = None
     try:
         conn = psycopg2.connect(connection_uri, connect_timeout=8)
@@ -95,7 +183,8 @@ def test_db_connection(connection_uri: str) -> Dict[str, Any]:
             "version": version,
             "host": info.get("host"),
             "database": info.get("database"),
-            "user": info.get("user")
+            "user": info.get("user"),
+            "engine": "postgres"
         }
     except Exception as e:
         logger.error(f"Database connection failed: {str(e)}")
@@ -105,12 +194,156 @@ def test_db_connection(connection_uri: str) -> Dict[str, Any]:
             conn.close()
 
 
+def _infer_bson_type(value: Any) -> str:
+    """Infers a clean schema type name from a Python/BSON value."""
+    if value is None:
+        return "UNKNOWN"
+    t_name = type(value).__name__
+    if t_name == "ObjectId":
+        return "ObjectId"
+    if t_name == "str":
+        return "String"
+    if t_name == "int":
+        return "Integer"
+    if t_name == "float":
+        return "Double"
+    if t_name == "bool":
+        return "Boolean"
+    if t_name in ("datetime", "date"):
+        return "Date"
+    if t_name == "list":
+        if value and len(value) > 0:
+            return f"Array<{_infer_bson_type(value[0])}>"
+        return "Array"
+    if t_name == "dict":
+        return "Object"
+    return t_name.capitalize()
+
+
+def _introspect_mongodb(connection_uri: str) -> Tuple[List[TableInfo], str]:
+    """Introspects MongoDB cluster, discovering all user databases, collections and document schemas."""
+    try:
+        from pymongo import MongoClient
+        client = MongoClient(connection_uri, serverSelectionTimeoutMS=8000)
+        
+        parsed = urllib.parse.urlparse(connection_uri.strip())
+        uri_db = parsed.path.lstrip('/')
+        if '?' in uri_db:
+            uri_db = uri_db.split('?')[0]
+            
+        target_databases = []
+        try:
+            available_dbs = [d for d in client.list_database_names() if d not in ['admin', 'local', 'config']]
+            if uri_db and uri_db in available_dbs:
+                target_databases = [uri_db] + [d for d in available_dbs if d != uri_db]
+            elif available_dbs:
+                target_databases = available_dbs
+            elif uri_db:
+                target_databases = [uri_db]
+            else:
+                target_databases = ["test"]
+        except Exception:
+            target_databases = [uri_db] if uri_db else ["test"]
+
+        table_info_list: List[TableInfo] = []
+        schema_doc_lines: List[str] = [
+            f"// LIVE INTROSPECTED MONGODB CLUSTER",
+            f"// Available Databases in Cluster ({len(target_databases)}): {', '.join(target_databases)}",
+            f"// RULE: If user request does not specify which database to query, ask: 'Which database in your cluster would you like to query? (Available: {', '.join(target_databases)})'\n"
+        ]
+
+        total_cols = 0
+        for db_name in target_databases:
+            db = client[db_name]
+            try:
+                collection_names = db.list_collection_names()
+            except Exception as e:
+                err_msg = str(e)
+                if "authentication failed" in err_msg.lower() or "bad auth" in err_msg.lower():
+                    raise ValueError("MongoDB authentication failed: Please verify your username and password in MongoDB Atlas -> Database Access.")
+                if "serverselectiontimeouterror" in err_msg.lower():
+                    raise ValueError("MongoDB network timeout: Please check IP Whitelist (0.0.0.0/0) in MongoDB Atlas -> Network Access.")
+                collection_names = []
+
+            schema_doc_lines.append(f"### DATABASE: {db_name}")
+            
+            for col_name in collection_names:
+                col = db[col_name]
+                try:
+                    samples = list(col.find().limit(10))
+                    doc_count = col.count_documents({})
+                except Exception:
+                    samples = []
+                    doc_count = 0
+
+                fields_map: Dict[str, str] = {}
+                for doc in samples:
+                    for k, v in doc.items():
+                        if k not in fields_map or fields_map[k] == "UNKNOWN":
+                            fields_map[k] = _infer_bson_type(v)
+
+                if "_id" not in fields_map:
+                    fields_map["_id"] = "ObjectId"
+
+                column_info_list: List[ColumnInfo] = []
+                col_ddl_parts = []
+                
+                for field_name, field_type in fields_map.items():
+                    is_pk = (field_name == "_id")
+                    column_info_list.append(ColumnInfo(
+                        name=field_name,
+                        type=field_type,
+                        is_primary_key=is_pk,
+                        is_foreign_key=False,
+                        references=None,
+                        description=f"Database: {db_name} | BSON {field_type}"
+                    ))
+                    pk_str = " (PRIMARY KEY)" if is_pk else ""
+                    col_ddl_parts.append(f"    {field_name}: {field_type}{pk_str}")
+
+                # Namespace collection name with database name if multiple databases
+                display_name = f"{db_name}.{col_name}" if len(target_databases) > 1 else col_name
+                table_info = TableInfo(
+                    table_name=display_name,
+                    description=f"Database: {db_name} | Collection: {col_name} ({doc_count} documents)",
+                    columns=column_info_list
+                )
+                table_info_list.append(table_info)
+                total_cols += 1
+
+                col_doc = f"Collection: db.getSiblingDB('{db_name}').{col_name} {{\n" + ",\n".join(col_ddl_parts) + "\n};\n"
+                schema_doc_lines.append(col_doc)
+
+            schema_doc_lines.append("")
+
+        if total_cols == 0:
+            # Fallback if databases have no collections yet
+            table_info_list.append(TableInfo(
+                table_name=f"{target_databases[0]}.items",
+                description=f"Database: {target_databases[0]} | Empty Collection",
+                columns=[ColumnInfo(name="_id", type="ObjectId", is_primary_key=True, is_foreign_key=False, references=None, description="Primary Key")]
+            ))
+
+        full_schema_doc = "\n".join(schema_doc_lines)
+        return table_info_list, full_schema_doc
+
+    except Exception as e:
+        logger.error(f"MongoDB introspection error: {str(e)}")
+        raise ValueError(f"MongoDB introspection failed: {str(e)}")
+
+
 def introspect_cloud_database(connection_uri: str) -> Tuple[List[TableInfo], str]:
     """
-    Introspects the connected cloud database and returns:
+    Introspects the connected cloud database (PostgreSQL or MongoDB) and returns:
     1. List of structured TableInfo objects
-    2. Formatted SQL DDL string for LLM system prompt
+    2. Formatted SQL/MQL Schema string for LLM system prompt
     """
+    engine = detect_engine_type(connection_uri)
+    
+    if engine == "mongodb":
+        return _introspect_mongodb(connection_uri)
+
+    # PostgreSQL Introspection
     conn = None
     try:
         conn = psycopg2.connect(connection_uri, connect_timeout=10)
@@ -184,11 +417,69 @@ def serialize_val(val):
         return None
     if hasattr(val, "isoformat"):
         return val.isoformat()
+    t_name = type(val).__name__
+    if t_name == "ObjectId":
+        return str(val)
+    if isinstance(val, (dict, list)):
+        return json.dumps(val, default=str)
     return str(val)
 
 
 def _raw_execute_select(connection_uri: str, query: str, limit: int = 50) -> Tuple[List[str], List[Dict[str, Any]]]:
     """Helper to run a read-only query safely with strict timeout."""
+    engine = detect_engine_type(connection_uri)
+    
+    if engine == "mongodb":
+        from pymongo import MongoClient
+        client = MongoClient(connection_uri, serverSelectionTimeoutMS=8000)
+        parsed = urllib.parse.urlparse(connection_uri.strip())
+        db_name = parsed.path.lstrip('/').split('?')[0] or "test"
+        db = client[db_name]
+        
+        # Try to parse query like db.collection.find(...) or db.collection.aggregate([...])
+        clean_q = query.strip()
+        match_agg = re.match(r"^db\.([a-zA-Z0-9_]+)\.aggregate\(\s*(\[.*\])\s*\)", clean_q, re.DOTALL)
+        match_find = re.match(r"^db\.([a-zA-Z0-9_]+)\.find\(\s*(\{.*\})?\s*\)", clean_q, re.DOTALL)
+        
+        if match_agg:
+            col_name, pipeline_str = match_agg.groups()
+            try:
+                pipeline = json.loads(pipeline_str)
+            except Exception:
+                import ast
+                pipeline = ast.literal_eval(pipeline_str)
+            # Append limit if not present
+            if not any("$limit" in stage for stage in pipeline):
+                pipeline.append({"$limit": limit})
+            results = list(db[col_name].aggregate(pipeline))
+        elif match_find:
+            col_name, filter_str = match_find.groups()
+            filter_dict = {}
+            if filter_str:
+                try:
+                    filter_dict = json.loads(filter_str)
+                except Exception:
+                    import ast
+                    filter_dict = ast.literal_eval(filter_str)
+            results = list(db[col_name].find(filter_dict).limit(limit))
+        else:
+            # Fallback: find in first collection
+            cols = db.list_collection_names()
+            first_col = cols[0] if cols else "items"
+            results = list(db[first_col].find().limit(limit))
+            
+        columns = []
+        if results:
+            for d in results:
+                for k in d.keys():
+                    if k not in columns:
+                        columns.append(k)
+        else:
+            columns = ["_id", "result"]
+            
+        serialized_rows = [{k: serialize_val(r.get(k)) for k in columns} for r in results]
+        return columns, serialized_rows
+
     conn = None
     try:
         conn = psycopg2.connect(connection_uri, connect_timeout=8)
@@ -216,12 +507,15 @@ def execute_read_only_query(
     live_schema: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Executes a SELECT query safely in read-only mode against the cloud database.
+    Executes a query safely in read-only mode against the cloud database.
     If execution fails and auto_heal=True, intercepts error and invokes the Critic Agent.
     """
     query = sql_query.strip()
-    if not (re.match(r"^\s*(?:SELECT|WITH)\b", query, re.IGNORECASE)):
-        raise ValueError("Only SELECT statements can be executed.")
+    engine = detect_engine_type(connection_uri)
+    
+    if engine != "mongodb":
+        if not (re.match(r"^\s*(?:SELECT|WITH)\b", query, re.IGNORECASE)):
+            raise ValueError("Only SELECT statements can be executed on relational databases.")
 
     healing_info = None
 
@@ -253,7 +547,7 @@ def execute_read_only_query(
                 user_prompt=user_prompt
             )
 
-            # Re-execute healed SQL query
+            # Re-execute healed query
             columns, rows = _raw_execute_select(connection_uri, healed_sql, limit)
 
             healing_info = HealedQueryInfo(
@@ -376,18 +670,18 @@ def sample_table_data(
     limit: int = 5
 ) -> Dict[str, Any]:
     """
-    Profiles a table and returns:
+    Profiles a table or MongoDB collection and returns:
     1. 5 sample records
     2. Column null counts & distinct categorical value distributions
     """
-    clean_table = table_name.strip().lower()
-    if not re.match(r"^[a-zA-Z0-9_]+$", clean_table):
-        raise ValueError(f"Invalid table name '{table_name}'.")
+    clean_table = table_name.strip()
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", clean_table):
+        raise ValueError(f"Invalid table or collection name '{table_name}'.")
 
     # If no live URI or URI is localhost/demo, return demo profiling if matched
     if not connection_uri or not connection_uri.strip() or "demo" in connection_uri.lower():
-        if clean_table in DEMO_TABLE_SAMPLES:
-            demo_data = DEMO_TABLE_SAMPLES[clean_table]
+        if clean_table.lower() in DEMO_TABLE_SAMPLES:
+            demo_data = DEMO_TABLE_SAMPLES[clean_table.lower()]
             return {
                 "status": "success",
                 "table_name": clean_table,
@@ -398,7 +692,54 @@ def sample_table_data(
                 "message": f"Retrieved sample preview & categorical distribution for '{clean_table}'."
             }
 
-    # Live Cloud Database Execution
+    engine = detect_engine_type(connection_uri)
+
+    if engine == "mongodb":
+        try:
+            from pymongo import MongoClient
+            client = MongoClient(connection_uri.strip(), serverSelectionTimeoutMS=8000)
+            parsed = urllib.parse.urlparse(connection_uri.strip())
+            db_name = parsed.path.lstrip('/').split('?')[0] or "test"
+            db = client[db_name]
+            col = db[clean_table]
+            
+            docs = list(col.find().limit(limit))
+            columns = []
+            for d in docs:
+                for k in d.keys():
+                    if k not in columns:
+                        columns.append(k)
+                        
+            serialized_rows = [{k: serialize_val(d.get(k)) for k in columns} for d in docs]
+            
+            column_profiles = []
+            for col_k in columns:
+                distinct_vals = []
+                try:
+                    distinct_vals = [str(x) for x in col.distinct(col_k)[:8] if x is not None]
+                except Exception:
+                    pass
+                column_profiles.append({
+                    "name": col_k,
+                    "type": "BSON",
+                    "null_count": sum(1 for r in serialized_rows if r.get(col_k) is None),
+                    "distinct_values": distinct_vals
+                })
+
+            return {
+                "status": "success",
+                "table_name": clean_table,
+                "columns": columns,
+                "rows": serialized_rows,
+                "column_profiles": column_profiles,
+                "row_count": len(serialized_rows),
+                "message": f"Successfully profiled MongoDB collection '{clean_table}' with {len(serialized_rows)} sample documents."
+            }
+        except Exception as e:
+            logger.warning(f"MongoDB collection profiling failed: {e}")
+            raise ValueError(f"Could not profile collection '{clean_table}': {str(e)}")
+
+    # Live Cloud Database Execution (PostgreSQL)
     conn = None
     try:
         conn = psycopg2.connect(connection_uri.strip(), connect_timeout=8)
@@ -451,8 +792,8 @@ def sample_table_data(
     except Exception as e:
         logger.warning(f"Live table sample failed for {clean_table}: {e}")
         # Fallback to demo sample if available
-        if clean_table in DEMO_TABLE_SAMPLES:
-            demo_data = DEMO_TABLE_SAMPLES[clean_table]
+        if clean_table.lower() in DEMO_TABLE_SAMPLES:
+            demo_data = DEMO_TABLE_SAMPLES[clean_table.lower()]
             return {
                 "status": "success",
                 "table_name": clean_table,
@@ -466,4 +807,3 @@ def sample_table_data(
     finally:
         if conn:
             conn.close()
-

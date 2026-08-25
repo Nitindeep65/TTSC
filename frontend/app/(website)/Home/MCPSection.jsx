@@ -30,30 +30,32 @@ const mcpHighlights = [
   {
     icon: Network,
     badge: "Protocol Standard",
-    title: "Zero-Latency Schema Streaming",
-    desc: "Uses Model Context Protocol to stream live database catalog metadata (types, foreign keys, constraints) dynamically into LLM context on every query.",
+    title: "Dynamic Schema Streaming",
+    desc: "Uses Model Context Protocol to stream live database catalogs (PostgreSQL tables, MongoDB collections, Redis key schemas) directly into LLM context on every query.",
   },
   {
     icon: ShieldCheck,
-    badge: "Sandboxed Tools",
-    title: "Declarative Read-Only Safety",
-    desc: "MCP tool definitions strictly enforce read-only SELECT permissions and statement timeouts, preventing accidental writes or data mutation.",
+    badge: "Universal Sandboxing",
+    title: "Cross-Engine Read-Only Safety",
+    desc: "MCP tool definitions strictly enforce read-only execution (SELECT, find(), aggregate(), GET), preventing data mutations across SQL and NoSQL databases.",
   },
   {
     icon: Workflow,
-    badge: "Daily Developer Stack",
+    badge: "Open Protocol Ecosystem",
     title: "Universal Agent Compatibility",
-    desc: "Connect your cloud database in this web studio, or plug the same MCP server into Claude Desktop, Cursor, or your internal agent workflows.",
+    desc: "Connect your cloud database in this web studio, or plug the same MCP server into Claude Desktop, Cursor, and enterprise AI agent pipelines.",
   },
 ]
 
 const sampleMcpConfig = `{
   "mcpServers": {
-    "cloud-postgres-clarifier": {
+    "universal-database-clarifier": {
       "command": "python",
       "args": ["-m", "app.mcp_server"],
       "env": {
-        "POSTGRES_URL": "postgresql://postgres:***@db.ref.supabase.co:5432/postgres",
+        "POSTGRES_URL": "postgresql://postgres:***@db.supabase.co:5432/postgres",
+        "MONGODB_URI": "mongodb+srv://user:***@cluster0.mongodb.net/analytics",
+        "REDIS_URL": "redis://default:***@redis.upstash.io:6379",
         "READ_ONLY_ENFORCED": "true",
         "AUTO_LIMIT": "50"
       }
@@ -62,12 +64,14 @@ const sampleMcpConfig = `{
 }`
 
 const sampleToolCall = `{
-  "tool": "mcp__postgres_clarify_and_query",
+  "tool": "mcp__database_clarify_and_compile",
   "parameters": {
-    "prompt": "Show top 5 customers by total spend in 2024",
+    "prompt": "Find top customers by total order spend in 2024",
+    "engine": "mongodb",
     "context": {
-      "tables_introspected": ["users", "orders", "order_items"],
-      "clarification_status": "complete"
+      "collections_introspected": ["users", "orders"],
+      "clarification_status": "complete",
+      "output_format": "mql_aggregation_pipeline"
     }
   }
 }`
@@ -95,7 +99,7 @@ export default function MCPSection() {
         <div className="mx-auto max-w-3xl text-center space-y-3">
           <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold">
             <Radio className="size-3.5 text-[#3aa363] animate-pulse" />
-            <span>Model Context Protocol (MCP) Standard</span>
+            <span>Open Model Context Protocol (MCP) Standard</span>
           </Badge>
 
           <h2 className="text-3xl font-semibold tracking-tight text-[#17241c] sm:text-4xl">
@@ -103,7 +107,7 @@ export default function MCPSection() {
           </h2>
 
           <p className="text-base text-[#5c6e63] leading-relaxed">
-            MCP standardizes how AI models discover database schemas, invoke safe data inspection tools, and stream real-time queries for daily analytics.
+            MCP standardizes how AI models discover SQL tables and NoSQL collections, invoke safe data inspection tools, and stream real-time queries for daily analytics.
           </p>
         </div>
 
@@ -142,7 +146,7 @@ export default function MCPSection() {
                 <span className="truncate">Compatible with Claude Desktop, Cursor &amp; Custom MCP Clients</span>
               </div>
               <Badge variant="emerald" className="font-mono text-[10px] bg-white text-[#206642] shrink-0">
-                v1.0 MCP
+                Multi-Engine MCP
               </Badge>
             </div>
           </div>
@@ -196,7 +200,7 @@ export default function MCPSection() {
             <div className="flex items-center justify-between border-t border-white/10 bg-[#0c140f] px-4 py-2 text-[10px] text-[#799986] font-mono">
               <span className="flex items-center gap-1.5">
                 <span className="size-1.5 rounded-full bg-[#4ca873] animate-pulse" />
-                MCP Transport: STDIO / HTTP SSE
+                MCP Transport: STDIO / HTTP SSE (Multi-Database)
               </span>
               <span>JSON-RPC 2.0</span>
             </div>

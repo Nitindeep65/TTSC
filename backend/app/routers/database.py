@@ -57,7 +57,7 @@ def connect_and_introspect(request: DBConnectRequest):
             tables_count=len(table_infos),
             schema_sql=schema_sql,
             tables=table_infos,
-            message=f"Successfully connected to {conn_info.get('host')} and introspected {len(table_infos)} tables."
+            message=f"Successfully connected to {conn_info.get('host')} and introspected {len(table_infos)} schemas/collections."
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Database connection or introspection failed: {str(e)}")

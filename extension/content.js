@@ -96,9 +96,9 @@
             </div>
 
             <div class="qc-tabs-group">
-              <button type="button" class="qc-tab-btn ${mode === 'prompt' ? 'active' : ''}" data-mode="prompt">Prompt to SQL</button>
-              <button type="button" class="qc-tab-btn ${mode === 'explain' ? 'active' : ''}" data-mode="explain">Explain SQL</button>
-              <button type="button" class="qc-tab-btn ${mode === 'doctor' ? 'active' : ''}" data-mode="doctor">SQL Doctor</button>
+              <button type="button" class="qc-tab-btn ${mode === 'prompt' ? 'active' : ''}" data-mode="prompt">SQL &amp; NoSQL Prompt</button>
+              <button type="button" class="qc-tab-btn ${mode === 'explain' ? 'active' : ''}" data-mode="explain">Explain Query</button>
+              <button type="button" class="qc-tab-btn ${mode === 'doctor' ? 'active' : ''}" data-mode="doctor">Self-Healing Doctor</button>
             </div>
 
             <button type="button" class="qc-close-btn" id="qcBtnClose">✕</button>
@@ -114,7 +114,7 @@
               type="text"
               id="qcMainInput"
               class="qc-main-input"
-              placeholder="${mode === 'prompt' ? 'Ask plain English question or describe SQL…' : mode === 'explain' ? 'Paste SQL query to explain and optimize…' : 'Paste PostgreSQL error message to heal…'}"
+              placeholder="${mode === 'prompt' ? 'Ask question in plain English (SQL or MongoDB)...' : mode === 'explain' ? 'Paste SQL or pipeline to explain and optimize...' : 'Paste runtime error message to heal...'}"
               value="${text ? text.replace(/"/g, '&quot;') : ''}"
             />
             <button type="button" class="qc-run-btn" id="qcBtnSubmit">
@@ -126,7 +126,7 @@
           <!-- Results Body -->
           <div class="qc-modal-body" id="qcModalBody">
             <div style="font-size:12px;color:#6b8275;text-align:center;padding:12px 0;">
-              ${mode === 'prompt' ? 'Type a question or press <strong>Cmd+Shift+K</strong> anywhere on the web.' : mode === 'explain' ? 'Analyze query execution cost & index recommendations.' : 'Diagnose PostgreSQL runtime error and generate auto-repaired SQL.'}
+              ${mode === 'prompt' ? 'Type a question or press <strong>Cmd+Shift+K</strong> anywhere on the web.' : mode === 'explain' ? 'Analyze query execution cost & index recommendations.' : 'Diagnose runtime errors and generate auto-repaired SQL / NoSQL.'}
             </div>
           </div>
 

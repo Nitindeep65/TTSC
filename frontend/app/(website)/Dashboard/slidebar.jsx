@@ -393,12 +393,12 @@ export function AppSidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
-              render={<Link href="/Login" />}
-              tooltip="Account Access"
+              render={<Link href="/Dashboard/chat" />}
+              tooltip="Open Interactive AI Studio"
               className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[11.5px] font-semibold text-[#4a5e53] hover:bg-[#edf5ef] hover:text-[#141a17] transition-colors"
             >
-              <LogOut className="size-3.5 text-[#6e8779]" />
-              <span>Sign In / Register</span>
+              <MessageSquareText className="size-3.5 text-[#6e8779]" />
+              <span>Interactive Chat</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
