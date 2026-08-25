@@ -281,6 +281,7 @@ export async function executeLlmClarification({
     const data = await response.json()
     const rawContent = data.choices?.[0]?.message?.content || "{}"
     const parsed = sanitizeAndParseJson(rawContent)
+    const extractedDataRaw = parsed.extracted_data || parsed
 
     const hasSql = !!(extractedDataRaw?.sql_query && typeof extractedDataRaw.sql_query === "string" && extractedDataRaw.sql_query.trim().length > 0)
     const status = (parsed.status === "complete" || hasSql) ? "complete" : "needs_clarification"

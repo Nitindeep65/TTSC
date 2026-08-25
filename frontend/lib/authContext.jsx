@@ -40,17 +40,19 @@ function formatUserObject(firebaseUser, customName) {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const cached = localStorage.getItem(USER_CACHE_KEY)
-        if (cached) return JSON.parse(cached)
-      } catch (e) {}
-    }
-    return null
-  })
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [authError, setAuthError] = useState("")
+
+  // Restore cached auth on client mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(USER_CACHE_KEY)
+      if (cached) {
+        setUser(JSON.parse(cached))
+      }
+    } catch (e) {}
+  }, [])
 
   // Real-time Firebase Authentication listener
   useEffect(() => {

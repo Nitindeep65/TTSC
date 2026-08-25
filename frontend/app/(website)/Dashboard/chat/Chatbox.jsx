@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import {
   Activity,
+  AlertTriangle,
   ArrowUp,
   BarChart3,
   Bookmark,
@@ -143,6 +144,7 @@ export default function Chatbox() {
 
   const messagesEndRef = useRef(null)
   const textareaRef = useRef(null)
+  const inFlightRef = useRef(false)
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }) }, [messages, isLoading])
 
@@ -165,8 +167,9 @@ export default function Chatbox() {
 
   const handleSend = useCallback(async (override) => {
     const query = typeof override === "string" ? override : inputText
-    if (!query.trim() || isLoading) return
+    if (!query.trim() || isLoading || inFlightRef.current) return
 
+    inFlightRef.current = true
     const userText = query.trim()
     const historyPayload = messages.map(m => ({ role: m.role, content: m.rawContent || m.content }))
 
@@ -217,16 +220,22 @@ export default function Chatbox() {
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         }])
       }
-    } catch {
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Could not reach AI compilation engine. Please try again."
       setMessages(p => [...p, {
         role: "assistant", status: "error",
-        content: "Could not reach backend API. Ensure the backend server is running.",
+        content: errorMsg,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       }])
     } finally {
       setIsLoading(false)
+      inFlightRef.current = false
     }
-  }, [inputText, isLoading, messages, dbInfo, connectionUri])
+  }, [inputText, isLoading, messages, dbInfo, connectionUri, user])
 
   const handleCopy = async (sql, idx) => {
     await navigator.clipboard.writeText(sql)
@@ -234,16 +243,42 @@ export default function Chatbox() {
     setTimeout(() => setCopiedIndex(null), 1800)
   }
 
-  const handleRun = async (sql, idx, msg) => {
+  const handleRun = async (sql, idx, msg, forceSandbox = false) => {
     setExecutingIndex(idx)
     try {
       const data = await databaseApi.execute({
-        connection_uri: connectionUri || "", sql_query: sql, limit: 50,
-        auto_heal: true, user_prompt: msg?.rawContent, live_schema: dbInfo?.schema_sql,
+        connection_uri: forceSandbox ? "" : (connectionUri || ""),
+        sql_query: sql,
+        limit: 50,
+        auto_heal: true,
+        user_prompt: msg?.rawContent,
+        live_schema: forceSandbox ? null : dbInfo?.schema_sql,
       })
-      setQueryResults(p => ({ ...p, [idx]: { success: true, columns: data.columns, rows: data.rows, rowCount: data.row_count, healingInfo: data.healing_info } }))
+      setQueryResults(p => ({
+        ...p,
+        [idx]: {
+          success: true,
+          columns: data.columns,
+          rows: data.rows,
+          rowCount: data.row_count,
+          healingInfo: data.healing_info,
+        },
+      }))
     } catch (err) {
-      setQueryResults(p => ({ ...p, [idx]: { success: false, error: err.response?.data?.detail || err.message } }))
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message ||
+        "Database query execution failed."
+      setQueryResults(p => ({
+        ...p,
+        [idx]: {
+          success: false,
+          error: errorMsg,
+          canFallbackToSandbox: !!connectionUri && !forceSandbox,
+        },
+      }))
     } finally {
       setExecutingIndex(null)
     }
@@ -396,8 +431,9 @@ export default function Chatbox() {
                       <button
                         key={i}
                         type="button"
-                        onClick={() => handleSend(p.text)}
-                        className="group flex flex-col gap-1.5 sm:gap-2 rounded-xl border border-[--border] bg-white p-3 sm:p-4 text-left shadow-2xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 hover:border-[#b8d4bc]"
+                        disabled={isLoading}
+                        onClick={() => !isLoading && handleSend(p.text)}
+                        className="group flex flex-col gap-1.5 sm:gap-2 rounded-xl border border-[--border] bg-white p-3 sm:p-4 text-left shadow-2xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 hover:border-[#b8d4bc] disabled:opacity-50 disabled:pointer-events-none"
                       >
                         <span className={`self-start rounded-md border px-2 py-0.5 text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wide ${BADGE_COLORS[p.color]}`}>
                           {p.type}
@@ -467,8 +503,9 @@ export default function Chatbox() {
                             <button
                               key={chipIdx}
                               type="button"
-                              onClick={() => handleSend(chip)}
-                              className="clarify-chip hover-lift text-[11px] sm:text-xs"
+                              disabled={isLoading}
+                              onClick={() => !isLoading && handleSend(chip)}
+                              className="clarify-chip hover-lift text-[11px] sm:text-xs disabled:opacity-50 disabled:pointer-events-none"
                             >
                               <span className="truncate max-w-[200px] sm:max-w-none">{chip}</span>
                               <span className="text-[#34c06a] text-xs font-bold shrink-0">→</span>
@@ -588,10 +625,32 @@ export default function Chatbox() {
                               </div>
                             </div>
                           )}
-                          {queryResults[idx].success
-                            ? <DataVisualizer columns={queryResults[idx].columns} rows={queryResults[idx].rows} visualIntent={msg.visual_intent} title={msg.message} />
-                            : <div className="rounded-xl border border-red-200 bg-red-50 p-3 sm:p-4 text-xs sm:text-[13px] text-red-800"><strong>Error:</strong> {queryResults[idx].error}</div>
-                          }
+                          {queryResults[idx].success ? (
+                            <DataVisualizer columns={queryResults[idx].columns} rows={queryResults[idx].rows} visualIntent={msg.visual_intent} title={msg.message} />
+                          ) : (
+                            <div className="rounded-xl border border-red-200 bg-red-50/90 p-3 sm:p-4 text-xs sm:text-[13px] text-red-800 space-y-2.5">
+                              <div className="flex items-start gap-2">
+                                <AlertTriangle className="size-4 text-red-600 mt-0.5 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-bold text-red-900">Database Execution Notice</p>
+                                  <p className="text-red-700 text-xs mt-0.5 leading-relaxed">{queryResults[idx].error}</p>
+                                </div>
+                              </div>
+                              {queryResults[idx].canFallbackToSandbox && (
+                                <div className="pt-2 border-t border-red-200/70 flex items-center justify-between gap-2">
+                                  <span className="text-[11px] text-red-700 font-medium">Test query in Sandbox mode?</span>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={() => handleRun(msg.sql_query, idx, msg, true)}
+                                    className="h-7 px-2.5 text-[11px] font-bold bg-[#1f7a47] hover:bg-[#186038] text-white shadow-xs"
+                                  >
+                                    Run in Demo Sandbox
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

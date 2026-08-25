@@ -91,10 +91,11 @@ export async function POST(request) {
 
     // 2. Check for local database attempted from cloud
     if (isLocalhostUri(uri) && process.env.VERCEL) {
+      const msg = "Cannot connect to 'localhost' / '127.0.0.1' from Vercel Cloud deployment. Please connect to a cloud database (Neon, Supabase, AWS RDS, MongoDB Atlas) or run QueryCraft locally with 'npm run dev'."
       return NextResponse.json(
         {
-          error:
-            "Cannot connect to 'localhost' / '127.0.0.1' from Vercel Cloud deployment. Please connect to a cloud database (Neon, Supabase, AWS RDS, MongoDB Atlas) or run QueryCraft locally with 'npm run dev'.",
+          error: msg,
+          detail: msg,
         },
         { status: 400 }
       )
@@ -109,8 +110,9 @@ export async function POST(request) {
         console.warn("Live execution error:", execErr.message)
         // If it's a real connected DB, return the database error
         if (!uri.includes("sample") && !uri.includes("demo") && !uri.includes("user:password")) {
+          const dbMsg = `Database Execution Error: ${execErr.message}`
           return NextResponse.json(
-            { error: `Database Execution Error: ${execErr.message}` },
+            { error: dbMsg, detail: dbMsg },
             { status: 400 }
           )
         }
@@ -122,8 +124,9 @@ export async function POST(request) {
     return NextResponse.json(simResult)
   } catch (error) {
     console.error("Execute route error:", error)
+    const errText = error.message || "Execution error"
     return NextResponse.json(
-      { error: error.message || "Execution error" },
+      { error: errText, detail: errText },
       { status: 500 }
     )
   }
