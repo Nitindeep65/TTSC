@@ -3,8 +3,10 @@
 import { useState } from "react"
 import Link from "next/link"
 import { ArrowRight, Database, Eye, EyeOff, Lock, Mail, Sparkles } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export default function Login() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -33,8 +35,8 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      window.location.href = "/Dashboard"
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      router.push("/Dashboard")
     } catch (err) {
       setError("Invalid email or password.")
     } finally {

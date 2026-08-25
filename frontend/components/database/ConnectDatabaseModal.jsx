@@ -120,15 +120,9 @@ export default function ConnectDatabaseModal() {
 
   const [activeCategory, setActiveCategory] = useState("all") // "all" | "sql" | "nosql" | "cache"
   const [activeProvider, setActiveProvider] = useState("supabase")
-  const [inputUri, setInputUri] = useState("")
+  const [inputUri, setInputUri] = useState(() => connectionUri || "")
   const [showPassword, setShowPassword] = useState(false)
   const [testSuccess, setTestSuccess] = useState(false)
-
-  useEffect(() => {
-    if (connectionUri) {
-      setInputUri(connectionUri)
-    }
-  }, [connectionUri])
 
   if (!isModalOpen) return null
 

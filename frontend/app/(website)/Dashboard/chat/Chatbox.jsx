@@ -92,6 +92,24 @@ const BADGE_COLORS = {
   purple: "bg-purple-50 text-purple-700 border-purple-200",
 }
 
+function generateClarificationChips(text) {
+  const t = (text || "").toLowerCase()
+  const chips = []
+  if (t.includes("time") || t.includes("date") || t.includes("window") || t.includes("year") || t.includes("month") || t.includes("range")) {
+    chips.push("Last 30 Days", "Calendar Year 2024", "All Time")
+  }
+  if (t.includes("status") || t.includes("completed") || t.includes("active") || t.includes("pending")) {
+    chips.push("Completed Orders Only", "Active Users Only", "Include All Statuses")
+  }
+  if (t.includes("ranking") || t.includes("spend") || t.includes("metric") || t.includes("count") || t.includes("top")) {
+    chips.push("Top 5 by Total Spend", "Top 10 by Order Count", "Order by Recent Date")
+  }
+  if (chips.length === 0) {
+    chips.push("Yes, proceed with defaults", "Filter by last 30 days", "Top 5 results")
+  }
+  return Array.from(new Set(chips)).slice(0, 4)
+}
+
 export default function Chatbox() {
   const { connectionUri, dbInfo, setIsModalOpen } = useDatabase()
 
@@ -109,7 +127,7 @@ export default function Chatbox() {
   const [isNotebookModalOpen, setIsNotebookModalOpen] = useState(false)
   const [profileTable, setProfileTable] = useState(null)
   const [copiedIndexRec, setCopiedIndexRec] = useState(false)
-  const [isHelperOpen, setIsHelperOpen] = useState(true)
+  const [isHelperOpen, setIsHelperOpen] = useState(false)
   const [schemaTables, setSchemaTables] = useState(FALLBACK_SCHEMA)
   const [schemaSearch, setSchemaSearch] = useState("")
   const [collapsed, setCollapsed] = useState({})
@@ -348,7 +366,7 @@ export default function Chatbox() {
                           {p.type}
                         </span>
                         <p className="text-[13px] font-semibold text-[#1a2920] leading-snug group-hover:text-[#1b6b3a] transition-colors">
-                          "{p.text}"
+                          &ldquo;{p.text}&rdquo;
                         </p>
                         <p className="text-[11.5px] text-[#8a9e93] leading-snug">{p.desc}</p>
                       </button>
@@ -378,14 +396,37 @@ export default function Chatbox() {
 
                   {/* Clarification */}
                   {msg.status === "needs_clarification" && (
-                    <div className="rounded-2xl rounded-tl-md border border-amber-200 bg-amber-50 p-5">
-                      <div className="flex items-center gap-2 mb-2.5">
-                        <HelpCircle className="size-4 text-amber-600" />
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600">
-                          Clarification Needed
+                    <div className="rounded-2xl rounded-tl-md border border-amber-200 bg-[#fefaf3] p-5 shadow-xs space-y-3.5">
+                      <div className="flex items-center gap-2">
+                        <div className="flex size-6 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                          <HelpCircle className="size-3.5" />
+                        </div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                          Clarification Needed Before Execution
                         </span>
                       </div>
-                      <p className="text-[14px] font-medium text-amber-900 leading-relaxed">{msg.content}</p>
+                      <p className="text-[14px] font-medium text-amber-950 leading-relaxed">{msg.content}</p>
+
+                      {/* 1-Tap Reply Chips */}
+                      <div className="pt-1.5 border-t border-amber-200/60">
+                        <p className="text-[10.5px] font-bold uppercase tracking-wider text-amber-800 mb-2 flex items-center gap-1.5">
+                          <Sparkles className="size-3 text-amber-600" />
+                          <span>1-Tap Quick Responses:</span>
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {generateClarificationChips(msg.content).map((chip, chipIdx) => (
+                            <button
+                              key={chipIdx}
+                              type="button"
+                              onClick={() => handleSend(chip)}
+                              className="clarify-chip hover-lift"
+                            >
+                              <span>{chip}</span>
+                              <span className="text-[#34c06a] text-xs font-bold">→</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -620,33 +661,37 @@ export default function Chatbox() {
               const name = t.table_name || t.table
               const isCollapsed = !!collapsed[name]
               return (
-                <div key={name} className="group/row rounded-xl border border-[--border] bg-white overflow-hidden shadow-sm transition-all duration-150 hover:border-[#b8d4bc]">
-                  <div className="relative">
+                <div key={name} className="group/row rounded-xl border border-[--border] bg-white overflow-hidden shadow-2xs transition-all duration-150 hover:border-[#a8d4b3]">
+                  <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#f8faf8] border-b border-[--border]">
                     <button
                       type="button"
                       onClick={() => toggleCollapse(name)}
-                      className="w-full flex items-center justify-between px-3.5 py-2.5 bg-[#f8faf8] hover:bg-[#f0f5f1] transition-colors"
+                      className="flex items-center gap-2 min-w-0 flex-1 text-left"
                     >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Columns className="size-3.5 text-[#34c06a] shrink-0" />
-                        <span className="font-mono text-[12.5px] font-bold text-[#141a17] truncate">{name}</span>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="rounded bg-[#edf5ef] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1b6b3a]">
-                          {(t.columns || []).length} cols
-                        </span>
-                        {isCollapsed ? <ChevronDown className="size-3.5 text-[#a3b5a9]" /> : <ChevronUp className="size-3.5 text-[#a3b5a9]" />}
-                      </div>
+                      <Columns className="size-3.5 text-[#34c06a] shrink-0" />
+                      <span className="font-mono text-[12.5px] font-bold text-[#141a17] truncate">{name}</span>
+                      <span className="rounded bg-[#edf5ef] px-1.5 py-0.2 text-[9px] font-bold text-[#1b6b3a]">
+                        {(t.columns || []).length}
+                      </span>
                     </button>
-                    {/* 👁 Sample — sibling to the button, never inside it */}
-                    <span
-                      role="button"
-                      tabIndex={-1}
-                      onClick={(e) => { e.stopPropagation(); setProfileTable(name); }}
-                      className="absolute left-[calc(100%-7.5rem)] top-1/2 -translate-y-1/2 opacity-0 group-hover/row:opacity-100 transition-opacity cursor-pointer rounded bg-white border border-[#c6e5d1] px-1.5 py-0.5 text-[9px] font-bold text-[#1b6b3a] hover:bg-[#eef7f1] z-10"
-                    >
-                      👁
-                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setProfileTable(name); }}
+                        title="View 5-row live sample preview & column distributions"
+                        className="flex items-center gap-1 rounded bg-white border border-[#c6e5d1] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1b6b3a] hover:bg-[#eef7f1] transition-colors"
+                      >
+                        <Eye className="size-2.5" />
+                        <span>Sample</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleCollapse(name)}
+                        className="p-0.5 text-[#a3b5a9] hover:text-[#141a17]"
+                      >
+                        {isCollapsed ? <ChevronDown className="size-3.5" /> : <ChevronUp className="size-3.5" />}
+                      </button>
+                    </div>
                   </div>
                   {!isCollapsed && (
                     <div className="border-t border-[--border] divide-y divide-[#f0f3f1]">

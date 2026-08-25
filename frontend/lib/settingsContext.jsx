@@ -31,22 +31,24 @@ export function SettingsProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
 
-  // ── FETCH from backend on mount ──────────────────────────────────────────
-  const fetchSettings = useCallback(async () => {
-    try {
-      const res = await fetch(`${API}/api/settings/`)
-      if (res.ok) {
-        const data = await res.json()
-        setSettings(prev => ({ ...prev, ...data }))
+  useEffect(() => {
+    let ignore = false
+    async function load() {
+      try {
+        const res = await fetch(`${API}/api/settings/`)
+        if (res.ok && !ignore) {
+          const data = await res.json()
+          setSettings(prev => ({ ...prev, ...data }))
+        }
+      } catch {
+        // Backend offline — use defaults silently
+      } finally {
+        if (!ignore) setIsLoading(false)
       }
-    } catch {
-      // Backend offline — use defaults silently
-    } finally {
-      setIsLoading(false)
     }
+    load()
+    return () => { ignore = true }
   }, [])
-
-  useEffect(() => { fetchSettings() }, [fetchSettings])
 
   // ── PUSH patch to backend ────────────────────────────────────────────────
   const pushSettings = useCallback(async (patch) => {
@@ -96,7 +98,7 @@ export function SettingsProvider({ children }) {
         usage: { ...prev.usage, [field]: (prev.usage[field] || 0) + 1 }
       }))
     }
-  }, [fetchSettings])
+  }, [])
 
   const resetAllSettings = async () => {
     try {

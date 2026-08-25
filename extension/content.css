@@ -1,18 +1,17 @@
-/* QueryCraft — In-Situ Spotlight Command Bar Styles (Isolated inside Shadow DOM) */
+/* QueryCraft — In-Situ Spotlight Command Bar Styles (Isolated inside Shadow DOM)
+   ========================================================================== */
 
 :host {
   all: initial;
   z-index: 2147483647 !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color: #f1f5f3;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #f1f5f9;
   font-size: 13px;
   line-height: 1.5;
   box-sizing: border-box;
 }
 
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -22,37 +21,30 @@
 .qc-spotlight-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(10, 15, 12, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(9, 12, 16, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 14vh;
+  padding-top: 12vh;
   z-index: 2147483647;
-  animation: qc-fade-in 0.15s ease-out;
+  animation: qc-fade-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes qc-fade-in {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 /* Spotlight Card Modal */
 .qc-spotlight-modal {
-  width: 680px;
+  width: 700px;
   max-width: 92vw;
-  background: #111a15;
-  border: 1px solid rgba(80, 180, 120, 0.25);
+  background: #0e1217;
+  border: 1px solid #232c3d;
   border-radius: 16px;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 40px -10px rgba(52, 192, 106, 0.15);
+  box-shadow: 0 28px 64px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 40px -10px rgba(34, 197, 94, 0.15);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -63,9 +55,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  background: #16221c;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 16px;
+  background: #151b24;
+  border-bottom: 1px solid #232c3d;
 }
 
 .qc-brand-pill {
@@ -74,10 +66,10 @@
   gap: 7px;
   font-size: 11.5px;
   font-weight: 700;
-  color: #5de08a;
-  background: rgba(46, 125, 75, 0.25);
-  border: 1px solid rgba(80, 180, 120, 0.3);
-  padding: 3px 8px;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  padding: 4px 10px;
   border-radius: 20px;
 }
 
@@ -92,8 +84,8 @@
 .qc-tabs-group {
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.3);
+  gap: 3px;
+  background: rgba(0, 0, 0, 0.35);
   padding: 3px;
   border-radius: 8px;
 }
@@ -101,13 +93,14 @@
 .qc-tab-btn {
   background: transparent;
   border: none;
-  color: #8fa597;
+  color: #9db0c6;
+  font-family: inherit;
   font-size: 11.5px;
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
 .qc-tab-btn:hover {
@@ -116,15 +109,15 @@
 }
 
 .qc-tab-btn.active {
-  background: #1f7a47;
+  background: #1c2430;
   color: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .qc-close-btn {
   background: transparent;
   border: none;
-  color: #6a8274;
+  color: #5f7188;
   font-size: 14px;
   padding: 4px 8px;
   border-radius: 6px;
@@ -141,15 +134,15 @@
   display: flex;
   align-items: center;
   padding: 14px 18px;
-  background: #0f1713;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: #090c10;
+  border-bottom: 1px solid #232c3d;
   gap: 12px;
 }
 
 .qc-search-icon {
   width: 18px;
   height: 18px;
-  color: #4abe7a;
+  color: #22c55e;
   flex-shrink: 0;
 }
 
@@ -158,23 +151,24 @@
   background: transparent;
   border: none;
   outline: none;
-  font-size: 15px;
+  font-size: 14.5px;
   color: #fff;
   line-height: 1.4;
   font-family: inherit;
 }
 
 .qc-main-input::placeholder {
-  color: #556c60;
+  color: #5f7188;
 }
 
 .qc-run-btn {
-  background: linear-gradient(135deg, #1f7a47 0%, #155d34 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
   color: #fff;
-  border: 1px solid rgba(110, 230, 150, 0.3);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  font-family: inherit;
   font-size: 12px;
   font-weight: 700;
-  padding: 6px 14px;
+  padding: 7px 14px;
   border-radius: 8px;
   cursor: pointer;
   display: flex;
@@ -185,7 +179,7 @@
 
 .qc-run-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(31, 122, 71, 0.4);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
 }
 
 .qc-run-btn:disabled {
@@ -206,8 +200,8 @@
 
 /* Cards & Code Blocks */
 .qc-code-card {
-  background: #0a110d;
-  border: 1px solid #1f2f25;
+  background: #090c10;
+  border: 1px solid #232c3d;
   border-radius: 10px;
   overflow: hidden;
 }
@@ -217,11 +211,11 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: #142019;
-  border-bottom: 1px solid #1f2f25;
+  background: #151b24;
+  border-bottom: 1px solid #232c3d;
   font-size: 11px;
   font-weight: 600;
-  color: #8da596;
+  color: #9db0c6;
 }
 
 .qc-code-actions {
@@ -233,13 +227,14 @@
 .qc-action-pill {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #b2d4c0;
+  color: #9db0c6;
+  font-family: inherit;
   font-size: 11px;
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -251,15 +246,15 @@
 }
 
 .qc-action-pill.primary {
-  background: #1f7a47;
+  background: #22c55e;
   color: #fff;
-  border-color: rgba(93, 224, 138, 0.3);
+  border-color: rgba(34, 197, 94, 0.4);
 }
 
 .qc-code-content {
   padding: 12px 14px;
-  font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
-  font-size: 12.5px;
+  font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
   line-height: 1.5;
   color: #a7f3d0;
   white-space: pre-wrap;
@@ -279,125 +274,54 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 700;
 }
 
 .qc-perf-fast {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .qc-perf-mod {
   background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
+  color: #f59e0b;
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .qc-perf-heavy {
   background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-.qc-doctor-card {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  border-radius: 10px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.qc-doctor-title {
-  color: #f87171;
-  font-weight: 700;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.qc-doctor-body {
-  color: #fca5a5;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-/* Results Data Table */
-.qc-table-wrap {
-  border: 1px solid #1f2f25;
-  border-radius: 8px;
-  overflow: hidden;
-  max-height: 180px;
-  overflow-y: auto;
-}
-
-.qc-data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11.5px;
-  text-align: left;
-}
-
-.qc-data-table th {
-  background: #142019;
-  color: #6ee7b7;
-  padding: 6px 10px;
-  border-bottom: 1px solid #1f2f25;
-  position: sticky;
-  top: 0;
-}
-
-.qc-data-table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid #15221b;
-  color: #d1fae5;
-}
-
-.qc-data-table tr:hover td {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-/* Footer Dock */
+/* Modal Bottom Footer */
 .qc-modal-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
-  background: #0d1612;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 8px 18px;
+  background: #151b24;
+  border-top: 1px solid #232c3d;
   font-size: 11px;
-  color: #556c60;
+  color: #5f7188;
 }
 
-.qc-shortcut-hint {
-  display: flex;
+.qc-hotkey-hint {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
 }
 
 .qc-kbd {
-  background: #192720;
-  border: 1px solid #283e32;
-  color: #9ab4a3;
-  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1px 5px;
   border-radius: 4px;
   font-size: 10px;
-  font-weight: 700;
-}
-
-.qc-open-studio-link {
-  color: #4abe7a;
-  text-decoration: none;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.qc-open-studio-link:hover {
-  text-decoration: underline;
+  font-family: 'JetBrains Mono', monospace;
+  color: #9db0c6;
 }

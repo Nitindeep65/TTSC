@@ -72,9 +72,9 @@ Original User Request:
 def extract_pg_error_code(error_msg: str) -> str:
     """Extracts standard PostgreSQL SQLSTATE code or maps known patterns."""
     import re
-    # Match standard 5-character SQLSTATE like 42703, 42P01, 22P02
-    match = re.search(r"\b([0-9A-Z]{5})\b", error_msg)
-    if match and match.group(1).isalnum():
+    # Match standard 5-character SQLSTATE like 42703, 42P01, 22P02 (starts with 2 digits)
+    match = re.search(r"\b([0-9]{2}[0-9A-Z]{3})\b", error_msg)
+    if match:
         return match.group(1)
     
     msg_lower = error_msg.lower()

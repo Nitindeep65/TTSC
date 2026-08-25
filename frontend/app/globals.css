@@ -289,3 +289,66 @@
 .perf-fast   { color: #1b6b3a; background: #dbf5e7; border-color: #b0e3c4; }
 .perf-mod    { color: #7a4b0a; background: #fef3c7; border-color: #fcd888; }
 .perf-heavy  { color: #941b1b; background: #fee2e2; border-color: #fca5a5; }
+
+/* ===== INTERACTIVE CLARIFICATION 1-TAP CHIPS ===== */
+.clarify-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  color: #174229;
+  background: #ffffff;
+  border: 1px solid #c2e2cc;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgba(20, 26, 23, 0.05);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.clarify-chip:hover {
+  background: #eef7f1;
+  border-color: #34c06a;
+  color: #0e331e;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(52, 192, 106, 0.18);
+}
+
+.clarify-chip:active {
+  transform: scale(0.97);
+  background: #d8eedf;
+}
+
+/* ===== GLOW & SHIMMER EFFECTS ===== */
+.glow-card {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.glow-card:hover {
+  box-shadow: 0 12px 28px -8px rgba(26, 41, 32, 0.12), 0 0 0 1px rgba(74, 190, 122, 0.3);
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.shimmer-badge {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-badge::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shimmer 2s infinite;
+}

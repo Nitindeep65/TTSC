@@ -13,7 +13,7 @@
   "shortcuts": {},
   "apiBase": "http://127.0.0.1:8000",
   "usage": {
-    "queries": 7,
+    "queries": 10,
     "heals": 0,
     "verified": 0,
     "dbs": 1

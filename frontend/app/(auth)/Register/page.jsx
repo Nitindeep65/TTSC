@@ -4,7 +4,10 @@ import { useState } from "react"
 import Link from "next/link"
 import { ArrowRight, Eye, EyeOff, Lock, Mail, Sparkles, User } from "lucide-react"
 
+import { useRouter } from "next/navigation"
+
 export default function Register() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -34,9 +37,9 @@ export default function Register() {
     setIsLoading(true)
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      window.location.href = "/Dashboard"
-    } catch (err) {
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      router.push("/Dashboard")
+    } catch {
       setError("Could not complete registration. Please try again.")
     } finally {
       setIsLoading(false)

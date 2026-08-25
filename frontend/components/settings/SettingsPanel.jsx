@@ -46,21 +46,31 @@ export default function SettingsPanel({ isOpen, onClose }) {
   const [activeTab, setActiveTab]     = useState("account")
   const [toast, setToast]             = useState(null)
   const [recordingFor, setRecordingFor] = useState(null)
-  const [localAccount, setLocalAccount] = useState({ displayName: "", email: "" })
-  const [localApiBase, setLocalApiBase] = useState("")
+  const [localAccount, setLocalAccount] = useState(() => ({
+    displayName: settings.account?.displayName || "",
+    email: settings.account?.email || "",
+  }))
+  const [localApiBase, setLocalApiBase] = useState(() => settings.apiBase || "http://127.0.0.1:8000")
   const overlayRef = useRef(null)
 
-  // Sync local editable state when settings load
+  // Sync local editable state when settings or panel open status changes
   useEffect(() => {
-    setLocalAccount({
-      displayName: settings.account?.displayName || "",
-      email:       settings.account?.email       || "",
-    })
-    setLocalApiBase(settings.apiBase || "http://127.0.0.1:8000")
-  }, [settings])
-
-  // Refresh on open
-  useEffect(() => { if (isOpen) fetchSettings() }, [isOpen, fetchSettings])
+    let ignore = false
+    if (isOpen) {
+      fetchSettings().then(() => {
+        if (!ignore) {
+          setLocalAccount({
+            displayName: settings.account?.displayName || "",
+            email: settings.account?.email || "",
+          })
+          setLocalApiBase(settings.apiBase || "http://127.0.0.1:8000")
+        }
+      })
+    }
+    return () => {
+      ignore = true
+    }
+  }, [isOpen, fetchSettings, settings.account?.displayName, settings.account?.email, settings.apiBase])
 
   // Keyboard shortcut recording
   useEffect(() => {

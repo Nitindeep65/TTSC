@@ -5,13 +5,25 @@
   if (window.__QUERYCRAFT_INJECTED__) return;
   window.__QUERYCRAFT_INJECTED__ = true;
 
-  const API_BASE = "http://127.0.0.1:8000";
+  let API_BASE = "http://127.0.0.1:8000";
   let hostEl = null;
   let shadowRoot = null;
   let isOpen = false;
   let currentMode = "prompt"; // "prompt" | "explain" | "doctor"
   let lastFocusedElement = null;
   let lastGeneratedSQL = "";
+
+  // Refresh API_BASE from chrome storage
+  function refreshConfig(cb) {
+    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(["querycraft_api_base_v1", "querycraft_active_db_id_v4", "querycraft_db_profiles_v4"], (res) => {
+        if (res.querycraft_api_base_v1) API_BASE = res.querycraft_api_base_v1;
+        if (cb) cb(res);
+      });
+    } else {
+      if (cb) cb({});
+    }
+  }
 
   // 1. Create or Get Shadow DOM Container
   function getShadowRoot() {
@@ -21,12 +33,9 @@
       hostEl.style.cssText = "position:fixed;top:0;left:0;width:0;height:0;z-index:2147483647;";
       document.documentElement.appendChild(hostEl);
 
-      // Use 'open' mode — Chrome requires this for content script Shadow DOM
       shadowRoot = hostEl.attachShadow({ mode: "open" });
 
-      // Inject styles as inline <style> — the ONLY Chrome MV3 compatible way.
-      // <link href="chrome-extension://..."> is blocked by Chrome's strict CSP inside
-      // dynamically-created shadow roots. We fetch the CSS text and inline it instead.
+      // Fetch and inline CSS text to avoid CSP blocks in Shadow DOM
       fetch(chrome.runtime.getURL("content.css"))
         .then(r => r.text())
         .then(css => {
@@ -49,28 +58,30 @@
     isOpen = true;
     currentMode = mode;
 
-    const root = getShadowRoot();
-    renderSpotlight(root, mode, prefilledText);
+    refreshConfig(() => {
+      const root = getShadowRoot();
+      renderSpotlight(root, mode, prefilledText);
 
-    setTimeout(() => {
-      const inputEl = root.getElementById("qcMainInput");
-      if (inputEl) {
-        inputEl.focus();
-        if (prefilledText) {
-          inputEl.select();
-          if (mode === "explain" || mode === "doctor") {
-            handleSpotlightAction(mode, prefilledText);
+      setTimeout(() => {
+        const inputEl = root.getElementById("qcMainInput");
+        if (inputEl) {
+          inputEl.focus();
+          if (prefilledText) {
+            inputEl.select();
+            if (mode === "explain" || mode === "doctor") {
+              handleSpotlightAction(mode, prefilledText);
+            }
           }
         }
-      }
-    }, 50);
+      }, 50);
+    });
   }
 
   function closeSpotlight() {
     if (!isOpen) return;
     isOpen = false;
     const root = getShadowRoot();
-    const wrapper = root.getElementById("qc-spotlight-wrapper");
+    const wrapper = root?.getElementById("qc-spotlight-wrapper");
     if (wrapper) wrapper.innerHTML = "";
     if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
       try { lastFocusedElement.focus(); } catch (e) {}
@@ -115,7 +126,7 @@
               id="qcMainInput"
               class="qc-main-input"
               placeholder="${mode === 'prompt' ? 'Ask question in plain English (SQL or MongoDB)...' : mode === 'explain' ? 'Paste SQL or pipeline to explain and optimize...' : 'Paste runtime error message to heal...'}"
-              value="${text ? text.replace(/"/g, '&quot;') : ''}"
+              value="${text ? escapeHtml(text) : ''}"
             />
             <button type="button" class="qc-run-btn" id="qcBtnSubmit">
               <span>Run</span>
@@ -125,7 +136,7 @@
 
           <!-- Results Body -->
           <div class="qc-modal-body" id="qcModalBody">
-            <div style="font-size:12px;color:#6b8275;text-align:center;padding:12px 0;">
+            <div style="font-size:12px;color:#9db0c6;text-align:center;padding:12px 0;">
               ${mode === 'prompt' ? 'Type a question or press <strong>Cmd+Shift+K</strong> anywhere on the web.' : mode === 'explain' ? 'Analyze query execution cost & index recommendations.' : 'Diagnose runtime errors and generate auto-repaired SQL / NoSQL.'}
             </div>
           </div>
@@ -137,7 +148,7 @@
               <span><span class="qc-kbd">Enter</span> Run</span>
               <span><span class="qc-kbd">Cmd+Shift+K</span> Toggle</span>
             </div>
-            <a href="http://localhost:3000/Dashboard/chat" target="_blank" class="qc-open-studio-link">
+            <a href="http://localhost:3000/Dashboard/chat" target="_blank" class="qc-open-studio-link" style="color:#22c55e;text-decoration:none;font-size:11px;font-weight:600;">
               Open in Web Studio ↗
             </a>
           </div>
@@ -196,9 +207,9 @@
 
     if (!body) return;
     body.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:#6ee7b7;">
-        <span style="display:inline-block;width:16px;height:16px;border:2px solid #34d399;border-top-color:transparent;border-radius:50%;animation:qc-spin 0.6s linear infinite;"></span>
-        <span style="font-size:12.5px;font-weight:600;">Processing with Llama 3.1 &amp; PostgreSQL Engine…</span>
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:#22c55e;">
+        <span style="display:inline-block;width:16px;height:16px;border:2px solid #22c55e;border-top-color:transparent;border-radius:50%;animation:qc-spin 0.6s linear infinite;"></span>
+        <span style="font-size:12.5px;font-weight:600;">Processing with LangGraph Agentic Engine…</span>
       </div>
       <style>@keyframes qc-spin { to { transform: rotate(360deg); } }</style>
     `;
@@ -217,7 +228,7 @@
         if (data.status === "needs_clarification") {
           body.innerHTML = `
             <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:12px;">
-              <p style="font-size:11px;font-weight:700;color:#fbbf24;text-transform:uppercase;margin-bottom:4px;">Clarification Needed</p>
+              <p style="font-size:11px;font-weight:700;color:#f59e0b;text-transform:uppercase;margin-bottom:4px;">Clarification Needed</p>
               <p style="font-size:13px;color:#fef3c7;line-height:1.4;">${escapeHtml(data.message)}</p>
             </div>
           `;
@@ -227,7 +238,7 @@
           body.innerHTML = `
             <div class="qc-code-card">
               <div class="qc-code-header">
-                <span>Verified PostgreSQL</span>
+                <span>Verified Query</span>
                 <div class="qc-code-actions">
                   <button type="button" class="qc-action-pill primary" id="qcBtnInsert">⚡ Insert to Editor</button>
                   <button type="button" class="qc-action-pill" id="qcBtnCopy">Copy SQL</button>
@@ -236,16 +247,14 @@
               </div>
               <pre class="qc-code-content"><code>${escapeHtml(sql)}</code></pre>
             </div>
-            ${data.extracted_data.explanation ? `<p style="font-size:12px;color:#8da596;line-height:1.4;">${escapeHtml(data.extracted_data.explanation)}</p>` : ''}
-            <div id="qcInlineResults"></div>
+            ${data.extracted_data.explanation ? `<p style="font-size:12px;color:#9db0c6;line-height:1.4;">${escapeHtml(data.extracted_data.explanation)}</p>` : ''}
           `;
 
-          // Bind Actions
           root.getElementById("qcBtnInsert")?.addEventListener("click", () => insertSQLToActiveEditor(sql));
           root.getElementById("qcBtnCopy")?.addEventListener("click", () => copyToClipboard(sql, root.getElementById("qcBtnCopy")));
           root.getElementById("qcBtnExplain")?.addEventListener("click", () => handleSpotlightAction("explain", sql));
         } else {
-          body.innerHTML = `<div style="color:#f87171;font-size:12px;">${escapeHtml(data.message || "Failed to generate SQL.")}</div>`;
+          body.innerHTML = `<div style="color:#ef4444;font-size:12px;">${escapeHtml(data.message || "Failed to generate SQL.")}</div>`;
         }
 
       } else if (mode === "explain") {
@@ -263,22 +272,22 @@
         body.innerHTML = `
           <div class="qc-badge-row">
             <span class="qc-perf-badge ${perfCls}">${perfIcon} ${data.rating_label || perf.toUpperCase()}</span>
-            <span style="font-size:11px;color:#8da596;">Cost: <strong>${data.total_cost || 0}</strong></span>
-            <span style="font-size:11px;color:#8da596;">Est. Rows: <strong>${data.plan_rows || 0}</strong></span>
-            ${data.has_seq_scan ? `<span style="font-size:10.5px;color:#f87171;font-weight:700;">⚠️ Seq Scan Detected</span>` : `<span style="font-size:10.5px;color:#34d399;font-weight:700;">✓ Indexed Scan</span>`}
+            <span style="font-size:11px;color:#9db0c6;">Cost: <strong>${data.total_cost || 0}</strong></span>
+            <span style="font-size:11px;color:#9db0c6;">Est. Rows: <strong>${data.plan_rows || 0}</strong></span>
+            ${data.has_seq_scan ? `<span style="font-size:10.5px;color:#ef4444;font-weight:700;">⚠️ Seq Scan Detected</span>` : `<span style="font-size:10.5px;color:#22c55e;font-weight:700;">✓ Indexed Scan</span>`}
           </div>
 
           ${data.scan_details && data.scan_details.length > 0 ? `
-            <div style="background:#0a110d;border:1px solid #1f2f25;border-radius:8px;padding:8px 12px;">
-              <p style="font-size:10px;font-weight:700;color:#6ee7b7;text-transform:uppercase;margin-bottom:4px;">Scan Plan Details</p>
-              ${data.scan_details.map(s => `<p style="font-size:11.5px;color:#c4e6d2;font-family:monospace;">• ${escapeHtml(s)}</p>`).join('')}
+            <div style="background:#090c10;border:1px solid #232c3d;border-radius:8px;padding:8px 12px;">
+              <p style="font-size:10px;font-weight:700;color:#22c55e;text-transform:uppercase;margin-bottom:4px;">Scan Plan Details</p>
+              ${data.scan_details.map(s => `<p style="font-size:11.5px;color:#9db0c6;font-family:monospace;">• ${escapeHtml(s)}</p>`).join('')}
             </div>
           ` : ''}
 
           ${data.index_recommendations && data.index_recommendations.length > 0 ? `
             <div class="qc-code-card">
               <div class="qc-code-header">
-                <span style="color:#34d399;">⚡ Recommended Index DDL</span>
+                <span style="color:#22c55e;">⚡ Recommended Index DDL</span>
                 <button type="button" class="qc-action-pill" id="qcBtnCopyIdx">Copy Index DDL</button>
               </div>
               <pre class="qc-code-content"><code>${escapeHtml(data.index_recommendations.join('\n'))}</code></pre>
@@ -300,19 +309,19 @@
         const data = await res.json();
 
         body.innerHTML = `
-          <div class="qc-doctor-card">
-            <div class="qc-doctor-title">
-              <span>🩺 SQL Doctor Diagnosis</span>
-              ${data.error_code ? `<span style="font-size:10px;background:rgba(239,68,68,0.2);padding:2px 6px;border-radius:4px;">Code: ${data.error_code}</span>` : ''}
+          <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:700;color:#ef4444;">🩺 SQL Doctor Diagnosis</span>
+              ${data.error_code ? `<span style="font-size:10px;background:rgba(239,68,68,0.2);padding:2px 6px;border-radius:4px;color:#ef4444;">Code: ${data.error_code}</span>` : ''}
             </div>
-            <p class="qc-doctor-body">${escapeHtml(data.root_cause)}</p>
-            ${data.explanation ? `<p style="font-size:11.5px;color:#fecaca;margin-top:2px;">${escapeHtml(data.explanation)}</p>` : ''}
+            <p style="font-size:12px;color:#fecaca;line-height:1.4;">${escapeHtml(data.root_cause)}</p>
+            ${data.explanation ? `<p style="font-size:11.5px;color:#fca5a5;margin-top:4px;">${escapeHtml(data.explanation)}</p>` : ''}
           </div>
 
           ${data.healed_sql ? `
             <div class="qc-code-card">
               <div class="qc-code-header">
-                <span style="color:#5de08a;">✓ Auto-Healed SQL</span>
+                <span style="color:#22c55e;">✓ Auto-Healed SQL</span>
                 <div class="qc-code-actions">
                   <button type="button" class="qc-action-pill primary" id="qcBtnInsertHealed">Insert Fixed SQL</button>
                   <button type="button" class="qc-action-pill" id="qcBtnCopyHealed">Copy</button>
@@ -330,7 +339,7 @@
       }
     } catch (err) {
       body.innerHTML = `
-        <div style="color:#f87171;font-size:12px;padding:12px;background:rgba(239,68,68,0.1);border-radius:8px;">
+        <div style="color:#ef4444;font-size:12px;padding:12px;background:rgba(239,68,68,0.1);border-radius:8px;">
           <strong>Error communicating with backend:</strong> ${escapeHtml(err.message || 'Make sure FastAPI backend is running on 127.0.0.1:8000')}.
         </div>
       `;
@@ -357,7 +366,6 @@
       el.dispatchEvent(new Event("input", { bubbles: true }));
       el.dispatchEvent(new Event("change", { bubbles: true }));
     } else if (el.isContentEditable) {
-      // document.execCommand is deprecated — use modern Selection + insertText input event
       el.focus();
       const sel = window.getSelection();
       if (sel && sel.rangeCount > 0) {
@@ -369,7 +377,6 @@
       }
       el.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: sql }));
     } else {
-      // Monaco / CodeMirror — fall back to clipboard
       navigator.clipboard.writeText(sql).catch(() => {});
     }
   }
@@ -392,7 +399,6 @@
 
   // 7. Global Keyboard Shortcut Listener (Cmd+Shift+K / Ctrl+Shift+K)
   window.addEventListener("keydown", (e) => {
-    // navigator.platform is deprecated in Chrome — use userAgentData if available, else userAgent string
     const isMac = (navigator.userAgentData?.platform || navigator.platform || navigator.userAgent).toLowerCase().includes("mac");
     const isModifier = isMac ? e.metaKey : e.ctrlKey;
 

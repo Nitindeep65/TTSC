@@ -38,7 +38,7 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
   const [newTags, setNewTags] = useState("#finance")
   const [isSaving, setIsSaving] = useState(false)
 
-  const fetchNotebook = async () => {
+  const fetchNotebook = useCallback(async () => {
     setLoading(true)
     try {
       const res = await axios.get(`${API}/api/memory/notebook`)
@@ -48,11 +48,30 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    if (isOpen) {
-      fetchNotebook()
+    let ignore = false
+    async function load() {
+      if (isOpen) {
+        setLoading(true)
+        try {
+          const res = await axios.get(`${API}/api/memory/notebook`)
+          if (!ignore) {
+            setQueries(res.data.queries || [])
+          }
+        } catch {
+          // ignore
+        } finally {
+          if (!ignore) {
+            setLoading(false)
+          }
+        }
+      }
+    }
+    load()
+    return () => {
+      ignore = true
     }
   }, [isOpen])
 

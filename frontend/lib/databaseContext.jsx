@@ -38,35 +38,35 @@ const STORAGE_KEY_WORKSPACES = "tts_cloud_workspaces_v2"
 const STORAGE_KEY_ACTIVE_WS = "tts_active_workspace_id_v2"
 
 export function DatabaseProvider({ children }) {
-  const [workspaces, setWorkspaces] = useState([defaultInitialWorkspace])
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState("ws-default")
+  const [workspaces, setWorkspaces] = useState(() => {
+    if (typeof window === "undefined") return [defaultInitialWorkspace]
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_WORKSPACES)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      }
+    } catch {
+      // ignore
+    }
+    return [defaultInitialWorkspace]
+  })
+
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(() => {
+    if (typeof window === "undefined") return "ws-default"
+    try {
+      const savedId = localStorage.getItem(STORAGE_KEY_ACTIVE_WS)
+      if (savedId) return savedId
+    } catch {
+      // ignore
+    }
+    return "ws-default"
+  })
+
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectionError, setConnectionError] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false)
-
-  // 1. Restore Workspaces & Active Workspace on Mount
-  useEffect(() => {
-    try {
-      const savedWorkspaces = localStorage.getItem(STORAGE_KEY_WORKSPACES)
-      const savedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE_WS)
-
-      if (savedWorkspaces) {
-        const parsed = JSON.parse(savedWorkspaces)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setWorkspaces(parsed)
-          if (savedActiveId && parsed.some((w) => w.id === savedActiveId)) {
-            setActiveWorkspaceId(savedActiveId)
-          } else {
-            setActiveWorkspaceId(parsed[0].id)
-          }
-          return
-        }
-      }
-    } catch (e) {
-      // ignore storage errors
-    }
-  }, [])
 
   // 2. Derive Active Workspace
   const activeWorkspace =

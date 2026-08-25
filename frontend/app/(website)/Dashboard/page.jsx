@@ -31,6 +31,24 @@ const sqlExamples = [
   "Find users who registered in the last 30 days but haven't placed an order",
 ]
 
+function generateClarificationChips(text) {
+  const t = (text || "").toLowerCase()
+  const chips = []
+  if (t.includes("time") || t.includes("date") || t.includes("window") || t.includes("year") || t.includes("month") || t.includes("range")) {
+    chips.push("Last 30 Days", "Calendar Year 2024", "All Time")
+  }
+  if (t.includes("status") || t.includes("completed") || t.includes("active") || t.includes("pending")) {
+    chips.push("Completed Orders Only", "Active Users Only", "Include All Statuses")
+  }
+  if (t.includes("ranking") || t.includes("spend") || t.includes("metric") || t.includes("count") || t.includes("top")) {
+    chips.push("Top 5 by Spend", "Top 10 by Order Count", "Order by Recent Date")
+  }
+  if (chips.length === 0) {
+    chips.push("Yes, proceed with defaults", "Filter by last 30 days", "Top 5 results")
+  }
+  return Array.from(new Set(chips)).slice(0, 4)
+}
+
 export default function Dashboard() {
   const { dbInfo, connectionUri, setIsModalOpen, executeLiveQuery } = useDatabase()
 
@@ -334,21 +352,42 @@ export default function Dashboard() {
               ) : (
                 <div className="space-y-5 p-6">
                   {apiResponse?.status === "needs_clarification" && (
-                    <div className="rounded-xl border border-[#ecd9be] bg-[#fdf8f0] p-4 text-[#754817]">
-                      <div className="flex items-center gap-2 font-semibold text-sm">
+                    <div className="rounded-xl border border-amber-200 bg-[#fdf8f0] p-5 text-[#754817] space-y-3.5">
+                      <div className="flex items-center gap-2 font-semibold text-sm text-amber-800">
                         <HelpCircle className="size-4 text-[#d98b2c]" />
-                        Clarification Required
+                        Clarification Required Before Compilation
                       </div>
-                      <p className="mt-2 text-sm leading-relaxed text-[#5c3e1b]">
+                      <p className="text-sm leading-relaxed text-[#5c3e1b]">
                         {apiResponse.message}
                       </p>
-                      <div className="mt-3">
+
+                      <div className="pt-2 border-t border-amber-200/70 space-y-2">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+                          <Sparkles className="size-3 text-[#d98b2c]" />
+                          <span>1-Tap Quick Responses:</span>
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {generateClarificationChips(apiResponse.message).map((chip, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => handleGenerate(`${query} — ${chip}`)}
+                              className="clarify-chip hover-lift"
+                            >
+                              <span>{chip}</span>
+                              <span className="text-[#34c06a] text-xs font-bold">→</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="pt-2 flex items-center gap-3">
                         <Link
                           href="/Dashboard/chat"
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#273e30] px-3 py-1.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#345341]"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#1f2d24] px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xs transition hover:bg-[#2d4634]"
                         >
                           <MessageSquareText className="size-3.5 text-[#71c897]" />
-                          Answer in Multi-Turn Chat
+                          Open in Multi-Turn Chat Studio
                         </Link>
                       </div>
                     </div>

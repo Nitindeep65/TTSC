@@ -40,21 +40,40 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
   const [policyText, setPolicyText] = useState("")
   const [isUploadingPolicy, setIsUploadingPolicy] = useState(false)
 
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     setLoading(true)
     try {
       const res = await axios.get("http://127.0.0.1:8000/api/semantic/metrics")
       setMetrics(res.data.metrics || [])
-    } catch (e) {
+    } catch {
       // ignore
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    if (isOpen) {
-      fetchMetrics()
+    let ignore = false
+    async function load() {
+      if (isOpen) {
+        setLoading(true)
+        try {
+          const res = await axios.get("http://127.0.0.1:8000/api/semantic/metrics")
+          if (!ignore) {
+            setMetrics(res.data.metrics || [])
+          }
+        } catch {
+          // ignore
+        } finally {
+          if (!ignore) {
+            setLoading(false)
+          }
+        }
+      }
+    }
+    load()
+    return () => {
+      ignore = true
     }
   }, [isOpen])
 

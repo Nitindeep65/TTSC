@@ -24,30 +24,39 @@ export default function TableDataProfilerModal({ isOpen, onClose, tableName, con
   const [error, setError] = useState("")
 
   useEffect(() => {
-    if (isOpen && tableName) {
-      fetchTableProfile(tableName)
-    } else {
-      setProfileData(null)
-      setError("")
-    }
-  }, [isOpen, tableName])
+    let ignore = false
 
-  const fetchTableProfile = async (tbl) => {
-    setLoading(true)
-    setError("")
-    try {
-      const res = await axios.post(`${API}/api/database/sample`, {
-        connection_uri: connectionUri || "",
-        table_name: tbl,
-        limit: 5,
-      })
-      setProfileData(res.data)
-    } catch (err) {
-      setError(err.response?.data?.detail || err.message || "Failed to profile table data.")
-    } finally {
-      setLoading(false)
+    async function load(tbl) {
+      setLoading(true)
+      setError("")
+      try {
+        const res = await axios.post(`${API}/api/database/sample`, {
+          connection_uri: connectionUri || "",
+          table_name: tbl,
+          limit: 5,
+        })
+        if (!ignore) {
+          setProfileData(res.data)
+        }
+      } catch (err) {
+        if (!ignore) {
+          setError(err.response?.data?.detail || err.message || "Failed to profile table data.")
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false)
+        }
+      }
     }
-  }
+
+    if (isOpen && tableName) {
+      load(tableName)
+    }
+
+    return () => {
+      ignore = true
+    }
+  }, [isOpen, tableName, connectionUri])
 
   if (!isOpen) return null
 
