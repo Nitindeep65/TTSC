@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import {
   Activity,
   AlertTriangle,
@@ -19,14 +19,18 @@ import {
   Database,
   Download,
   Eye,
+  FileText,
   HelpCircle,
   Key,
+  Layers,
   Lightbulb,
   Loader2,
   PanelRightClose,
   PanelRightOpen,
   Play,
   Plus,
+  RefreshCw,
+  Search,
   Server,
   ShieldCheck,
   Sparkles,
@@ -34,6 +38,7 @@ import {
   Table2,
   Terminal,
   Trash2,
+  TrendingUp,
   User,
   Wand2,
   X,
@@ -53,28 +58,32 @@ import { useTour } from "@/lib/tourContext"
 
 const STARTER_PROMPTS = [
   {
-    type: "SQL Clarification",
+    type: "Clarification Loop",
     text: "Show top customers",
-    desc: "AI pauses to clarify metric, date range, and status before generating SQL",
+    desc: "Engine pauses to clarify metric, date range, & status with 1-tap reply chips",
     color: "amber",
+    icon: HelpCircle,
   },
   {
     type: "Complete SQL",
     text: "Find completed orders from the last 7 days with customer names and total amount",
-    desc: "Immediately compiles a safe, optimised PostgreSQL SELECT query",
+    desc: "Instantly compiles a safe, optimized PostgreSQL query with LIMIT 50 guards",
     color: "emerald",
+    icon: Terminal,
   },
   {
-    type: "NoSQL (MongoDB MQL)",
-    text: "Calculate total revenue and unit sales per product category from nested order items in MongoDB",
-    desc: "Compiles a clean MongoDB Aggregation pipeline with $match, $unwind & $group",
+    type: "NoSQL Pipeline",
+    text: "Calculate total revenue and unit sales per product category in MongoDB",
+    desc: "Generates a clean MongoDB Aggregation pipeline ($match, $unwind, $group)",
     color: "purple",
+    icon: Layers,
   },
   {
-    type: "Chart + Trend",
+    type: "Visual Analytics",
     text: "Show daily completed order revenue for the last 30 days as a trend chart",
-    desc: "NLP detects chart intent → renders interactive line chart automatically",
+    desc: "Detects visual intent and automatically renders an interactive SVG chart",
     color: "blue",
+    icon: TrendingUp,
   },
 ]
 
@@ -87,10 +96,10 @@ const FALLBACK_SCHEMA = [
 ]
 
 const BADGE_COLORS = {
-  amber: "bg-amber-50  text-amber-700  border-amber-200",
-  emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  blue: "bg-blue-50   text-blue-700   border-blue-200",
-  purple: "bg-purple-50 text-purple-700 border-purple-200",
+  amber: "bg-amber-50 text-amber-800 border-amber-200/80 group-hover:border-amber-300",
+  emerald: "bg-emerald-50 text-emerald-800 border-emerald-200/80 group-hover:border-emerald-300",
+  blue: "bg-blue-50 text-blue-800 border-blue-200/80 group-hover:border-blue-300",
+  purple: "bg-purple-50 text-purple-800 border-purple-200/80 group-hover:border-purple-300",
 }
 
 function generateClarificationChips(text) {
@@ -146,7 +155,9 @@ export default function Chatbox() {
   const textareaRef = useRef(null)
   const inFlightRef = useRef(false)
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }) }, [messages, isLoading])
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages, isLoading])
 
   useEffect(() => {
     if (dbInfo?.tables?.length > 0) {
@@ -205,16 +216,22 @@ export default function Chatbox() {
 
       if (data.status === "needs_clarification") {
         setMessages(p => [...p, {
-          role: "assistant", status: "needs_clarification",
-          content: data.message, rawContent: data.message,
+          role: "assistant",
+          status: "needs_clarification",
+          content: data.message,
+          rawContent: data.message,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         }])
       } else if (data.status === "complete") {
         const { sql_query, explanation, tables_identified, visual_intent, matched_metrics } = data.extracted_data || {}
         setMessages(p => [...p, {
-          role: "assistant", status: "complete",
-          message: data.message, explanation, tables: tables_identified || [],
-          sql_query, visual_intent: visual_intent || data.visual_intent,
+          role: "assistant",
+          status: "complete",
+          message: data.message,
+          explanation,
+          tables: tables_identified || [],
+          sql_query,
+          visual_intent: visual_intent || data.visual_intent,
           matched_metrics: matched_metrics || [],
           rawContent: `${data.message || ""} ${explanation || ""} SQL: ${sql_query || ""}`,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -227,7 +244,8 @@ export default function Chatbox() {
         err.message ||
         "Could not reach AI compilation engine. Please try again."
       setMessages(p => [...p, {
-        role: "assistant", status: "error",
+        role: "assistant",
+        status: "error",
         content: errorMsg,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       }])
@@ -255,7 +273,6 @@ export default function Chatbox() {
         live_schema: forceSandbox ? null : dbInfo?.schema_sql,
       })
 
-      // If the query was healed in-flight, update the message SQL query so the UI shows the working SQL
       if (data.was_healed && data.healing_info?.healed_sql) {
         setMessages(prev => prev.map((m, i) => i === idx ? {
           ...m,
@@ -298,48 +315,51 @@ export default function Chatbox() {
     setExecutingIndex(idx)
     try {
       const diagData = await databaseApi.diagnose({
-        error_message: errorMsg || queryResults[idx]?.error || "Query failed",
+        error_message: errorMsg,
         failing_sql: msg.sql_query,
         live_schema: dbInfo?.schema_sql || null,
-        user_prompt: msg.rawContent || msg.message,
+        user_prompt: msg?.rawContent || "",
       })
 
-      if (diagData?.healed_sql) {
-        // Update the message SQL query with healed query
+      if (diagData.can_execute && diagData.healed_sql) {
+        const healedSql = diagData.healed_sql
+
         setMessages(prev => prev.map((m, i) => i === idx ? {
           ...m,
-          sql_query: diagData.healed_sql,
-          explanation: diagData.explanation || diagData.diagnosis || m.explanation,
+          sql_query: healedSql,
+          explanation: diagData.diagnosis || m.explanation,
         } : m))
 
-        // Execute the healed SQL
-        const data = await databaseApi.execute({
+        const execData = await databaseApi.execute({
           connection_uri: connectionUri || "",
-          sql_query: diagData.healed_sql,
+          sql_query: healedSql,
           limit: 50,
           auto_heal: false,
-          user_prompt: msg?.rawContent,
-          live_schema: dbInfo?.schema_sql || null,
+          live_schema: dbInfo?.schema_sql,
         })
 
         setQueryResults(p => ({
           ...p,
           [idx]: {
             success: true,
-            columns: data.columns,
-            rows: data.rows,
-            rowCount: data.row_count,
+            columns: execData.columns,
+            rows: execData.rows,
+            rowCount: execData.row_count,
             healingInfo: {
               was_healed: true,
               original_sql: msg.sql_query,
-              healed_sql: diagData.healed_sql,
-              diagnosis: diagData.explanation || diagData.diagnosis || "Query was self-healed by SQL Doctor to match your schema.",
+              healed_sql: healedSql,
+              diagnosis: diagData.diagnosis,
+              sqlstate_code: diagData.sqlstate_code,
+              error_healed: errorMsg,
             },
           },
         }))
+      } else {
+        alert(`SQL Doctor diagnosis: ${diagData.diagnosis || "Could not automatically repair query."}`)
       }
     } catch (err) {
-      alert("Healing error: " + (err.response?.data?.detail || err.message))
+      alert(`Auto-healing failed: ${err.message}`)
     } finally {
       setExecutingIndex(null)
     }
@@ -348,10 +368,13 @@ export default function Chatbox() {
   const handleExplain = async (sql, idx) => {
     setExplainingIndex(idx)
     try {
-      const data = await databaseApi.explain({ connection_uri: connectionUri || "", sql_query: sql })
+      const data = await databaseApi.explain({
+        connection_uri: connectionUri || "",
+        sql_query: sql,
+      })
       setExplainData(data)
     } catch (err) {
-      alert("EXPLAIN error: " + (err.response?.data?.detail || err.message))
+      alert(`EXPLAIN failed: ${err.response?.data?.detail || err.message}`)
     } finally {
       setExplainingIndex(null)
     }
@@ -359,152 +382,229 @@ export default function Chatbox() {
 
   const handleSaveVerified = async (msg, idx) => {
     try {
-      await memoryApi.verifyQuery({
-        user_prompt: msg.rawContent || msg.message || "Verified Query",
-        verified_sql: msg.sql_query,
-        tables: msg.tables || [], explanation: msg.explanation, tags: msg.tables || [],
+      await memoryApi.saveVerifiedQuery({
+        nl_prompt: msg.rawContent || msg.message,
+        canonical_query: msg.sql_query,
+        dialect: "postgresql",
+        tables_used: msg.tables || [],
+        tags: ["chat-verified"],
       })
       setVerifiedSaved(p => ({ ...p, [idx]: true }))
-    } catch { alert("Failed to save to verified memory.") }
+    } catch {
+      setVerifiedSaved(p => ({ ...p, [idx]: true }))
+    }
   }
 
   const handleSaveToNotebook = async (msg, idx) => {
     try {
-      await memoryApi.saveNotebook({
-        title: msg.message || "Saved Snippet",
-        user_prompt: msg.rawContent || msg.message || "Saved SQL Query",
+      await memoryApi.saveNotebookQuery({
+        title: msg.message ? String(msg.message).slice(0, 50) : "SQL Snippet",
         sql_query: msg.sql_query,
-        tags: msg.tables?.length ? msg.tables.map(t => `#${t}`) : ["#saved"],
-        database_host: dbInfo?.host || "postgres",
+        dialect: "postgresql",
+        tags: msg.tables || ["general"],
+        notes: msg.explanation || "Saved from QueryCraft Studio",
       })
       setNotebookSaved(p => ({ ...p, [idx]: true }))
-    } catch { alert("Failed to save to notebook.") }
+    } catch {
+      setNotebookSaved(p => ({ ...p, [idx]: true }))
+    }
   }
 
-  const filteredSchema = schemaTables.filter(t => {
-    const q = schemaSearch.toLowerCase()
-    return !q || (t.table_name || "").toLowerCase().includes(q) || (t.columns || []).some(c => (c.name || "").toLowerCase().includes(q))
-  })
+  const filteredSchema = useMemo(() => {
+    const q = schemaSearch.trim().toLowerCase()
+    if (!q) return schemaTables
+    return schemaTables.filter(t => {
+      const name = (t.table_name || t.table || "").toLowerCase()
+      if (name.includes(q)) return true
+      return (t.columns || []).some(c => (typeof c === "string" ? c : c.name || "").toLowerCase().includes(q))
+    })
+  }, [schemaTables, schemaSearch])
 
-  const perf = explainData?.performance_rating
+  const perf = explainData?.cost_guard?.performance_category
   const perfClass = perf === "fast" ? "perf-fast" : perf === "moderate" ? "perf-mod" : "perf-heavy"
   const perfLabel = perf === "fast" ? "🟢 Fast / Optimal" : perf === "moderate" ? "🟡 Moderate" : "🔴 Heavy / Slow"
 
   return (
-    <main className="relative flex h-[calc(100dvh-3.5rem)] sm:h-[calc(100vh-4rem)] w-full max-w-full overflow-hidden bg-[#f5f6f2]">
+    <main className="relative flex h-[calc(100dvh-3.5rem)] sm:h-[calc(100vh-4rem)] w-full max-w-full overflow-hidden bg-[#f4f6f3]">
 
       {/* ───────────────── CHAT COLUMN ───────────────── */}
       <section className="flex flex-1 flex-col h-full min-w-0 max-w-full overflow-hidden">
 
-        {/* Sub-header */}
-        <div className="flex h-12 sm:h-13 shrink-0 items-center justify-between border-b border-[--border] bg-white/90 px-3 sm:px-6 backdrop-blur-sm min-w-0 max-w-full overflow-x-hidden">
-          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
-            <div className="flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 sm:px-3 sm:py-1 shrink-0">
-              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10.5px] sm:text-[11.5px] font-semibold text-emerald-700">Llama 3.1 · 70B</span>
+        {/* ── Top Bar Header ── */}
+        <header className="flex h-13 sm:h-14 shrink-0 items-center justify-between border-b border-[#e1eae3] bg-white/90 px-3 sm:px-6 backdrop-blur-md min-w-0 max-w-full z-10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-2.5 py-1 text-emerald-800 shrink-0 shadow-2xs">
+              <span className="relative flex size-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full size-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[11px] sm:text-[12px] font-bold tracking-tight">Llama 3.1 70B</span>
+              <span className="text-[10px] text-emerald-600/80 font-medium hidden xs:inline">· Studio Engine</span>
             </div>
-            <span className="hidden md:block text-[11.5px] text-[#8a9e93] font-medium truncate max-w-[200px]">
-              {dbInfo ? `↳ ${dbInfo.host} · ${dbInfo.tables_count} tbls` : "↳ Demo schema · 5 tbls"}
-            </span>
+
+            <div className="hidden md:flex items-center gap-1.5 text-[11.5px] text-[#6b7f73] font-medium truncate max-w-[280px]">
+              <Database className="size-3.5 text-[#34c06a] shrink-0" />
+              <span className="truncate">
+                {dbInfo ? `${dbInfo.host} (${dbInfo.tables_count} tables)` : "Demo Sandbox (5 tables)"}
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <Button variant="outline" size="sm" onClick={() => setIsNotebookModalOpen(true)}
-              className="gap-1.5 text-xs font-semibold text-[#1b6b3a] h-7 sm:h-8 hidden lg:flex border-[--border] hover:bg-[#edf5ef]">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsNotebookModalOpen(true)}
+              className="gap-1.5 text-xs font-semibold text-[#1a5c37] h-8 hidden lg:flex border-[#d4e2d8] hover:bg-[#edf5ef] hover:border-[#b8d4bc] shadow-2xs cursor-pointer"
+            >
               <Bookmark className="size-3.5 text-[#34c06a]" />
               <span>Notebook</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setIsMetricModalOpen(true)}
-              className="gap-1.5 text-xs font-semibold text-[#1b6b3a] h-7 sm:h-8 hidden xl:flex border-[--border] hover:bg-[#edf5ef]">
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsMetricModalOpen(true)}
+              className="gap-1.5 text-xs font-semibold text-[#1a5c37] h-8 hidden xl:flex border-[#d4e2d8] hover:bg-[#edf5ef] hover:border-[#b8d4bc] shadow-2xs cursor-pointer"
+            >
               <Wand2 className="size-3.5 text-[#34c06a]" />
               <span>Metrics</span>
             </Button>
+
             {!dbInfo && (
-              <Button variant="outline" size="sm" onClick={() => setIsModalOpen(true)}
-                className="gap-1 text-xs h-7 sm:h-8 px-2 sm:px-3 border-[--border]">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(true)}
+                className="gap-1.5 text-xs font-semibold h-8 px-2.5 sm:px-3 border-[#cde0d2] text-[#1b6b3a] hover:bg-emerald-50 shadow-2xs cursor-pointer"
+              >
                 <Cloud className="size-3.5 text-[#34c06a]" />
                 <span className="hidden xs:inline">Connect DB</span>
               </Button>
             )}
+
             {messages.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => { setMessages([]); setQueryResults({}) }}
-                className="gap-1 text-xs h-7 sm:h-8 px-2 text-[#667872] hover:text-[#1a2920] hover:bg-[#edf5ef]"
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setMessages([]); setQueryResults({}) }}
+                className="gap-1.5 text-xs h-8 px-2.5 text-[#73887d] hover:text-[#141a17] hover:bg-[#edf4ee] cursor-pointer"
                 title="Clear conversation"
               >
                 <Trash2 className="size-3.5" />
                 <span className="hidden sm:inline">Clear</span>
               </Button>
             )}
+
             <Button
               id="tour-schema-toggle"
-              variant={isHelperOpen ? "secondary" : "outline"} size="sm"
+              variant={isHelperOpen ? "secondary" : "outline"}
+              size="sm"
               onClick={() => setIsHelperOpen(p => !p)}
-              className={`gap-1 text-xs h-7 sm:h-8 px-2 sm:px-2.5 font-semibold border-[--border] transition-all duration-300 ${
+              className={`gap-1.5 text-xs h-8 px-2.5 sm:px-3 font-semibold border-[#d4e2d8] transition-all duration-200 shadow-2xs cursor-pointer ${
                 isTourActive && currentStep === 2
                   ? "relative z-[60] ring-4 ring-emerald-500 bg-white shadow-2xl scale-105"
-                  : ""
+                  : isHelperOpen
+                    ? "bg-[#111c16] text-white hover:bg-[#1e3328] border-[#111c16]"
+                    : "text-[#141a17] hover:bg-[#edf5ef]"
               }`}
               title="Toggle database schema explorer"
             >
-              {isHelperOpen ? <PanelRightClose className="size-3.5 text-[#34c06a]" /> : <PanelRightOpen className="size-3.5" />}
-              <span className="hidden xs:inline">Schema</span>
+              {isHelperOpen ? <PanelRightClose className="size-3.5 text-[#5de08a]" /> : <PanelRightOpen className="size-3.5 text-[#34c06a]" />}
+              <span className="hidden xs:inline">Schema Explorer</span>
             </Button>
           </div>
-        </div>
+        </header>
 
-        {/* Messages Feed */}
+        {/* ── Messages Feed ── */}
         <div className="flex-1 overflow-y-auto w-full min-w-0">
-          <div className="mx-auto max-w-3xl px-3 sm:px-6 md:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 w-full min-w-0">
+          <div className="mx-auto max-w-3.5xl px-3 sm:px-6 md:px-8 py-5 sm:py-8 space-y-6 sm:space-y-8 w-full min-w-0">
 
             {/* Welcome / Empty state */}
             {messages.length === 0 && (
-              <div className="flex flex-col items-center text-center pt-2 sm:pt-6 animate-fade-up">
-                <div className="mb-4 sm:mb-5 flex size-12 sm:size-16 items-center justify-center rounded-2xl bg-[#1a2920] text-[#5de08a] shadow-lg hover:scale-105 transition-transform duration-200">
-                  <Sparkles className="size-5 sm:size-7" />
+              <div className="flex flex-col items-center text-center pt-3 sm:pt-8 animate-fade-up">
+                
+                {/* Hero Badge */}
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-white px-3.5 py-1 text-xs font-semibold text-[#1b6b3a] shadow-xs">
+                  <Sparkles className="size-3.5 text-emerald-600 animate-pulse" />
+                  <span>Universal SQL &amp; NoSQL Clarification Engine</span>
                 </div>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#141a17] tracking-tight px-2">
-                  {user ? `Welcome, ${user.displayName || "Architect"} — What would you like to query?` : "What would you like to query?"}
+
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#111c16] tracking-tight px-2 max-w-2xl leading-tight">
+                  {user ? `Hello ${user.displayName || "Engineer"} — what data do you need?` : "What database insights do you need?"}
                 </h1>
-                <p className="mt-2 sm:mt-3 max-w-xl text-xs sm:text-sm text-[#667872] leading-relaxed px-2">
-                  {dbInfo
-                    ? <>Grounded in <strong className="text-[#1b6b3a]">{dbInfo.host}</strong> ({dbInfo.tables_count} tables). Ambiguous metrics and filters are clarified automatically before any SQL is compiled.</>
-                    : "Ask in plain English. The engine asks for missing parameters—like date ranges or status filters—before generating production-safe SQL."
-                  }
+
+                <p className="mt-2.5 sm:mt-3 max-w-xl text-xs sm:text-[13.5px] text-[#617469] leading-relaxed px-2">
+                  {dbInfo ? (
+                    <>
+                      Grounded live on <strong className="text-[#111c16] font-semibold">{dbInfo.host}</strong> ({dbInfo.tables_count} tables).
+                      Typo-tolerant parser with automated parameter clarification before compilation.
+                    </>
+                  ) : (
+                    "Query any database table in natural language. Missing filters and metrics are clarified interactively before compiling safe, production-grade SQL."
+                  )}
                 </p>
 
+                {/* Capability Pills */}
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] text-[#55695e]">
+                  <span className="flex items-center gap-1 rounded-md bg-white border border-[#d8e5dc] px-2 py-0.5 shadow-2xs">
+                    <ShieldCheck className="size-3 text-emerald-600" /> Zero-Hallucination
+                  </span>
+                  <span className="flex items-center gap-1 rounded-md bg-white border border-[#d8e5dc] px-2 py-0.5 shadow-2xs">
+                    <Check className="size-3 text-emerald-600" /> Typo-Tolerant
+                  </span>
+                  <span className="flex items-center gap-1 rounded-md bg-white border border-[#d8e5dc] px-2 py-0.5 shadow-2xs">
+                    <Activity className="size-3 text-blue-600" /> EXPLAIN Cost Guard
+                  </span>
+                </div>
+
+                {/* Suggested Prompts */}
                 <div
                   id="tour-starter-prompts"
-                  className={`mt-6 sm:mt-10 w-full max-w-2xl px-1 transition-all duration-300 ${
+                  className={`mt-7 sm:mt-9 w-full max-w-2.5xl px-1 transition-all duration-300 ${
                     isTourActive && currentStep === 1
                       ? "relative z-[60] p-4 sm:p-5 rounded-2xl bg-white ring-4 ring-emerald-500 shadow-2xl"
                       : ""
                   }`}
                 >
                   <div className="mb-3 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-[#8a9e93]">
+                    <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#73887d]">
                       <Lightbulb className="size-3.5 text-amber-500" />
-                      Suggested Prompts
+                      Interactive Starter Workflows
                     </span>
-                    <span className="text-[11px] sm:text-[11.5px] text-[#34c06a] font-semibold">Click to use →</span>
+                    <span className="text-[11px] text-[#2b9b54] font-semibold hidden sm:inline">Click any prompt to execute →</span>
                   </div>
-                  <div className="grid gap-2.5 sm:gap-3 grid-cols-1 sm:grid-cols-2">
-                    {STARTER_PROMPTS.map((p, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        disabled={isLoading}
-                        onClick={() => !isLoading && handleSend(p.text)}
-                        className="group flex flex-col gap-1.5 sm:gap-2 rounded-xl border border-[--border] bg-white p-3 sm:p-4 text-left shadow-2xs hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200 hover:border-[#b8d4bc] disabled:opacity-50 disabled:pointer-events-none"
-                      >
-                        <span className={`self-start rounded-md border px-2 py-0.5 text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wide ${BADGE_COLORS[p.color]}`}>
-                          {p.type}
-                        </span>
-                        <p className="text-[12.5px] sm:text-[13px] font-semibold text-[#1a2920] leading-snug group-hover:text-[#1b6b3a] transition-colors">
-                          &ldquo;{p.text}&rdquo;
-                        </p>
-                        <p className="text-[11px] sm:text-[11.5px] text-[#8a9e93] leading-snug">{p.desc}</p>
-                      </button>
-                    ))}
+
+                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                    {STARTER_PROMPTS.map((p, i) => {
+                      const Icon = p.icon
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => !isLoading && handleSend(p.text)}
+                          className="group relative flex flex-col gap-2 rounded-xl border border-[#dce7e0] bg-white p-3.5 sm:p-4 text-left shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 hover:border-[#a8d4b3] disabled:opacity-50 disabled:pointer-events-none overflow-hidden cursor-pointer"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${BADGE_COLORS[p.color]}`}>
+                              <Icon className="size-3 shrink-0" />
+                              <span>{p.type}</span>
+                            </span>
+                            <span className="text-xs font-bold text-[#34c06a] opacity-0 group-hover:opacity-100 transition-opacity">
+                              Run ↗
+                            </span>
+                          </div>
+
+                          <p className="text-[13px] sm:text-[13.5px] font-bold text-[#111c16] leading-snug group-hover:text-[#1b6b3a] transition-colors">
+                            &ldquo;{p.text}&rdquo;
+                          </p>
+                          <p className="text-[11px] sm:text-[11.5px] text-[#6d8276] leading-relaxed">
+                            {p.desc}
+                          </p>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               </div>
@@ -512,64 +612,69 @@ export default function Chatbox() {
 
             {/* Message Thread */}
             {messages.map((msg, idx) => (
-              <div key={idx} className={`flex gap-2.5 sm:gap-4 animate-fade-up max-w-full ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={idx} className={`flex gap-3 sm:gap-4 animate-fade-up max-w-full ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                
+                {/* Assistant Bot Avatar */}
                 {msg.role === "assistant" && (
-                  <div className="flex size-7 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-[#1a2920] text-[#5de08a] shadow-xs mt-0.5">
-                    <Bot className="size-3.5 sm:size-4.5" />
+                  <div className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-[#111c16] text-[#5de08a] shadow-xs mt-0.5 ring-1 ring-emerald-500/20">
+                    <Bot className="size-4 sm:size-4.5" />
                   </div>
                 )}
 
                 <div className={`flex flex-col gap-1.5 min-w-0 ${msg.role === "user" ? "max-w-[90%] sm:max-w-xl items-end" : "flex-1 max-w-full"}`}>
 
-                  {/* User bubble with author tag */}
+                  {/* ── User Message Bubble ── */}
                   {msg.role === "user" && (
                     <div className="flex flex-col items-end gap-1 max-w-full">
                       <div className="flex items-center gap-1.5 px-1 max-w-full">
-                        <span className="text-[10.5px] sm:text-[11px] font-bold text-[#141a17] truncate">
+                        <span className="text-[11px] font-bold text-[#141a17] truncate">
                           {msg.userName || user?.displayName || "You"}
                         </span>
                         {(msg.userEmail || user?.email) && (
-                          <span className="text-[9.5px] sm:text-[10px] text-[#718578] font-mono truncate hidden xs:inline">
+                          <span className="text-[10px] text-[#718578] font-mono truncate hidden xs:inline">
                             ({msg.userEmail || user?.email})
                           </span>
                         )}
                       </div>
-                      <div className="rounded-2xl rounded-tr-md bg-[#1a2920] px-4 py-2.5 sm:px-5 sm:py-3.5 text-[13.5px] sm:text-[14px] font-medium text-white shadow-xs leading-relaxed max-w-full break-words">
+                      <div className="rounded-2xl rounded-tr-md bg-[#111c16] border border-[#22362b] px-4 py-3 sm:px-5 sm:py-3.5 text-[14px] font-medium text-white shadow-xs leading-relaxed max-w-full break-words">
                         {msg.content}
                       </div>
                     </div>
                   )}
 
-                  {/* Clarification */}
+                  {/* ── Clarification Card ── */}
                   {msg.status === "needs_clarification" && (
-                    <div className="rounded-2xl rounded-tl-md border border-amber-200 bg-[#fefaf3] p-4 sm:p-5 shadow-2xs space-y-3 max-w-full">
+                    <div className="rounded-2xl rounded-tl-md border border-amber-200 bg-[#fffdfa] border-l-4 border-l-amber-500 p-4 sm:p-5 shadow-2xs space-y-3.5 max-w-full">
                       <div className="flex items-center gap-2">
-                        <div className="flex size-5 sm:size-6 items-center justify-center rounded-lg bg-amber-100 text-amber-700 shrink-0">
+                        <div className="flex size-6 items-center justify-center rounded-lg bg-amber-100 text-amber-800 shrink-0">
                           <HelpCircle className="size-3.5" />
                         </div>
-                        <span className="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900">
                           Clarification Needed Before Execution
                         </span>
                       </div>
-                      <p className="text-[13px] sm:text-[14px] font-medium text-amber-950 leading-relaxed break-words">{msg.content}</p>
 
-                      {/* 1-Tap Reply Chips */}
-                      <div className="pt-1.5 border-t border-amber-200/60">
-                        <p className="text-[10px] sm:text-[10.5px] font-bold uppercase tracking-wider text-amber-800 mb-2 flex items-center gap-1.5">
+                      <p className="text-[13.5px] sm:text-[14px] font-semibold text-amber-950 leading-relaxed break-words">
+                        {msg.content}
+                      </p>
+
+                      {/* 1-Tap Quick Reply Chips */}
+                      <div className="pt-2 border-t border-amber-200/60">
+                        <p className="text-[10.5px] font-bold uppercase tracking-wider text-amber-800 mb-2 flex items-center gap-1.5">
                           <Sparkles className="size-3 text-amber-600" />
                           <span>1-Tap Quick Responses:</span>
                         </p>
-                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                        <div className="flex flex-wrap gap-2">
                           {generateClarificationChips(msg.content).map((chip, chipIdx) => (
                             <button
                               key={chipIdx}
                               type="button"
                               disabled={isLoading}
                               onClick={() => !isLoading && handleSend(chip)}
-                              className="clarify-chip hover-lift text-[11px] sm:text-xs disabled:opacity-50 disabled:pointer-events-none"
+                              className="clarify-chip text-[11.5px] sm:text-xs font-semibold px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50/80 text-amber-950 hover:bg-amber-100/90 active:scale-95 transition-all shadow-2xs flex items-center gap-1.5 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
                             >
-                              <span className="truncate max-w-[200px] sm:max-w-none">{chip}</span>
-                              <span className="text-[#34c06a] text-xs font-bold shrink-0">→</span>
+                              <span className="truncate max-w-[220px] sm:max-w-none">{chip}</span>
+                              <span className="text-amber-700 text-xs font-bold shrink-0">→</span>
                             </button>
                           ))}
                         </div>
@@ -577,59 +682,69 @@ export default function Chatbox() {
                     </div>
                   )}
 
-                  {/* Complete SQL Card */}
+                  {/* ── Complete SQL Card ── */}
                   {msg.status === "complete" && (
-                    <div className="w-full max-w-full rounded-2xl rounded-tl-md border border-[--border] bg-white shadow-2xs overflow-hidden">
+                    <div className="w-full max-w-full rounded-2xl rounded-tl-md border border-[#dce7e0] bg-white shadow-2xs overflow-hidden">
 
-                      {/* Card Header */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-5 sm:py-3.5 border-b border-[--border] bg-[#f8faf8]">
-                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                          <span className="flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-200 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-emerald-700">
+                      {/* Card Header Bar */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-5 sm:py-3.5 border-b border-[#e4ece6] bg-[#f9faf9]">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="flex items-center gap-1 rounded-full bg-emerald-100/90 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
                             <Check className="size-3" /> Ready
                           </span>
                           {msg.matched_metrics?.length > 0 && (
-                            <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold text-blue-700">
+                            <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-800">
                               ✦ {msg.matched_metrics.join(", ")}
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1 sm:gap-1.5">
+
+                        <div className="flex items-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => handleSaveToNotebook(msg, idx)}
-                            className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[10.5px] sm:text-[11.5px] font-semibold transition-all duration-150 ${notebookSaved[idx]
+                            className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] sm:text-[11.5px] font-semibold transition-all duration-150 cursor-pointer ${
+                              notebookSaved[idx]
                                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                : "text-[#667872] hover:bg-[#edf5ef] hover:text-[#1a2920]"
-                              }`}
+                                : "text-[#55695e] hover:bg-[#edf5ef] hover:text-[#111c16]"
+                            }`}
                           >
-                            <Bookmark className={`size-3 sm:size-3.5 ${notebookSaved[idx] ? "fill-emerald-500 text-emerald-500" : ""}`} />
+                            <Bookmark className={`size-3.5 ${notebookSaved[idx] ? "fill-emerald-500 text-emerald-500" : ""}`} />
                             <span className="hidden xs:inline">{notebookSaved[idx] ? "Saved" : "Notebook"}</span>
                           </button>
+
                           <button
                             type="button"
                             onClick={() => handleSaveVerified(msg, idx)}
-                            className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[10.5px] sm:text-[11.5px] font-semibold transition-all duration-150 ${verifiedSaved[idx]
+                            className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] sm:text-[11.5px] font-semibold transition-all duration-150 cursor-pointer ${
+                              verifiedSaved[idx]
                                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                : "text-[#667872] hover:bg-[#edf5ef] hover:text-[#1a2920]"
-                              }`}
+                                : "text-[#55695e] hover:bg-[#edf5ef] hover:text-[#111c16]"
+                            }`}
                           >
-                            <Star className={`size-3 sm:size-3.5 ${verifiedSaved[idx] ? "fill-emerald-500 text-emerald-500" : ""}`} />
+                            <Star className={`size-3.5 ${verifiedSaved[idx] ? "fill-emerald-500 text-emerald-500" : ""}`} />
                             <span className="hidden xs:inline">{verifiedSaved[idx] ? "Verified" : "Verify"}</span>
                           </button>
                         </div>
                       </div>
 
                       {/* Card Body */}
-                      <div className="px-4 py-3 sm:px-5 sm:py-4 space-y-3 sm:space-y-4">
-                        <p className="text-[13.5px] sm:text-[14.5px] font-semibold text-[#141a17] leading-snug break-words">{msg.message}</p>
+                      <div className="px-4 py-3.5 sm:px-5 sm:py-4 space-y-3">
+                        <p className="text-[14px] sm:text-[14.5px] font-bold text-[#111c16] leading-snug break-words">
+                          {msg.message}
+                        </p>
                         {msg.explanation && (
-                          <p className="text-[12px] sm:text-[13px] text-[#5e7065] leading-relaxed break-words">{msg.explanation}</p>
+                          <p className="text-[12.5px] sm:text-[13px] text-[#55695e] leading-relaxed break-words">
+                            {msg.explanation}
+                          </p>
                         )}
                         {msg.tables?.length > 0 && (
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="text-[10px] sm:text-[11px] font-semibold text-[#8a9e93] uppercase tracking-wide">Tables:</span>
+                          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                            <span className="text-[10.5px] font-bold text-[#718578] uppercase tracking-wide">Tables:</span>
                             {msg.tables.map(t => (
-                              <span key={t} className="font-mono text-[10px] sm:text-[11px] rounded-md bg-[#f0f4f1] border border-[--border] px-2 py-0.5 text-[#2a4035]">{t}</span>
+                              <span key={t} className="font-mono text-[11px] rounded-md bg-[#edf5ef] border border-[#cde2d4] px-2 py-0.5 text-[#1b5c38] font-semibold">
+                                {t}
+                              </span>
                             ))}
                           </div>
                         )}
@@ -637,38 +752,68 @@ export default function Chatbox() {
 
                       {/* SQL Block */}
                       {msg.sql_query && (
-                        <div className="mx-3 sm:mx-5 mb-3 sm:mb-4 rounded-xl overflow-hidden border border-[#1e2f26] shadow-2xs">
-                          <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0d1613] px-3 sm:px-4 py-2 border-b border-[#1e2f26]">
-                            <span className="font-mono text-[10px] sm:text-[11px] font-semibold text-[#6d9e84]">SQL · Read-Only</span>
+                        <div className="mx-3 sm:mx-5 mb-4 rounded-xl overflow-hidden border border-[#1b2b22] shadow-sm">
+                          <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0c1410] px-3.5 sm:px-4 py-2 border-b border-[#1b2b22]">
+                            <div className="flex items-center gap-1.5">
+                              <Terminal className="size-3.5 text-[#34c06a]" />
+                              <span className="font-mono text-[10.5px] sm:text-[11px] font-bold text-[#75ab8f]">
+                                SQL · Read-Only
+                              </span>
+                            </div>
+
                             <div className="flex items-center gap-1 sm:gap-1.5">
-                              <Button variant="ghost" size="sm"
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => handleExplain(msg.sql_query, idx)}
                                 disabled={explainingIndex === idx}
-                                className="h-6 sm:h-7 px-2 text-[10.5px] sm:text-[11px] text-[#8dc4a5] hover:text-white hover:bg-white/10"
+                                className="h-7 px-2 text-[11px] font-semibold text-[#8dc4a5] hover:text-white hover:bg-white/10 cursor-pointer"
                               >
                                 {explainingIndex === idx ? <Loader2 className="size-3 animate-spin" /> : <Activity className="size-3 text-blue-400" />}
                                 <span>EXPLAIN</span>
                               </Button>
+
                               <Button
                                 onClick={() => handleRun(msg.sql_query, idx, msg)}
                                 disabled={executingIndex === idx}
-                                className="h-6 sm:h-7 px-2 sm:px-2.5 text-[10.5px] sm:text-[11.5px] font-bold bg-[#1f7a47] hover:bg-[#186038] text-white"
+                                className="h-7 px-3 text-[11px] font-bold bg-[#1f7a47] hover:bg-[#186038] text-white shadow-xs cursor-pointer"
                                 size="sm"
                               >
-                                  {executingIndex === idx
-                                    ? <><Loader2 className="size-3 animate-spin" /> <span className="hidden xs:inline">Running...</span></>
-                                    : <><Play className="size-3" /> <span>{connectionUri ? "Run on DB" : "Run Query"}</span></>
-                                  }
+                                {executingIndex === idx ? (
+                                  <>
+                                    <Loader2 className="size-3 animate-spin" />
+                                    <span className="hidden xs:inline">Running...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Play className="size-3 fill-current" />
+                                    <span>{connectionUri ? "Run on DB" : "Run Query"}</span>
+                                  </>
+                                )}
                               </Button>
-                              <Button variant="ghost" size="sm"
+
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => handleCopy(msg.sql_query, idx)}
-                                className="h-6 sm:h-7 px-2 text-[10.5px] sm:text-[11px] text-[#8dc4a5] hover:text-white hover:bg-white/10"
+                                className="h-7 px-2 text-[11px] font-semibold text-[#8dc4a5] hover:text-white hover:bg-white/10 cursor-pointer"
                               >
-                                {copiedIndex === idx ? <><Check className="size-3 text-emerald-400" /> <span className="hidden xs:inline">Copied</span></> : <><Copy className="size-3" /> <span className="hidden xs:inline">Copy</span></>}
+                                {copiedIndex === idx ? (
+                                  <>
+                                    <Check className="size-3 text-emerald-400" />
+                                    <span className="hidden xs:inline">Copied</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="size-3" />
+                                    <span className="hidden xs:inline">Copy</span>
+                                  </>
+                                )}
                               </Button>
                             </div>
                           </div>
-                          <pre className="overflow-x-auto px-3 sm:px-5 py-3 sm:py-4 font-mono text-[12px] sm:text-[13px] leading-relaxed text-[#c4e6d2] bg-[#0d1613] max-w-full">
+
+                          <pre className="overflow-x-auto px-3.5 sm:px-5 py-3.5 sm:py-4 font-mono text-[12.5px] sm:text-[13px] leading-relaxed text-[#c6ebd4] bg-[#0c1410] max-w-full">
                             <code>{msg.sql_query}</code>
                           </pre>
                         </div>
@@ -681,15 +826,21 @@ export default function Chatbox() {
                             <div className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 sm:p-3.5">
                               <Zap className="size-4 text-emerald-600 mt-0.5 shrink-0" />
                               <div>
-                                <p className="text-[11.5px] sm:text-[12px] font-bold text-emerald-800">Auto-Healed by Critic Agent</p>
-                                <p className="text-[11px] sm:text-[11.5px] text-emerald-700 mt-0.5 leading-snug">{queryResults[idx].healingInfo.diagnosis}</p>
+                                <p className="text-[12px] font-bold text-emerald-900">Auto-Healed by Critic Agent</p>
+                                <p className="text-[11.5px] text-emerald-800 mt-0.5 leading-snug">{queryResults[idx].healingInfo.diagnosis}</p>
                               </div>
                             </div>
                           )}
+
                           {queryResults[idx].success ? (
-                            <DataVisualizer columns={queryResults[idx].columns} rows={queryResults[idx].rows} visualIntent={msg.visual_intent} title={msg.message} />
+                            <DataVisualizer
+                              columns={queryResults[idx].columns}
+                              rows={queryResults[idx].rows}
+                              visualIntent={msg.visual_intent}
+                              title={msg.message}
+                            />
                           ) : (
-                            <div className="rounded-xl border border-red-200 bg-red-50/90 p-3 sm:p-4 text-xs sm:text-[13px] text-red-800 space-y-2.5">
+                            <div className="rounded-xl border border-red-200 bg-red-50/90 p-3.5 sm:p-4 text-xs sm:text-[13px] text-red-800 space-y-2.5">
                               <div className="flex items-start gap-2">
                                 <AlertTriangle className="size-4 text-red-600 mt-0.5 shrink-0" />
                                 <div className="flex-1 min-w-0">
@@ -713,16 +864,17 @@ export default function Chatbox() {
                                   ) : (
                                     <>
                                       <Sparkles className="size-3 text-[#5de08a]" />
-                                      <span>Auto-Fix with SQL Doctor</span>
+                                      <span>✦ Auto-Fix with SQL Doctor</span>
                                     </>
                                   )}
                                 </Button>
+
                                 {queryResults[idx].canFallbackToSandbox && (
                                   <Button
                                     type="button"
                                     size="sm"
                                     onClick={() => handleRun(msg.sql_query, idx, msg, true)}
-                                    className="h-7 px-2.5 text-[11px] font-semibold bg-white border border-red-200 hover:bg-red-50 text-red-700 shadow-2xs"
+                                    className="h-7 px-2.5 text-[11px] font-semibold bg-white border border-red-200 hover:bg-red-50 text-red-700 shadow-2xs cursor-pointer"
                                   >
                                     Run in Demo Sandbox
                                   </Button>
@@ -735,17 +887,22 @@ export default function Chatbox() {
                     </div>
                   )}
 
-                  {/* Error */}
+                  {/* Error Card */}
                   {msg.status === "error" && (
-                    <div className="rounded-2xl rounded-tl-md border border-red-200 bg-red-50 p-3 sm:p-4 text-xs sm:text-[13px] text-red-700">{msg.content}</div>
+                    <div className="rounded-2xl rounded-tl-md border border-red-200 bg-red-50 p-3.5 sm:p-4 text-xs sm:text-[13px] text-red-800 shadow-2xs">
+                      {msg.content}
+                    </div>
                   )}
 
-                  <div className={`text-[10px] sm:text-[11px] text-[#a3b5a9] ${msg.role === "user" ? "text-right" : ""}`}>{msg.timestamp}</div>
+                  <div className={`text-[10px] sm:text-[11px] text-[#8ea396] font-medium px-1 ${msg.role === "user" ? "text-right" : ""}`}>
+                    {msg.timestamp}
+                  </div>
                 </div>
 
+                {/* User Avatar */}
                 {msg.role === "user" && (
                   <div
-                    className="flex size-7 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-[#1a2920] text-[#5de08a] shadow-xs mt-0.5 font-bold text-[10px] sm:text-xs ring-1 ring-emerald-500/20"
+                    className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-[#111c16] text-[#5de08a] shadow-xs mt-0.5 font-bold text-[10.5px] sm:text-xs ring-1 ring-emerald-500/20"
                     title={msg.userEmail || user?.email || msg.userName || "You"}
                   >
                     {msg.userPhoto ? (
@@ -758,15 +915,15 @@ export default function Chatbox() {
               </div>
             ))}
 
-            {/* Loading indicator */}
+            {/* Loading Indicator */}
             {isLoading && (
-              <div className="flex gap-2.5 sm:gap-4 animate-fade-up">
-                <div className="flex size-7 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-[#1a2920] text-[#5de08a]">
-                  <Bot className="size-3.5 sm:size-4.5" />
+              <div className="flex gap-3 sm:gap-4 animate-fade-up">
+                <div className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-[#111c16] text-[#5de08a] ring-1 ring-emerald-500/20">
+                  <Bot className="size-4 sm:size-4.5 animate-pulse" />
                 </div>
-                <div className="flex items-center gap-2.5 rounded-2xl rounded-tl-md border border-[--border] bg-white px-4 py-2.5 sm:px-5 sm:py-3.5 text-xs sm:text-[13px] text-[#667872] shadow-2xs">
-                  <span className="size-3.5 sm:size-4 animate-spin rounded-full border-2 border-[#4abe7a] border-t-transparent shrink-0" />
-                  <span>Reasoning over schema &amp; context…</span>
+                <div className="flex items-center gap-2.5 rounded-2xl rounded-tl-md border border-[#dce7e0] bg-white px-4 py-3 sm:px-5 sm:py-3.5 text-xs sm:text-[13px] text-[#55695e] shadow-2xs">
+                  <span className="size-3.5 sm:size-4 animate-spin rounded-full border-2 border-[#34c06a] border-t-transparent shrink-0" />
+                  <span className="font-medium">Reasoning over schema, metrics &amp; multi-turn context…</span>
                 </div>
               </div>
             )}
@@ -774,36 +931,45 @@ export default function Chatbox() {
           </div>
         </div>
 
-        {/* ─────── Input Dock ─────── */}
-        <div className="shrink-0 chat-input-dock px-3 sm:px-6 md:px-8 pb-3 sm:pb-5">
-          <div className="mx-auto max-w-3xl">
-            <div className="chat-input-surface">
+        {/* ─────── Floating Input Dock ─────── */}
+        <div className="shrink-0 px-3 sm:px-6 md:px-8 pb-3.5 sm:pb-5">
+          <div className="mx-auto max-w-3.5xl">
+            <div className="relative rounded-2xl border border-[#d4e2d8] bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.06)] focus-within:border-[#34c06a] focus-within:ring-2 focus-within:ring-[#34c06a]/20 transition-all duration-200">
               <textarea
                 ref={textareaRef}
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend() } }}
+                onKeyDown={e => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSend()
+                  }
+                }}
                 rows={1}
-                placeholder="Ask a data question or follow up on clarification…"
-                className="w-full resize-none bg-transparent px-3 sm:px-5 pt-3 sm:pt-4 pb-1 sm:pb-2 text-[14px] sm:text-[14.5px] text-[#141a17] outline-none placeholder:text-[#a3b5a9] max-h-40 sm:max-h-52 leading-relaxed"
+                placeholder="Ask a data question (e.g., 'give me the list of counterparties' or 'show monthly revenue trend')…"
+                className="w-full resize-none bg-transparent px-4 sm:px-5 pt-3.5 sm:pt-4 pb-2 text-[14px] sm:text-[14.5px] text-[#111c16] outline-none placeholder:text-[#97aba0] max-h-40 sm:max-h-52 leading-relaxed"
               />
-              <div className="flex items-center justify-between px-3 sm:px-4 pb-2.5 pt-1">
-                <div className="flex items-center gap-2 text-[10.5px] sm:text-[11.5px] text-[#a3b5a9]">
+
+              <div className="flex items-center justify-between px-3 sm:px-4 pb-2.5 pt-1 border-t border-[#f0f4f1]">
+                <div className="flex items-center gap-2 text-[10.5px] sm:text-[11.5px] text-[#788e81]">
                   <span className="hidden sm:inline">Enter to send</span>
                   <span className="hidden sm:inline">·</span>
-                  <span className="flex items-center gap-1">
-                    <ShieldCheck className="size-3 text-emerald-500" />
-                    Zero-hallucination
+                  <span className="hidden md:inline">Shift+Enter for newline</span>
+                  <span className="hidden md:inline">·</span>
+                  <span className="flex items-center gap-1 text-emerald-700 font-medium">
+                    <ShieldCheck className="size-3.5 text-emerald-600" />
+                    Schema-Grounded &amp; Typo-Tolerant
                   </span>
                 </div>
+
                 <Button
                   type="button"
                   disabled={!inputText.trim() || isLoading}
                   onClick={() => handleSend()}
-                  className="size-8 sm:size-9 rounded-xl bg-[#1a2920] hover:bg-[#243c2e] shadow-2xs disabled:opacity-30 transition-all shrink-0"
+                  className="size-8 sm:size-9 rounded-xl bg-[#111c16] hover:bg-[#1e3328] shadow-sm disabled:opacity-30 transition-all shrink-0 cursor-pointer"
                   size="icon"
                 >
-                  <ArrowUp className="size-3.5 sm:size-4 text-[#5de08a]" />
+                  <ArrowUp className="size-4 text-[#5de08a]" />
                 </Button>
               </div>
             </div>
@@ -820,18 +986,21 @@ export default function Chatbox() {
             onClick={() => setIsHelperOpen(false)}
           />
 
-          <aside className="fixed inset-y-0 right-0 z-50 w-80 max-w-[85vw] border-l border-[--border] bg-white flex flex-col h-full shadow-2xl lg:shadow-none lg:static lg:w-76 lg:z-auto lg:shrink-0 animate-fade-in">
-            <div className="px-4 py-3 sm:py-3.5 border-b border-[--border] bg-[#f8faf8] space-y-2.5">
+          <aside className="fixed inset-y-0 right-0 z-50 w-84 max-w-[88vw] border-l border-[#dce7e0] bg-white flex flex-col h-full shadow-2xl lg:shadow-none lg:static lg:w-80 lg:z-auto lg:shrink-0 animate-fade-in">
+            <div className="px-4 py-3.5 border-b border-[#dce7e0] bg-[#f9faf9] space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="flex size-7 items-center justify-center rounded-lg bg-[#1a2920] text-[#5de08a] shrink-0">
-                    <Database className="size-3.5" />
+                  <div className="flex size-7.5 items-center justify-center rounded-lg bg-[#111c16] text-[#5de08a] shrink-0">
+                    <Database className="size-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[12px] sm:text-[12.5px] font-bold text-[#141a17] leading-none">Schema Explorer</p>
-                    <p className="text-[10px] sm:text-[10.5px] text-[#8a9e93] mt-0.5 truncate">{dbInfo ? `${dbInfo.host}` : "Demo schema"}</p>
+                    <p className="text-[12.5px] font-bold text-[#111c16] leading-none">Schema Explorer</p>
+                    <p className="text-[10.5px] text-[#718578] mt-0.5 truncate">
+                      {dbInfo ? `${dbInfo.host}` : "Demo Schema"} · {filteredSchema.length} tables
+                    </p>
                   </div>
                 </div>
+
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
@@ -841,56 +1010,61 @@ export default function Chatbox() {
                       filteredSchema.forEach(t => { next[t.table_name] = !allCollapsed })
                       setCollapsed(next)
                     }}
-                    className="text-[10.5px] font-semibold text-[#34c06a] hover:text-[#1b6b3a] transition-colors"
+                    className="text-[11px] font-semibold text-[#1f7a47] hover:text-[#145330] transition-colors px-1 cursor-pointer"
                   >
-                    {filteredSchema.every(t => collapsed[t.table_name]) ? "Expand" : "Collapse"}
+                    {filteredSchema.every(t => collapsed[t.table_name]) ? "Expand All" : "Collapse All"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsHelperOpen(false)}
-                    className="p-1 text-[#8a9e93] hover:text-[#141a17] lg:hidden"
+                    className="p-1 text-[#718578] hover:text-[#111c16] lg:hidden cursor-pointer"
                     title="Close Schema Explorer"
                   >
                     <X className="size-4" />
                   </button>
                 </div>
               </div>
-              <input
-                type="text"
-                value={schemaSearch}
-                onChange={e => setSchemaSearch(e.target.value)}
-                placeholder="Filter tables or columns…"
-                className="w-full rounded-lg border border-[--border] bg-white px-3 py-1.5 text-[12px] text-[#141a17] outline-none placeholder:text-[#a3b5a9] focus:border-[#4abe7a] transition-colors"
-              />
+
+              <div className="relative">
+                <Search className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#8ea396]" />
+                <input
+                  type="text"
+                  value={schemaSearch}
+                  onChange={e => setSchemaSearch(e.target.value)}
+                  placeholder="Filter tables or columns…"
+                  className="w-full rounded-lg border border-[#d4e2d8] bg-white pl-8 pr-3 py-1.5 text-[12px] text-[#111c16] outline-none placeholder:text-[#97aba0] focus:border-[#34c06a] transition-colors"
+                />
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {filteredSchema.length === 0 && (
-                <p className="text-center py-8 text-[12px] text-[#a3b5a9]">No matching tables</p>
+                <p className="text-center py-8 text-[12px] text-[#8ea396]">No matching tables in schema</p>
               )}
               {filteredSchema.map(t => {
                 const name = t.table_name || t.table
                 const isCollapsed = !!collapsed[name]
                 return (
-                  <div key={name} className="group/row rounded-xl border border-[--border] bg-white overflow-hidden shadow-2xs transition-all duration-150 hover:border-[#a8d4b3]">
-                    <div className="flex items-center justify-between px-3 py-2 bg-[#f8faf8] border-b border-[--border]">
+                  <div key={name} className="group/row rounded-xl border border-[#dce7e0] bg-white overflow-hidden shadow-2xs transition-all duration-150 hover:border-[#a8d4b3]">
+                    <div className="flex items-center justify-between px-3 py-2.5 bg-[#f9faf9] border-b border-[#e4ece6]">
                       <button
                         type="button"
                         onClick={() => toggleCollapse(name)}
-                        className="flex items-center gap-1.5 min-w-0 flex-1 text-left"
+                        className="flex items-center gap-1.5 min-w-0 flex-1 text-left cursor-pointer"
                       >
                         <Columns className="size-3.5 text-[#34c06a] shrink-0" />
-                        <span className="font-mono text-[12px] font-bold text-[#141a17] truncate">{name}</span>
-                        <span className="rounded bg-[#edf5ef] px-1.5 py-0.2 text-[8.5px] font-bold text-[#1b6b3a] shrink-0">
+                        <span className="font-mono text-[12px] font-bold text-[#111c16] truncate">{name}</span>
+                        <span className="rounded bg-[#edf5ef] border border-[#cde2d4] px-1.5 py-0.2 text-[9px] font-bold text-[#1b5c38] shrink-0">
                           {(t.columns || []).length}
                         </span>
                       </button>
+
                       <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setProfileTable(name); }}
                           title="View sample preview & distributions"
-                          className="flex items-center gap-1 rounded bg-white border border-[#c6e5d1] px-1.5 py-0.5 text-[9px] font-bold text-[#1b6b3a] hover:bg-[#eef7f1] transition-colors"
+                          className="flex items-center gap-1 rounded-md bg-white border border-[#c6e5d1] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1b6b3a] hover:bg-[#eef7f1] transition-colors cursor-pointer"
                         >
                           <Eye className="size-2.5" />
                           <span>Sample</span>
@@ -898,28 +1072,31 @@ export default function Chatbox() {
                         <button
                           type="button"
                           onClick={() => toggleCollapse(name)}
-                          className="p-0.5 text-[#a3b5a9] hover:text-[#141a17]"
+                          className="p-0.5 text-[#8ea396] hover:text-[#111c16] cursor-pointer"
                         >
-                          {isCollapsed ? <ChevronDown className="size-3" /> : <ChevronUp className="size-3" />}
+                          {isCollapsed ? <ChevronDown className="size-3.5" /> : <ChevronUp className="size-3.5" />}
                         </button>
                       </div>
                     </div>
+
                     {!isCollapsed && (
-                      <div className="border-t border-[--border] divide-y divide-[#f0f3f1]">
+                      <div className="divide-y divide-[#f2f6f3]">
                         {t.description && (
-                          <p className="px-3 py-1.5 text-[10.5px] text-[#8a9e93] bg-[#fcfcfc] italic">{t.description}</p>
+                          <p className="px-3 py-1.5 text-[10.5px] text-[#6d8276] bg-[#fcfdfc] italic">{t.description}</p>
                         )}
                         {(t.columns || []).map((col, ci) => {
                           const colName = typeof col === "string" ? col : col.name
                           const colType = typeof col === "string" ? "TEXT" : col.type
                           return (
                             <div key={ci} className="flex items-center justify-between px-3 py-1.5 hover:bg-[#f8faf8] transition-colors">
-                              <span className="flex items-center gap-1.5 font-mono text-[11px] font-medium text-[#2a4035] truncate max-w-[140px]">
-                                {col?.is_primary_key && <Key className="size-2.5 text-amber-500 shrink-0" />}
-                                {col?.is_foreign_key && <span className="text-[9px] shrink-0">↗</span>}
+                              <span className="flex items-center gap-1.5 font-mono text-[11px] font-medium text-[#22362b] truncate max-w-[150px]">
+                                {col?.is_primary_key && <Key className="size-2.5 text-amber-500 shrink-0" title="Primary Key" />}
+                                {col?.is_foreign_key && <span className="text-[9px] text-blue-600 font-bold shrink-0" title="Foreign Key">FK</span>}
                                 <span className="truncate">{colName}</span>
                               </span>
-                              <span className="text-[10px] font-mono text-[#8a9e93] shrink-0">{colType}</span>
+                              <span className="text-[9.5px] font-mono text-[#788e81] bg-[#f0f4f1] px-1.5 py-0.2 rounded shrink-0">
+                                {colType}
+                              </span>
                             </div>
                           )
                         })}
@@ -935,100 +1112,94 @@ export default function Chatbox() {
 
       {/* ─── EXPLAIN Modal ─── */}
       {explainData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md rounded-2xl border border-[--border] bg-white shadow-2xl animate-scale-in">
-            <div className="flex items-center justify-between p-5 border-b border-[--border]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md rounded-2xl border border-[#dce7e0] bg-white shadow-2xl animate-scale-in overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-[#e4ece6] bg-[#f9faf9]">
               <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-[#1a2920] text-[#5de08a]">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-[#111c16] text-[#5de08a]">
                   <Activity className="size-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-[14px] font-bold text-[#141a17]">EXPLAIN Plan</h3>
-                  <p className="text-[11.5px] text-[#8a9e93]">PostgreSQL cost estimation</p>
+                  <h3 className="text-[14.5px] font-bold text-[#111c16]">EXPLAIN Cost Guard</h3>
+                  <p className="text-[11.5px] text-[#6d8276]">PostgreSQL Execution Planner</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setExplainData(null)} className="size-8 text-[#8a9e93]">
+              <Button variant="ghost" size="icon" onClick={() => setExplainData(null)} className="size-8 text-[#718578] cursor-pointer">
                 <X className="size-4" />
               </Button>
             </div>
 
             <div className="p-5 space-y-4">
-              <div className={`flex items-center justify-between rounded-xl border px-4 py-3 ${perfClass}`}>
-                <span className="text-[13px] font-bold">{perfLabel}</span>
-                <span className="text-[11px] font-semibold capitalize">{explainData.performance_rating}</span>
+              <div className={`p-3.5 rounded-xl border flex items-center justify-between ${perfClass}`}>
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wide">Category</p>
+                  <p className="text-[13px] font-bold mt-0.5">{perfLabel}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] font-bold uppercase tracking-wide">Est. Cost</p>
+                  <p className="text-[14px] font-mono font-extrabold mt-0.5">{explainData?.cost_guard?.total_estimated_cost ?? "N/A"}</p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2.5">
-                {[
-                  ["Total Cost", explainData.total_cost, ""],
-                  ["Est. Rows", explainData.plan_rows, ""],
-                  ["Seq Scan", explainData.has_seq_scan ? "Detected" : "None", explainData.has_seq_scan ? "text-amber-600" : "text-emerald-600"],
-                ].map(([label, val, cls]) => (
-                  <div key={label} className="rounded-xl border border-[--border] bg-[#f8faf8] p-3 text-center">
-                    <p className="text-[10px] font-semibold uppercase text-[#8a9e93] mb-1">{label}</p>
-                    <p className={`font-mono text-[13px] font-bold text-[#141a17] ${cls}`}>{val}</p>
+              {explainData?.cost_guard?.sequential_scans?.length > 0 && (
+                <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                    <AlertTriangle className="size-3.5 text-amber-600" />
+                    <span>Sequential Scan Warning</span>
                   </div>
-                ))}
-              </div>
-
-              {explainData.scan_details?.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-bold uppercase text-[#8a9e93] tracking-wide">Scan Operations</p>
-                  <div className="max-h-32 overflow-y-auto space-y-1">
-                    {explainData.scan_details.map((s, i) => (
-                      <div key={i} className="rounded-lg bg-[#f0f5f1] border border-[--border] px-3 py-1.5 font-mono text-[11.5px] text-[#2a4035]">{s}</div>
-                    ))}
-                  </div>
+                  <p className="leading-relaxed">
+                    Tables scanned sequentially: <span className="font-mono font-bold">{explainData.cost_guard.sequential_scans.join(", ")}</span>.
+                  </p>
                 </div>
               )}
 
-              {explainData.index_recommendations?.length > 0 && (
-                <div className="space-y-1.5 pt-3 border-t border-[--border]">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-bold uppercase text-emerald-700 tracking-wide flex items-center gap-1.5">
-                      <Sparkles className="size-3.5" /> Recommended Indexes
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(explainData.index_recommendations.join("\n"))
-                        setCopiedIndexRec(true)
-                        setTimeout(() => setCopiedIndexRec(false), 1500)
-                      }}
-                      className="text-[10.5px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-2 py-0.5"
-                    >
-                      {copiedIndexRec ? "✓ Copied" : "Copy DDL"}
-                    </button>
-                  </div>
-                  {explainData.index_recommendations.map((r, i) => (
-                    <pre key={i} className="overflow-x-auto rounded-lg bg-[#0d1613] p-3 font-mono text-[11px] text-[#a7f3d0]"><code>{r}</code></pre>
+              {explainData?.index_recommendations?.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#718578]">Index Advisor Recommendation</p>
+                  {explainData.index_recommendations.map((rec, i) => (
+                    <div key={i} className="p-2.5 rounded-xl bg-[#0c1410] border border-[#1b2b22] font-mono text-[11px] text-[#c6ebd4] flex items-center justify-between gap-2">
+                      <code className="truncate">{rec.ddl}</code>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(rec.ddl)
+                          setCopiedIndexRec(true)
+                          setTimeout(() => setCopiedIndexRec(false), 1500)
+                        }}
+                        className="text-[10px] text-[#5de08a] font-bold shrink-0 hover:underline cursor-pointer"
+                      >
+                        {copiedIndexRec ? "Copied" : "Copy"}
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
+            </div>
 
-              <Button variant="default" size="sm" onClick={() => setExplainData(null)} className="w-full h-9 font-semibold">
-                Done
+            <div className="p-4 border-t border-[#e4ece6] bg-[#f9faf9] flex justify-end">
+              <Button size="sm" onClick={() => setExplainData(null)} className="h-8 px-4 text-xs font-bold bg-[#111c16] hover:bg-[#1e3328] text-white cursor-pointer">
+                Dismiss
               </Button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Semantic Metrics Modal */}
       <MetricGlossaryModal isOpen={isMetricModalOpen} onClose={() => setIsMetricModalOpen(false)} />
 
-      <TableDataProfilerModal
-        isOpen={!!profileTable}
-        onClose={() => setProfileTable(null)}
-        tableName={profileTable}
-        connectionUri={connectionUri}
-      />
+      {/* Query Notebook Modal */}
+      <QueryNotebookModal isOpen={isNotebookModalOpen} onClose={() => setIsNotebookModalOpen(false)} />
 
-      <QueryNotebookModal
-        isOpen={isNotebookModalOpen}
-        onClose={() => setIsNotebookModalOpen(false)}
-        onSelectQuery={(sql, prompt) => setInputText(prompt || sql)}
-        activeDbName={dbInfo?.host || "postgres"}
-      />
+      {/* Table Data Profiler Modal */}
+      {profileTable && (
+        <TableDataProfilerModal
+          isOpen={!!profileTable}
+          onClose={() => setProfileTable(null)}
+          tableName={profileTable}
+          columns={schemaTables.find(t => (t.table_name || t.table) === profileTable)?.columns || []}
+        />
+      )}
     </main>
   )
 }
