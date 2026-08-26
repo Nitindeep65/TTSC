@@ -352,10 +352,11 @@ def validate_and_enforce_sql_safety(sql_query: str) -> str:
 
 
 def calculate_string_similarity(s1: str, s2: str) -> float:
-    """Computes normalized Levenshtein similarity (0.0 to 1.0) between two strings."""
+    """Computes normalized Levenshtein similarity (0.0 to 1.0) between two strings with whitespace/delimiter collapsing."""
     if not s1 or not s2:
         return 0.0
-    a, b = s1.lower().strip(), s2.lower().strip()
+    a = re.sub(r"[\s_-]+", "", s1.lower())
+    b = re.sub(r"[\s_-]+", "", s2.lower())
     if a == b:
         return 1.0
 
@@ -383,8 +384,8 @@ def calculate_string_similarity(s1: str, s2: str) -> float:
     return 1.0 - (distance / max_len)
 
 
-def find_closest_schema_table(candidate_word: str, schema_tables: List[str] = None, threshold: float = 0.65) -> Optional[str]:
-    """Finds the closest matching schema table for a potentially misspelled word."""
+def find_closest_schema_table(candidate_word: str, schema_tables: List[str] = None, threshold: float = 0.60) -> Optional[str]:
+    """Finds the closest matching schema table for a potentially misspelled word or multi-word phrase."""
     if not candidate_word or not schema_tables:
         return None
     word = candidate_word.lower().strip()
@@ -395,12 +396,9 @@ def find_closest_schema_table(candidate_word: str, schema_tables: List[str] = No
 
     for tbl in schema_tables:
         table_clean = tbl.lower().strip()
-        if word == table_clean or word == f"{table_clean}s" or f"{word}s" == table_clean:
-            return tbl
-
-        similarity = calculate_string_similarity(word, table_clean)
-        if similarity > highest_score:
-            highest_score = similarity
+        sim = calculate_string_similarity(word, table_clean)
+        if sim > highest_score:
+            highest_score = sim
             best_match = tbl
 
     if highest_score >= threshold:
@@ -413,21 +411,40 @@ def extract_table_name_from_prompt(prompt: str, schema_tables: List[str] = None)
         return None
     p = prompt.strip().lower()
     schema_tables = schema_tables or []
+    normalized_prompt = re.sub(r"[\s_-]+", "", p)
 
-    # 1. Direct exact schema table lookup
+    # 1. Direct exact or normalized containment in schema tables
     for tbl in schema_tables:
-        regex = rf"\b{tbl}(?:s|es)?\b"
-        if re.search(regex, p, re.IGNORECASE):
+        norm_tbl = re.sub(r"[\s_-]+", "", tbl.lower())
+        if norm_tbl in normalized_prompt or norm_tbl.rstrip("s") in normalized_prompt:
             return tbl
 
-    # 2. Scan individual words in prompt for typo-fuzzy matches against schema tables
-    words_in_prompt = [w for w in re.split(r"[^a-zA-Z0-9_]+", p) if len(w) >= 3]
-    for word in words_in_prompt:
-        fuzzy_match = find_closest_schema_table(word, schema_tables, threshold=0.68)
-        if fuzzy_match:
-            return fuzzy_match
+    # 2. Tokenize prompt into words and check multi-word sliding window n-grams (up to 3 words)
+    words = [w for w in re.split(r"[^a-zA-Z0-9_]+", p) if w]
+    stop_words = {
+        "give", "show", "get", "bring", "fetch", "display", "provide", "select", "find",
+        "list", "view", "render", "count", "how", "many", "all", "the", "in", "of", "to",
+        "for", "me", "from", "table", "data", "records", "rows", "database", "please",
+        "can", "you", "could", "i", "just", "need", "want", "no", "yes", "time", "filter"
+    }
 
-    # 3. Phrasal extraction
+    best_match = None
+    highest_score = 0.0
+
+    for n in range(3, 0, -1):
+        for i in range(len(words) - n + 1):
+            phrase_words = words[i:i + n]
+            if all(w in stop_words for w in phrase_words):
+                continue
+            phrase = " ".join(phrase_words)
+
+            for tbl in schema_tables:
+                sim = calculate_string_similarity(phrase, tbl)
+                if sim > highest_score:
+                    highest_score = sim
+                    best_match = tbl
+
+    # 3. Phrasal extraction with common conversational prefixes stripped
     cleaned = re.sub(
         r"^(?:please\s+)?(?:can\s+you\s+)?(?:could\s+you\s+)?(?:i\s+just\s+(?:simple\s+)?(?:need|want)\s+)?(?:give|show|get|bring|fetch|display|provide|select|find|list|view|render|count|how\s+many)\s+(?:me\s+)?(?:all\s+)?(?:the\s+)?(?:list\s+of\s+(?:all\s+)?(?:the\s+)?)?",
         "", p, flags=re.IGNORECASE
@@ -438,16 +455,24 @@ def extract_table_name_from_prompt(prompt: str, schema_tables: List[str] = None)
     cleaned = re.sub(r"^(?:the\s+)?", "", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\s+(?:table|data|records|rows|collection|info|items)$", "", cleaned, flags=re.IGNORECASE).strip()
 
+    if cleaned:
+        for tbl in schema_tables:
+            sim = calculate_string_similarity(cleaned, tbl)
+            if sim > highest_score:
+                highest_score = sim
+                best_match = tbl
+
+    # If match meets threshold against grounded schema, return it
+    if highest_score >= 0.55 and best_match:
+        return best_match
+
+    # If connected schema tables are provided, NEVER return an ungrounded hallucinated table
+    if schema_tables:
+        return None
+
+    # Fallback if no schema is provided at all
     first_word = cleaned.split()[0] if cleaned.split() else ""
-    stop_words = {
-        "table", "data", "records", "rows", "database", "all", "the", "in", "of", "no", "yes",
-        "time", "filter", "simple", "total", "last", "first", "recent", "top", "past", "next",
-        "day", "days", "month", "months", "year", "years", "date", "status", "range", "completed", "active", "count"
-    }
-    if first_word and re.match(r"^[a-zA-Z0-9_]+$", first_word) and first_word not in stop_words:
-        fuzzy = find_closest_schema_table(first_word, schema_tables, threshold=0.65)
-        return fuzzy or first_word
-    return None
+    return first_word or None
 
 
 def compile_fallback_query(

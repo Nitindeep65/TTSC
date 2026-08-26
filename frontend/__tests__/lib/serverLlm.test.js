@@ -168,6 +168,22 @@ CREATE TABLE counterparties (id INT, name VARCHAR(100), created_at TIMESTAMPTZ);
       })
       expect(res3.status).toBe("complete")
       expect(res3.extracted_data.sql_query).toBe("SELECT * FROM users LIMIT 50;")
+
+      const res4 = compileFallbackQuery({
+        user_prompt: "give the list of the ocunter parties",
+        session_history: [],
+        live_schema: schema,
+      })
+      expect(res4.status).toBe("complete")
+      expect(res4.extracted_data.sql_query).toBe("SELECT * FROM counterparties LIMIT 50;")
+
+      const res5 = compileFallbackQuery({
+        user_prompt: "give the list of the counter parties",
+        session_history: [],
+        live_schema: schema,
+      })
+      expect(res5.status).toBe("complete")
+      expect(res5.extracted_data.sql_query).toBe("SELECT * FROM counterparties LIMIT 50;")
     })
   })
 })

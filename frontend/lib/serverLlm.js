@@ -343,12 +343,12 @@ export async function executeLlmClarification({
   }
 }
 /**
- * Computes normalized Levenshtein similarity (0.0 to 1.0) between two strings.
+ * Computes normalized Levenshtein similarity (0.0 to 1.0) between two strings with whitespace/delimiter collapsing.
  */
 export function calculateStringSimilarity(s1, s2) {
   if (!s1 || !s2) return 0
-  const a = s1.toLowerCase().trim()
-  const b = s2.toLowerCase().trim()
+  const a = s1.toLowerCase().replace(/[\s_-]+/g, "")
+  const b = s2.toLowerCase().replace(/[\s_-]+/g, "")
   if (a === b) return 1.0
 
   const lenA = a.length
@@ -377,9 +377,9 @@ export function calculateStringSimilarity(s1, s2) {
 }
 
 /**
- * Finds the closest matching schema table for a potentially misspelled word.
+ * Finds the closest matching schema table for a potentially misspelled word or multi-word phrase.
  */
-export function findClosestSchemaTable(candidateWord, schemaTables = [], threshold = 0.65) {
+export function findClosestSchemaTable(candidateWord, schemaTables = [], threshold = 0.60) {
   if (!candidateWord || !schemaTables || schemaTables.length === 0) return null
   const word = candidateWord.toLowerCase().trim()
 
@@ -388,13 +388,9 @@ export function findClosestSchemaTable(candidateWord, schemaTables = [], thresho
 
   for (const tbl of schemaTables) {
     const tableClean = tbl.toLowerCase().trim()
-    if (word === tableClean || word === `${tableClean}s` || `${word}s` === tableClean) {
-      return tbl
-    }
-
-    const similarity = calculateStringSimilarity(word, tableClean)
-    if (similarity > highestScore) {
-      highestScore = similarity
+    const sim = calculateStringSimilarity(word, tableClean)
+    if (sim > highestScore) {
+      highestScore = sim
       bestMatch = tbl
     }
   }
@@ -408,19 +404,41 @@ export function findClosestSchemaTable(candidateWord, schemaTables = [], thresho
 export function extractTableNameFromPrompt(prompt, schemaTables = []) {
   if (!prompt) return null
   const p = prompt.trim().toLowerCase()
+  const normalizedPrompt = p.replace(/[\s_-]+/g, "")
 
-  // 1. Direct exact schema table lookup
+  // 1. Direct exact or normalized containment in schema tables
   for (const tbl of schemaTables) {
-    const regex = new RegExp(`\\b${tbl}(?:s|es)?\\b`, "i")
-    if (regex.test(p)) return tbl
+    const normTbl = tbl.toLowerCase().replace(/[\s_-]+/g, "")
+    if (normalizedPrompt.includes(normTbl) || normalizedPrompt.includes(normTbl.replace(/s$/, ""))) {
+      return tbl
+    }
   }
 
-  // 2. Scan individual words in the prompt for typo-fuzzy matches against schema tables
-  const wordsInPrompt = p.split(/[^a-zA-Z0-9_]+/).filter(w => w.length >= 3)
-  for (const word of wordsInPrompt) {
-    const fuzzyMatch = findClosestSchemaTable(word, schemaTables, 0.68)
-    if (fuzzyMatch) {
-      return fuzzyMatch
+  // 2. Tokenize prompt into words and check multi-word sliding window n-grams (up to 3 words)
+  const words = p.split(/[^a-zA-Z0-9_]+/).filter(Boolean)
+  const stopWords = new Set([
+    "give", "show", "get", "bring", "fetch", "display", "provide", "select", "find",
+    "list", "view", "render", "count", "how", "many", "all", "the", "in", "of", "to",
+    "for", "me", "from", "table", "data", "records", "rows", "database", "please",
+    "can", "you", "could", "i", "just", "need", "want", "no", "yes", "time", "filter"
+  ])
+
+  let bestMatch = null
+  let highestScore = 0
+
+  for (let n = 3; n >= 1; n--) {
+    for (let i = 0; i <= words.length - n; i++) {
+      const phraseWords = words.slice(i, i + n)
+      if (phraseWords.every(w => stopWords.has(w))) continue
+      const phrase = phraseWords.join(" ")
+
+      for (const tbl of schemaTables) {
+        const sim = calculateStringSimilarity(phrase, tbl)
+        if (sim > highestScore) {
+          highestScore = sim
+          bestMatch = tbl
+        }
+      }
     }
   }
 
@@ -434,18 +452,29 @@ export function extractTableNameFromPrompt(prompt, schemaTables = []) {
     .replace(/\s+(?:table|data|records|rows|collection|info|items)$/i, "")
     .trim()
 
-  const firstWord = cleaned.split(/\s+/)[0]
-  const stopWords = [
-    "table", "data", "records", "rows", "database", "all", "the", "in", "of", "no", "yes",
-    "time", "filter", "simple", "total", "last", "first", "recent", "top", "past", "next",
-    "day", "days", "month", "months", "year", "years", "date", "status", "range", "completed", "active", "count"
-  ]
-  if (firstWord && /^[a-zA-Z0-9_]+$/.test(firstWord) && !stopWords.includes(firstWord)) {
-    // Check if the extracted word is a typo of a known schema table
-    const fuzzy = findClosestSchemaTable(firstWord, schemaTables, 0.65)
-    return fuzzy || firstWord
+  if (cleaned) {
+    for (const tbl of schemaTables) {
+      const sim = calculateStringSimilarity(cleaned, tbl)
+      if (sim > highestScore) {
+        highestScore = sim
+        bestMatch = tbl
+      }
+    }
   }
-  return null
+
+  // If match meets threshold against grounded schema, return it
+  if (highestScore >= 0.55 && bestMatch) {
+    return bestMatch
+  }
+
+  // If connected schema tables are provided, NEVER return an ungrounded hallucinated table
+  if (schemaTables.length > 0) {
+    return null
+  }
+
+  // Fallback if no schema is provided at all
+  const firstWord = cleaned.split(/\s+/)[0]
+  return firstWord || null
 }
 
 export function compileFallbackQuery({ user_prompt, session_history = [], live_schema = null }) {

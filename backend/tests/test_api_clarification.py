@@ -172,3 +172,15 @@ class TestFuzzySchemaMatching:
         assert res.status == "complete"
         assert res.extracted_data.sql_query == "SELECT * FROM counterparties LIMIT 50;"
 
+        # Multi-word space separated typos (e.g. "ocunter parties")
+        assert extract_table_name_from_prompt("give the list of the ocunter parties", tables) == "counterparties"
+        assert extract_table_name_from_prompt("give the list of the counter parties", tables) == "counterparties"
+
+        res_multi = compile_fallback_query(
+            user_prompt="give the list of the ocunter parties",
+            live_schema="CREATE TABLE counterparties (id INT, name TEXT);"
+        )
+        assert res_multi.status == "complete"
+        assert res_multi.extracted_data.sql_query == "SELECT * FROM counterparties LIMIT 50;"
+
+
