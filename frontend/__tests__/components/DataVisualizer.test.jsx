@@ -110,4 +110,38 @@ describe('DataVisualizer Component', () => {
       expect.stringContaining('date,revenue')
     )
   })
+
+  test('renders executive KPI summary tiles in chart mode', () => {
+    render(
+      <DataVisualizer
+        columns={sampleColumns}
+        rows={sampleRows}
+        visualIntent={{ should_visualize: true, recommended_chart: 'bar' }}
+      />
+    )
+
+    expect(screen.getByText(/Total Sum/i)).toBeInTheDocument()
+    expect(screen.getByText(/Average Value/i)).toBeInTheDocument()
+    expect(screen.getByText(/Peak Record/i)).toBeInTheDocument()
+    expect(screen.getByText(/Dimensions/i)).toBeInTheDocument()
+    // Total sum = 100 + 250 + 400 = 750
+    expect(screen.getByText('750')).toBeInTheDocument()
+  })
+
+  test('renders circular SVG donut chart when pie/donut chart type is selected', () => {
+    render(
+      <DataVisualizer
+        columns={sampleColumns}
+        rows={sampleRows}
+        visualIntent={{ should_visualize: true, recommended_chart: 'pie' }}
+      />
+    )
+
+    // Should render Donut center Total label
+    expect(screen.getByText('Total')).toBeInTheDocument()
+    // Should render legend items with percentage badges
+    expect(screen.getByText('2024-01-03')).toBeInTheDocument()
+    expect(screen.getByText('53%')).toBeInTheDocument()
+  })
 })
+
