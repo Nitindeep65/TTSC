@@ -12,7 +12,15 @@ describe('DataVisualizer Component', () => {
 
   test('renders empty message when rows array is empty', () => {
     render(<DataVisualizer columns={[]} rows={[]} />)
-    expect(screen.getByText(/No rows returned/i)).toBeInTheDocument()
+    expect(screen.getByText(/0 rows \(Empty Table\)/i)).toBeInTheDocument()
+  })
+
+  test('renders column headers even when table contains 0 rows', () => {
+    render(<DataVisualizer columns={['id', 'title', 'created_at']} rows={[]} />)
+    expect(screen.getByText(/0 rows \(Empty Table\)/i)).toBeInTheDocument()
+    expect(screen.getByText('id')).toBeInTheDocument()
+    expect(screen.getByText('title')).toBeInTheDocument()
+    expect(screen.getByText('created_at')).toBeInTheDocument()
   })
 
   test('renders tabular data by default when visual intent does not specify chart', () => {

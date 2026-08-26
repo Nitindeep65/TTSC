@@ -47,9 +47,58 @@ export default function DataVisualizer({
     setTimeout(() => setCopiedCsv(false), 1800)
   }
 
-  if (!rows?.length) return (
-    <div className="py-8 text-center text-[13px] text-[#a3b5a9] italic">No rows returned.</div>
-  )
+  if (!rows?.length) {
+    return (
+      <div className="rounded-xl border border-[#e0e8e2] bg-white overflow-hidden">
+        <div className="flex items-center justify-between border-b border-[#e0e8e2] bg-[#f8faf8] px-4 py-2.5">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[11px] font-bold text-amber-700">
+              0 rows (Empty Table)
+            </span>
+            {columns?.length > 0 && (
+              <span className="text-[11px] text-[#667872]">
+                {columns.length} {columns.length === 1 ? "column" : "columns"} detected
+              </span>
+            )}
+          </div>
+        </div>
+
+        {columns?.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-[#f0f5f1] border-b border-[#e0e8e2]">
+                  {columns.map((c) => (
+                    <th key={c} className="px-3.5 py-2.5 font-bold text-[#1a2920] uppercase tracking-wider font-mono text-[10.5px]">
+                      {c}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colSpan={columns.length} className="px-4 py-8 text-center">
+                    <div className="flex flex-col items-center justify-center gap-1 text-center">
+                      <p className="text-[12.5px] font-semibold text-[#1a2920]">
+                        Query executed successfully (0 rows returned)
+                      </p>
+                      <p className="text-[11.5px] text-[#667872] max-w-md">
+                        This table exists in your connected database schema with the columns shown above, but currently has no inserted rows.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="py-8 text-center text-[13px] text-[#667872]">
+            Query executed successfully. 0 rows returned.
+          </div>
+        )}
+      </div>
+    )
+  }
 
   const chartSlice = chartData.slice(0, 14)
 
