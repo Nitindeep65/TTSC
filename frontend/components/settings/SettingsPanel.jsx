@@ -9,6 +9,7 @@ import {
   Check,
   CheckCircle2,
   ChevronRight,
+  Clock,
   Cloud,
   Copy,
   Cpu,
@@ -40,9 +41,11 @@ import {
   ShieldCheck,
   Sliders,
   SlidersHorizontal,
+  Sparkles,
   Table2,
   Terminal,
   Trash2,
+  TrendingUp,
   User,
   Volume2,
   Wifi,
@@ -58,8 +61,10 @@ import { API_BASE_URL, settingsApi } from "@/lib/api"
 
 const TABS = [
   { id: "engine",      label: "AI Engine & Doctor",   icon: Cpu,                badge: "70B NIM" },
-  { id: "safety",      label: "Database Safety Guards", icon: ShieldCheck,      badge: "Read-Only" },
+  { id: "safety",      label: "Database Safety",       icon: ShieldCheck,        badge: "Read-Only" },
   { id: "editor",      label: "Studio & Formatting",   icon: SlidersHorizontal,  badge: null },
+  { id: "usage",       label: "Usage & Quotas",        icon: BarChart3,          badge: "Quota" },
+  { id: "plans",       label: "Plans & Billing",       icon: CreditCard,         badge: "Free" },
   { id: "shortcuts",   label: "Keybindings & Copilot", icon: Keyboard,           badge: "Cmd+K" },
   { id: "workspaces",  label: "Projects & Workspaces", icon: FolderKanban,       badge: null },
   { id: "account",     label: "Profile & Cloud Sync",  icon: User,               badge: null },
@@ -129,7 +134,6 @@ export default function SettingsPanel({ isOpen, onClose }) {
   }))
 
   const [localApiBase, setLocalApiBase] = useState(() => settings.apiBase || API_BASE_URL)
-  const [pingStatus, setPingStatus] = useState(null)
   const overlayRef = useRef(null)
 
   // Sync state with authUser
@@ -215,28 +219,12 @@ export default function SettingsPanel({ isOpen, onClose }) {
     showToast("Preferences saved & synchronized to cloud", "success")
   }
 
-  const handlePingServer = async () => {
-    setPingStatus({ loading: true })
-    try {
-      const result = await settingsApi.pingHealth(localApiBase)
-      setPingStatus({
-        loading: false,
-        ok: true,
-        latency: result.latency,
-        message: result.message || "FastAPI Backend is online & responsive",
-      })
-      showToast(`Server healthy (${result.latency}ms latency)`, "success")
-    } catch (err) {
-      setPingStatus({
-        loading: false,
-        ok: false,
-        error: err.message || "Failed to reach server",
-      })
-      showToast("Server ping failed — verify URL and backend status", "error")
-    }
-  }
-
   if (!isOpen) return null
+
+  const usage = settings.usage || { queries: 28, heals: 5, verified: 12 }
+  const queriesUsed = usage.queries || 28
+  const maxQueries = 500
+  const quotaPercent = Math.min(100, Math.round((queriesUsed / maxQueries) * 100))
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
@@ -344,6 +332,8 @@ export default function SettingsPanel({ isOpen, onClose }) {
                 {activeTab === "engine" && "Configure LLM compiler, strictness temperature, and SQL Doctor Critic healing"}
                 {activeTab === "safety" && "Enforce read-only safety, statement execution timeouts, and row limit protection"}
                 {activeTab === "editor" && "Fine-tune SQL keyword casing, export delimiters, and audio feedback"}
+                {activeTab === "usage" && "Track monthly query compilation quotas, SQL Doctor auto-heals, and execution metrics"}
+                {activeTab === "plans" && "Manage subscription plan, team seats, and developer quota limits"}
                 {activeTab === "shortcuts" && "Customize Spotlight Copilot global hotkeys and execution bindings"}
                 {activeTab === "workspaces" && "Manage multiple project workspaces, environments, and catalogs"}
                 {activeTab === "account" && "Manage profile, identity, and reset local configuration"}
@@ -484,7 +474,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                         key={lvl.id}
                         type="button"
                         onClick={() => setLocalPreferences((p) => ({ ...p, clarificationLevel: lvl.id }))}
-                        className={`p-2.5 rounded-xl border text-left transition ${
+                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
                           localPreferences.clarificationLevel === lvl.id
                             ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 font-semibold"
                             : "border-[#dfe7df] bg-[#fbfdfb] text-[#55695d] hover:bg-white"
@@ -680,7 +670,217 @@ export default function SettingsPanel({ isOpen, onClose }) {
             )}
 
             {/* ═════════════════════════════════════════════════════════ */}
-            {/* 4. KEYBINDINGS & COPILOT HOTKEYS                         */}
+            {/* 4. USAGE & QUOTAS                                         */}
+            {/* ═════════════════════════════════════════════════════════ */}
+            {activeTab === "usage" && (
+              <div className="space-y-4">
+                
+                {/* Monthly Quota Banner */}
+                <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-[#f0faf3] to-[#e8f6ed] p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-800">
+                        Monthly AI Compilation Quota
+                      </span>
+                      <h4 className="text-lg font-extrabold text-[#112419]">
+                        {queriesUsed} / {maxQueries} Queries Used
+                      </h4>
+                    </div>
+                    <Badge variant="emerald" className="text-xs font-bold px-3 py-1">
+                      {100 - quotaPercent}% Remaining
+                    </Badge>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="space-y-1.5">
+                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#d6ebdd]">
+                      <div
+                        className="h-full rounded-full bg-emerald-600 transition-all duration-500"
+                        style={{ width: `${quotaPercent}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-[11px] text-[#557864] font-mono">
+                      <span>{queriesUsed} queries compiled</span>
+                      <span>Resets in 18 days</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Key Usage Statistics Tiles */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="p-3.5 rounded-xl border border-[#dfe7df] bg-white space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#718578]">
+                      Total Queries
+                    </span>
+                    <p className="text-xl font-extrabold text-[#141a17]">{queriesUsed}</p>
+                    <span className="text-[10px] text-emerald-700 font-semibold">100% read-only</span>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl border border-[#dfe7df] bg-white space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#718578]">
+                      Auto-Heals
+                    </span>
+                    <p className="text-xl font-extrabold text-[#141a17]">{usage.heals || 5}</p>
+                    <span className="text-[10px] text-amber-700 font-semibold">Critic Doctor</span>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl border border-[#dfe7df] bg-white space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#718578]">
+                      Verified Snippets
+                    </span>
+                    <p className="text-xl font-extrabold text-[#141a17]">{usage.verified || 12}</p>
+                    <span className="text-[10px] text-blue-700 font-semibold">Few-shot RAG</span>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl border border-[#dfe7df] bg-white space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#718578]">
+                      Live Schemas
+                    </span>
+                    <p className="text-xl font-extrabold text-[#141a17]">{dbInfo?.tables_count || 5}</p>
+                    <span className="text-[10px] text-[#2f6643] font-semibold">Introspected</span>
+                  </div>
+                </div>
+
+                {/* Engine Activity Velocity */}
+                <div className="rounded-xl border border-[#dfe7df] p-4 bg-white space-y-3">
+                  <h4 className="text-xs font-bold text-[#141a17]">Dialect Usage Distribution</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between text-[11.5px] font-medium text-[#324538]">
+                      <span className="flex items-center gap-2">
+                        <span className="size-2.5 rounded-full bg-[#3ecf8e]" />
+                        <span>PostgreSQL (Supabase / Neon / RDS)</span>
+                      </span>
+                      <span className="font-mono font-bold text-emerald-800">68%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11.5px] font-medium text-[#324538]">
+                      <span className="flex items-center gap-2">
+                        <span className="size-2.5 rounded-full bg-[#00ed64]" />
+                        <span>MongoDB Atlas (NoSQL Aggregations)</span>
+                      </span>
+                      <span className="font-mono font-bold text-emerald-800">22%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11.5px] font-medium text-[#324538]">
+                      <span className="flex items-center gap-2">
+                        <span className="size-2.5 rounded-full bg-[#00758f]" />
+                        <span>MySQL / MariaDB</span>
+                      </span>
+                      <span className="font-mono font-bold text-emerald-800">10%</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* ═════════════════════════════════════════════════════════ */}
+            {/* 5. PLANS & BILLING                                        */}
+            {/* ═════════════════════════════════════════════════════════ */}
+            {activeTab === "plans" && (
+              <div className="space-y-4">
+                
+                {/* Active Plan Banner */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-[#dfe7df] bg-[#f8faf8]">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-[#141a17]">Developer Free Tier</h4>
+                      <Badge variant="emerald" className="text-[9px] uppercase font-bold">
+                        Active Plan
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-[#718578] mt-0.5">
+                      500 queries/month · Unlimited Live Schemas · Read-Only Sandboxed
+                    </p>
+                  </div>
+
+                  <span className="text-lg font-extrabold text-[#1b6b3a] font-mono">$0 / mo</span>
+                </div>
+
+                {/* Plan Tier Comparison Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  
+                  {/* Free Tier */}
+                  <div className="rounded-2xl border-2 border-emerald-500 bg-[#fbfdfb] p-4 space-y-3 shadow-2xs relative">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-sm font-bold text-[#141a17]">Developer Free</h4>
+                        <p className="text-xs text-[#718578]">For individual engineers &amp; hackers</p>
+                      </div>
+                      <span className="rounded bg-emerald-100 text-emerald-800 font-bold text-[10px] px-2 py-0.5">
+                        Current
+                      </span>
+                    </div>
+
+                    <div className="text-2xl font-black text-[#141a17]">
+                      $0 <span className="text-xs font-normal text-[#718578]">/ month</span>
+                    </div>
+
+                    <ul className="space-y-1.5 text-xs text-[#324538]">
+                      {[
+                        "500 AI SQL & NoSQL queries / month",
+                        "Llama 3.1 70B live schema grounding",
+                        "Chrome Spotlight Copilot (Cmd+Shift+K)",
+                        "Up to 3 Project Workspaces",
+                        "SQL Doctor Critic auto-healing",
+                      ].map((item, idx) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <Check className="size-3.5 text-emerald-600 font-bold shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Team Pro Tier */}
+                  <div className="rounded-2xl border border-[#2b4234] bg-[#0c1410] text-white p-4 space-y-3 shadow-md relative">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                          <Zap className="size-4 text-amber-400" />
+                          <span>Team Pro</span>
+                        </h4>
+                        <p className="text-xs text-[#87a090]">For fast-moving data teams</p>
+                      </div>
+                      <span className="rounded bg-amber-400/20 border border-amber-400/40 text-amber-300 font-bold text-[10px] px-2 py-0.5">
+                        Popular
+                      </span>
+                    </div>
+
+                    <div className="text-2xl font-black text-white">
+                      $19 <span className="text-xs font-normal text-[#87a090]">/ seat / month</span>
+                    </div>
+
+                    <ul className="space-y-1.5 text-xs text-[#d0ded5]">
+                      {[
+                        "Unlimited AI SQL & NoSQL queries",
+                        "Dedicated high-speed GPU inference",
+                        "Unlimited project workspaces & team notebooks",
+                        "V3 Scheduled Cron workflows & Slack alerts",
+                        "Priority 24/7 SLA & dedicated support",
+                      ].map((item, idx) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <Check className="size-3.5 text-emerald-400 font-bold shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Button
+                      type="button"
+                      onClick={() => showToast("Upgrade link triggered. Contacting Stripe checkout...", "success")}
+                      className="w-full mt-2 font-bold text-xs bg-emerald-500 hover:bg-emerald-400 text-black shadow-sm cursor-pointer"
+                    >
+                      <span>Upgrade to Team Pro</span>
+                      <ArrowRight className="size-3.5 ml-1" />
+                    </Button>
+                  </div>
+
+                </div>
+
+              </div>
+            )}
+
+            {/* ═════════════════════════════════════════════════════════ */}
+            {/* 6. KEYBINDINGS & COPILOT HOTKEYS                         */}
             {/* ═════════════════════════════════════════════════════════ */}
             {activeTab === "shortcuts" && (
               <div className="space-y-4">
@@ -718,7 +918,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
             )}
 
             {/* ═════════════════════════════════════════════════════════ */}
-            {/* 5. PROJECTS & WORKSPACES                                 */}
+            {/* 7. PROJECTS & WORKSPACES                                 */}
             {/* ═════════════════════════════════════════════════════════ */}
             {activeTab === "workspaces" && (
               <div className="space-y-4">
@@ -804,7 +1004,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
             )}
 
             {/* ═════════════════════════════════════════════════════════ */}
-            {/* 6. PROFILE & CLOUD SYNCHRONIZATION                       */}
+            {/* 8. PROFILE & CLOUD SYNCHRONIZATION                       */}
             {/* ═════════════════════════════════════════════════════════ */}
             {activeTab === "account" && (
               <div className="space-y-4">
