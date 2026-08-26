@@ -99,4 +99,49 @@ describe("serverLlm utilities", () => {
       expect(res.healed_sql).toContain("SELECT * FROM users")
     })
   })
+
+  describe("compileFallbackQuery & multi-turn follow-ups", () => {
+    const { compileFallbackQuery, extractTableNameFromPrompt } = require("@/lib/serverLlm")
+    const schema = `
+CREATE TABLE users (id INT, email VARCHAR(255), created_at TIMESTAMPTZ);
+CREATE TABLE contracts (id INT, title VARCHAR(100), created_at TIMESTAMPTZ);
+CREATE TABLE counterparties (id INT, name VARCHAR(100), created_at TIMESTAMPTZ);
+`
+
+    it("extracts table names from phrasal prompts", () => {
+      expect(extractTableNameFromPrompt("give me the list of the contracts")).toBe("contracts")
+      expect(extractTableNameFromPrompt("give the list of the counterparties")).toBe("counterparties")
+      expect(extractTableNameFromPrompt("bring all the users")).toBe("users")
+    })
+
+    it("compiles direct query for contracts", () => {
+      const res = compileFallbackQuery({
+        user_prompt: "give me the list of the contracts",
+        session_history: [],
+        live_schema: schema,
+      })
+      expect(res.status).toBe("complete")
+      expect(res.extracted_data.sql_query).toBe("SELECT * FROM contracts LIMIT 50;")
+    })
+
+    it("maintains table context on follow-up chips like All Time or Last 30 Days", () => {
+      const history = [{ role: "user", content: "give the list of the counterparties" }]
+
+      const resAllTime = compileFallbackQuery({
+        user_prompt: "All Time",
+        session_history: history,
+        live_schema: schema,
+      })
+      expect(resAllTime.status).toBe("complete")
+      expect(resAllTime.extracted_data.sql_query).toBe("SELECT * FROM counterparties LIMIT 50;")
+
+      const res30Days = compileFallbackQuery({
+        user_prompt: "Last 30 Days",
+        session_history: history,
+        live_schema: schema,
+      })
+      expect(res30Days.status).toBe("complete")
+      expect(res30Days.extracted_data.sql_query).toContain("FROM counterparties WHERE created_at >= NOW() - INTERVAL '30 days'")
+    })
+  })
 })

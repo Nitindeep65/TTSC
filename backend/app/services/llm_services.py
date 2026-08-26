@@ -348,6 +348,126 @@ def validate_and_enforce_sql_safety(sql_query: str) -> str:
     return query
 
 
+def extract_table_name_from_prompt(prompt: str, schema_tables: List[str] = None) -> Optional[str]:
+    if not prompt:
+        return None
+    p = prompt.strip().lower()
+    schema_tables = schema_tables or []
+
+    # 1. Direct schema table lookup
+    for tbl in schema_tables:
+        regex = rf"\b{tbl}(?:s|es)?\b"
+        if re.search(regex, p, re.IGNORECASE):
+            return tbl
+
+    # 2. Phrasal extraction
+    cleaned = re.sub(
+        r"^(?:please\s+)?(?:can\s+you\s+)?(?:could\s+you\s+)?(?:i\s+just\s+(?:simple\s+)?(?:need|want)\s+)?(?:give|show|get|bring|fetch|display|provide|select|find|list|view|render|count|how\s+many)\s+(?:me\s+)?(?:all\s+)?(?:the\s+)?(?:list\s+of\s+(?:all\s+)?(?:the\s+)?)?",
+        "", p, flags=re.IGNORECASE
+    )
+    cleaned = re.sub(r"^(?:top|first|limit)\s+\d+\s+", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^all\s+(?:the\s+)?", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^list\s+of\s+(?:all\s+)?(?:the\s+)?", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^(?:the\s+)?", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s+(?:table|data|records|rows|collection|info|items)$", "", cleaned, flags=re.IGNORECASE).strip()
+
+    first_word = cleaned.split()[0] if cleaned.split() else ""
+    stop_words = {
+        "table", "data", "records", "rows", "database", "all", "the", "in", "of", "no", "yes",
+        "time", "filter", "simple", "total", "last", "first", "recent", "top", "past", "next",
+        "day", "days", "month", "months", "year", "years", "date", "status", "range", "completed", "active", "count"
+    }
+    if first_word and re.match(r"^[a-zA-Z0-9_]+$", first_word) and first_word not in stop_words:
+        return first_word
+    return None
+
+
+def compile_fallback_query(
+    user_prompt: str,
+    session_history: Optional[List[Dict[str, Any]]] = None,
+    live_schema: Optional[str] = None
+) -> ClarificationResponse:
+    schema = live_schema if live_schema and live_schema.strip() else LIVE_DATABASE_SCHEMA_SQL
+    visual_intent = detect_visual_intent(user_prompt)
+
+    table_matches = re.findall(r"CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-zA-Z0-9_]+)", schema, re.IGNORECASE)
+    schema_tables = [t.lower() for t in table_matches]
+
+    session_history = session_history or []
+    target_table = extract_table_name_from_prompt(user_prompt, schema_tables)
+
+    if not target_table and session_history:
+        for item in reversed(session_history):
+            prev = item.get("content", "")
+            tbl = extract_table_name_from_prompt(prev, schema_tables)
+            if tbl:
+                target_table = tbl
+                break
+
+    if not target_table and schema_tables:
+        p = user_prompt.lower()
+        if "user" in p or "customer" in p:
+            target_table = "users"
+        elif "product" in p or "item" in p:
+            target_table = "products"
+        elif "order" in p or "sale" in p:
+            target_table = "orders"
+        elif schema_tables:
+            target_table = schema_tables[0]
+
+    if target_table:
+        all_prompts = [item.get("content", "") for item in session_history] + [user_prompt]
+        combined_text = " ".join(all_prompts).lower()
+        where_clauses = []
+
+        if "last 7 days" in combined_text or "7 days" in combined_text:
+            where_clauses.append("created_at >= NOW() - INTERVAL '7 days'")
+        elif "last 30 days" in combined_text or "30 days" in combined_text:
+            where_clauses.append("created_at >= NOW() - INTERVAL '30 days'")
+        elif "2024" in combined_text:
+            where_clauses.append("created_at >= '2024-01-01' AND created_at < '2025-01-01'")
+
+        if "completed" in combined_text:
+            where_clauses.append("status = 'completed'")
+        elif "active" in combined_text:
+            where_clauses.append("is_active = TRUE")
+
+        where_str = f" WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+        is_count = bool(re.search(r"\b(?:count|how many|total count|number of)\b", combined_text, re.IGNORECASE))
+        limit_match = re.search(r"\b(?:top|limit)\s+(\d+)\b", combined_text, re.IGNORECASE)
+        limit_val = int(limit_match.group(1)) if limit_match else 50
+
+        is_nosql = "// LIVE INTROSPECTED MONGODB" in schema
+        sql = (
+            f"db.{target_table}.find({{}}).limit({limit_val})"
+            if is_nosql
+            else f"SELECT COUNT(*) AS total_count FROM {target_table}{where_str};"
+            if is_count
+            else f"SELECT * FROM {target_table}{where_str} LIMIT {limit_val};"
+        )
+
+        extracted_data = ExtractedSQLData(
+            sql_query=sql,
+            tables_identified=[target_table],
+            explanation=f"Retrieves records from {target_table} with safe read-only LIMIT {limit_val} protections.",
+            visual_intent=visual_intent,
+            matched_metrics=[]
+        )
+        return ClarificationResponse(
+            status="complete",
+            message=f"Here is the query for retrieving records from the {target_table} table:",
+            extracted_data=extracted_data,
+            visual_intent=visual_intent
+        )
+
+    return ClarificationResponse(
+        status="needs_clarification",
+        message=f"Which database table or records would you like to query for \"{user_prompt}\"?",
+        extracted_data=None,
+        visual_intent=visual_intent
+    )
+
+
 def evaluate_user_intent(
     user_prompt: str,
     session_history: Optional[List[Dict[str, Any]]] = None,
@@ -434,10 +554,9 @@ def evaluate_user_intent(
             )
 
     except Exception as e:
-        logger.error(f"Error during LLM evaluation: {str(e)}", exc_info=True)
-        return ClarificationResponse(
-            status="needs_clarification",
-            message="I'd be glad to help formulate this query. Could you specify any required date ranges, status filters, or metrics to ensure an accurate query?",
-            extracted_data=None,
-            visual_intent=visual_intent
+        logger.warning(f"External LLM evaluation failed, invoking fallback compiler: {str(e)}")
+        return compile_fallback_query(
+            user_prompt=user_prompt,
+            session_history=session_history,
+            live_schema=live_schema
         )

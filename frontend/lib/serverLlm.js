@@ -331,74 +331,141 @@ export async function executeLlmClarification({
       }
     }
   } catch (err) {
-    console.error("LLM Clarification Error:", err)
-    
-    // Heuristic fallback for common direct table queries if API fails
+    console.warn("LLM Clarification API unavailable, invoking Dynamic Schema-Aware Fallback Engine:", err.message)
+    return compileFallbackQuery({
+      user_prompt,
+      session_history,
+      live_schema,
+    })
+  }
+}
+export function extractTableNameFromPrompt(prompt, schemaTables = []) {
+  if (!prompt) return null
+  const p = prompt.trim().toLowerCase()
+
+  // 1. Direct schema table lookup
+  for (const tbl of schemaTables) {
+    const regex = new RegExp(`\\b${tbl}(?:s|es)?\\b`, "i")
+    if (regex.test(p)) return tbl
+  }
+
+  // 2. Phrasal extraction
+  const cleaned = p
+    .replace(/^(?:please\s+)?(?:can\s+you\s+)?(?:could\s+you\s+)?(?:i\s+just\s+(?:simple\s+)?(?:need|want)\s+)?(?:give|show|get|bring|fetch|display|provide|select|find|list|view|render|count|how\s+many)\s+(?:me\s+)?(?:all\s+)?(?:the\s+)?(?:list\s+of\s+(?:all\s+)?(?:the\s+)?)?/i, "")
+    .replace(/^(?:top|first|limit)\s+\d+\s+/i, "")
+    .replace(/^all\s+(?:the\s+)?/i, "")
+    .replace(/^list\s+of\s+(?:all\s+)?(?:the\s+)?/i, "")
+    .replace(/^(?:the\s+)?/i, "")
+    .replace(/\s+(?:table|data|records|rows|collection|info|items)$/i, "")
+    .trim()
+
+  const firstWord = cleaned.split(/\s+/)[0]
+  const stopWords = [
+    "table", "data", "records", "rows", "database", "all", "the", "in", "of", "no", "yes",
+    "time", "filter", "simple", "total", "last", "first", "recent", "top", "past", "next",
+    "day", "days", "month", "months", "year", "years", "date", "status", "range", "completed", "active", "count"
+  ]
+  if (firstWord && /^[a-zA-Z0-9_]+$/.test(firstWord) && !stopWords.includes(firstWord)) {
+    return firstWord
+  }
+  return null
+}
+
+export function compileFallbackQuery({ user_prompt, session_history = [], live_schema = null }) {
+  const schema = live_schema && live_schema.trim() ? live_schema : LIVE_DATABASE_SCHEMA_SQL
+  const visualIntent = detectVisualIntent(user_prompt)
+
+  const tableMatches = [...schema.matchAll(/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-zA-Z0-9_]+)/gi)]
+  const schemaTables = tableMatches.map(m => m[1].toLowerCase())
+
+  let targetTable = extractTableNameFromPrompt(user_prompt, schemaTables)
+
+  // If not found in current prompt, check previous history
+  if (!targetTable && session_history?.length > 0) {
+    for (let i = session_history.length - 1; i >= 0; i--) {
+      const prev = session_history[i].content || session_history[i].rawContent || ""
+      const tbl = extractTableNameFromPrompt(prev, schemaTables)
+      if (tbl) {
+        targetTable = tbl
+        break
+      }
+    }
+  }
+
+  // If still not found and we have schema tables, fallback to the first table
+  if (!targetTable && schemaTables.length > 0) {
     const p = (user_prompt || "").toLowerCase()
-    
-    // If prompt is an error recovery or users query, produce a safe universal SELECT * query
-    if (p.includes("user") || p.includes("customer")) {
-      return {
-        status: "complete",
-        message: "Here is the query for retrieving user records from the connected database:",
-        options: [],
-        extracted_data: {
-          sql_query: "SELECT * FROM users LIMIT 50;",
-          dialect: "postgresql",
-          explanation: "Retrieves user records with safe read-only LIMIT 50 protections.",
-          tables_identified: ["users"],
-          tables_used: ["users"],
-          visual_intent: visualIntent,
-          visualization_recommendation: "table",
-        },
-        visual_intent: visualIntent,
-      }
+    if (p.includes("user") || p.includes("customer") || p.includes("account")) {
+      targetTable = "users"
+    } else if (p.includes("product") || p.includes("item") || p.includes("catalog")) {
+      targetTable = "products"
+    } else if (p.includes("order") || p.includes("sale") || p.includes("transaction")) {
+      targetTable = "orders"
+    } else if (schemaTables.length > 0) {
+      targetTable = schemaTables[0]
+    }
+  }
+
+  if (targetTable) {
+    const allPrompts = [...session_history.map(m => m.content || m.rawContent || ""), user_prompt].filter(Boolean)
+    const combinedText = allPrompts.join(" ").toLowerCase()
+    let whereClauses = []
+
+    if (combinedText.includes("last 7 days") || combinedText.includes("7 days")) {
+      whereClauses.push("created_at >= NOW() - INTERVAL '7 days'")
+    } else if (combinedText.includes("last 30 days") || combinedText.includes("30 days")) {
+      whereClauses.push("created_at >= NOW() - INTERVAL '30 days'")
+    } else if (combinedText.includes("2024") || combinedText.includes("year 2024")) {
+      whereClauses.push("created_at >= '2024-01-01' AND created_at < '2025-01-01'")
     }
 
-    if (p.includes("product") || p.includes("item")) {
-      return {
-        status: "complete",
-        message: "Here is the query for listing products from the catalog:",
-        options: [],
-        extracted_data: {
-          sql_query: "SELECT * FROM products LIMIT 50;",
-          dialect: "postgresql",
-          explanation: "Retrieves products from the catalog with safe LIMIT 50.",
-          tables_identified: ["products"],
-          tables_used: ["products"],
-          visual_intent: visualIntent,
-          visualization_recommendation: "table",
-        },
-        visual_intent: visualIntent,
-      }
+    if (combinedText.includes("completed")) {
+      whereClauses.push("status = 'completed'")
+    } else if (combinedText.includes("active")) {
+      whereClauses.push("is_active = TRUE")
     }
 
-    if (p.includes("order")) {
-      return {
-        status: "complete",
-        message: "Here is the query for retrieving order records:",
-        options: [],
-        extracted_data: {
-          sql_query: "SELECT * FROM orders LIMIT 50;",
-          dialect: "postgresql",
-          explanation: "Retrieves recent orders with safe LIMIT 50.",
-          tables_identified: ["orders"],
-          tables_used: ["orders"],
-          visual_intent: visualIntent,
-          visualization_recommendation: "table",
-        },
-        visual_intent: visualIntent,
-      }
-    }
-    
-    // Graceful intelligent fallback if LLM endpoint has temporary network timeout
+    const whereStr = whereClauses.length > 0 ? ` WHERE ${whereClauses.join(" AND ")}` : ""
+    const isCount = /\b(?:count|how many|total count|number of)\b/i.test(combinedText)
+    const limitMatch = combinedText.match(/\btop\s+(\d+)\b/i) || combinedText.match(/\blimit\s+(\d+)\b/i)
+    const limitVal = limitMatch ? parseInt(limitMatch[1], 10) : 50
+
+    const isNoSql = schema.includes("// LIVE INTROSPECTED MONGODB")
+    const sql = isNoSql
+      ? `db.${targetTable}.find(${whereClauses.length > 0 ? "{}" : "{}"}).limit(${limitVal})`
+      : isCount
+        ? `SELECT COUNT(*) AS total_count FROM ${targetTable}${whereStr};`
+        : `SELECT * FROM ${targetTable}${whereStr} LIMIT ${limitVal};`
+
     return {
-      status: "needs_clarification",
-      message: `Could you please clarify the target metric, timeframe (e.g. last 30 days or YTD), or specific filters for "${user_prompt}"?`,
-      options: ["Last 30 Days", "Completed Orders Only", "Top 5 by Total Spend", "Calendar Year 2024"],
-      extracted_data: null,
+      status: "complete",
+      message: isCount
+        ? `Counting records in the ${targetTable} table:`
+        : `Here is the query for retrieving records from the ${targetTable} table:`,
+      options: [],
+      extracted_data: {
+        sql_query: sql,
+        dialect: isNoSql ? "mongodb" : "postgresql",
+        explanation: isCount
+          ? `Calculates total count from ${targetTable}${whereClauses.length > 0 ? ` with filters (${whereClauses.join(", ")})` : ""}.`
+          : `Retrieves records from ${targetTable}${whereClauses.length > 0 ? ` with filters: ${whereClauses.join(", ")}` : ""} with safe read-only LIMIT ${limitVal} protections.`,
+        tables_identified: [targetTable],
+        tables_used: [targetTable],
+        visual_intent: visualIntent,
+        visualization_recommendation: visualIntent.recommended_chart || "table",
+      },
       visual_intent: visualIntent,
     }
+  }
+
+  // Graceful fallback for completely open-ended queries
+  const chips = generateClarificationChips(user_prompt)
+  return {
+    status: "needs_clarification",
+    message: `Which database table or records would you like to query for "${user_prompt}"? (Available: ${schemaTables.slice(0, 4).join(", ") || "users, products, orders"})`,
+    options: chips.length > 0 ? chips : ["All Time", "Last 30 Days", "Top 10 Results"],
+    extracted_data: null,
+    visual_intent: visualIntent,
   }
 }
 
