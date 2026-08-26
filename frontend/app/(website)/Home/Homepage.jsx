@@ -2,6 +2,7 @@
 
 import React from "react"
 import Hero from "./Hero"
+import HowItWorks from "./HowItWorks"
 import ProblemSection from "./ProblemSection"
 import Features from "./Features"
 import MCPSection from "./MCPSection"
@@ -16,6 +17,7 @@ export default function Homepage() {
     <div className="min-h-screen flex flex-col justify-between bg-[#f7f8f5] overflow-x-hidden w-full max-w-full">
       <main className="flex-1 w-full max-w-full">
         <Hero />
+        <HowItWorks />
         <ProblemSection />
         <Features />
         <MCPSection />
