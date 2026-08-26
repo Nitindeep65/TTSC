@@ -74,4 +74,29 @@ describe("serverLlm utilities", () => {
       expect(obj.status).toBe("needs_clarification")
     })
   })
+
+  describe("buildSystemPrompt & schema grounding", () => {
+    it("includes strict zero-hallucination and error recovery rules in system prompt", () => {
+      const customSchema = `CREATE TABLE users (\n    id INT PRIMARY KEY,\n    email VARCHAR(255) NOT NULL,\n    created_at TIMESTAMPTZ\n);`
+      const { buildSystemPrompt } = require("@/lib/serverLlm")
+      const prompt = buildSystemPrompt(customSchema)
+      expect(prompt).toContain("ZERO HALLUCINATION")
+      expect(prompt).toContain("ERROR NOTICE RECOVERY")
+      expect(prompt).toContain("CREATE TABLE users")
+    })
+  })
+
+  describe("executeLlmDiagnosis recovery", () => {
+    it("repairs column mismatch using universal fallback when API is mocked/unavailable", async () => {
+      const { executeLlmDiagnosis } = require("@/lib/serverLlm")
+      const res = await executeLlmDiagnosis({
+        error_message: 'column "name" does not exist',
+        failing_sql: "SELECT id, name, email, role FROM users LIMIT 50;",
+        live_schema: `CREATE TABLE users (id INT, email VARCHAR(255), created_at TIMESTAMPTZ);`,
+        user_prompt: "bring all the users",
+      })
+      expect(res.can_execute).toBe(true)
+      expect(res.healed_sql).toContain("SELECT * FROM users")
+    })
+  })
 })

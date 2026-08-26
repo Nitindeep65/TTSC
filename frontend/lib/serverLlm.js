@@ -191,17 +191,26 @@ ${schema}
 
 1. SCHEMA & COLLECTION GROUNDING (ZERO HALLUCINATION):
    - Only reference tables, columns, or collections/fields explicitly present in the provided schema.
+   - NEVER invent or guess columns (such as "name", "role", "is_active", "metadata", "status") if they are not listed in the table's DDL above.
    - Respect data types (e.g., UUID, TIMESTAMPTZ, JSONB, BSON object types).
 
 2. DIRECT DATA RETRIEVAL & INSPECTION (ALWAYS GENERATE QUERY - status = "complete"):
-   - For direct retrieval requests, record inspection, or table viewing requests (e.g., "provide data of users", "show all users", "list products", "get recent orders", "show rows from users table", "get all customers"), ALWAYS generate the query with status: "complete" immediately.
-   - Select the relevant explicit columns from the table and apply a safe LIMIT 50.
+   - For direct retrieval requests, record inspection, or table viewing requests (e.g., "provide data of users", "show all users", "bring all the users", "list products", "get recent orders", "show rows from users table", "get all customers"):
+     * ALWAYS generate the query with status: "complete" immediately.
+     * If the user did not specify distinct columns, you may use "SELECT * FROM <table> LIMIT 50;" or select ONLY the exact columns present in the schema definition for that table. Never guess non-existent columns.
+     * Always apply a safe read-only LIMIT 50.
 
-3. WHEN TO PAUSE FOR CLARIFICATION (status = "needs_clarification"):
+3. ERROR NOTICE RECOVERY & SELF-HEALING:
+   - If the user prompt or session history mentions a database execution error (e.g. 'column "..." does not exist', 'relation "..." does not exist', 'syntax error', or 'Database Execution Notice'):
+     * Treat this as an immediate query repair request.
+     * Inspect the error and schema, immediately eliminate all invalid/missing columns in a single pass, or switch to "SELECT * FROM <table> LIMIT 50;" if the column structure is uncertain.
+     * Set status: "complete" with the healed SQL query. Do NOT ask for clarification on an error message.
+
+4. WHEN TO PAUSE FOR CLARIFICATION (status = "needs_clarification"):
    - ONLY set status to "needs_clarification" if the request is fundamentally ambiguous and cannot be fulfilled with standard baseline filters (e.g., "calculate our business churn KPI" when no churn formula is defined, or "are we profitable?" with no financial tables).
    - If the request can be fulfilled with reasonable default assumptions (e.g. recent records, default status), generate the query with status: "complete" and state your assumptions in the "explanation".
 
-4. SAFETY & RESOURCE CONSTRAINTS:
+5. SAFETY & RESOURCE CONSTRAINTS:
    - READ-ONLY ENFORCEMENT: Output ONLY SELECT statements for SQL, or read-only find() / aggregate() for MongoDB. Never generate INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.
    - RESOURCE PROTECTION: Apply an explicit LIMIT (default to 50 if unspecified) on open-ended queries.
 
@@ -326,15 +335,17 @@ export async function executeLlmClarification({
     
     // Heuristic fallback for common direct table queries if API fails
     const p = (user_prompt || "").toLowerCase()
+    
+    // If prompt is an error recovery or users query, produce a safe universal SELECT * query
     if (p.includes("user") || p.includes("customer")) {
       return {
         status: "complete",
         message: "Here is the query for retrieving user records from the connected database:",
         options: [],
         extracted_data: {
-          sql_query: "SELECT id, name, email, role, is_active, created_at FROM users ORDER BY created_at DESC LIMIT 50;",
+          sql_query: "SELECT * FROM users LIMIT 50;",
           dialect: "postgresql",
-          explanation: "Retrieves user records ordered by registration date with safe read-only LIMIT 50 protections.",
+          explanation: "Retrieves user records with safe read-only LIMIT 50 protections.",
           tables_identified: ["users"],
           tables_used: ["users"],
           visual_intent: visualIntent,
@@ -344,15 +355,15 @@ export async function executeLlmClarification({
       }
     }
 
-    if (p.includes("product")) {
+    if (p.includes("product") || p.includes("item")) {
       return {
         status: "complete",
         message: "Here is the query for listing products from the catalog:",
         options: [],
         extracted_data: {
-          sql_query: "SELECT id, name, category, price, stock_quantity, is_available FROM products WHERE is_available = TRUE LIMIT 50;",
+          sql_query: "SELECT * FROM products LIMIT 50;",
           dialect: "postgresql",
-          explanation: "Retrieves active products from catalog.",
+          explanation: "Retrieves products from the catalog with safe LIMIT 50.",
           tables_identified: ["products"],
           tables_used: ["products"],
           visual_intent: visualIntent,
@@ -368,11 +379,11 @@ export async function executeLlmClarification({
         message: "Here is the query for retrieving order records:",
         options: [],
         extracted_data: {
-          sql_query: "SELECT o.id, u.name AS customer_name, o.total_amount, o.status, o.created_at FROM orders o JOIN users u ON o.user_id = u.id ORDER BY o.created_at DESC LIMIT 50;",
+          sql_query: "SELECT * FROM orders LIMIT 50;",
           dialect: "postgresql",
-          explanation: "Retrieves recent orders joined with customer names.",
-          tables_identified: ["orders", "users"],
-          tables_used: ["orders", "users"],
+          explanation: "Retrieves recent orders with safe LIMIT 50.",
+          tables_identified: ["orders"],
+          tables_used: ["orders"],
           visual_intent: visualIntent,
           visualization_recommendation: "table",
         },
@@ -413,7 +424,7 @@ export async function executeLlmDiagnosis({
     process.env.model ||
     "meta/llama-3.1-70b-instruct"
 
-  const schema = liveSchema && liveSchema.trim() ? liveSchema : LIVE_DATABASE_SCHEMA_SQL
+  const schema = live_schema && live_schema.trim() ? live_schema : LIVE_DATABASE_SCHEMA_SQL
 
   const prompt = `You are an expert SQL Doctor and Critic Healer.
 A query failed with the following runtime error:
@@ -425,11 +436,17 @@ USER INTENT: ${user_prompt || "N/A"}
 DATABASE SCHEMA:
 ${schema}
 
-Diagnose the exact root cause of the error (e.g., wrong column name, missing join, invalid GROUP BY, syntax error) and provide a healed, valid PostgreSQL read-only query that adheres to the schema.
+DIAGNOSIS & HEALING INSTRUCTIONS:
+1. Diagnose the exact root cause of the error (e.g. column name mismatch, invalid data type, missing GROUP BY, syntax error).
+2. If a column error occurred (e.g. column "X" does not exist):
+   - Compare EVERY column in the failing SQL query against the schema columns for that table.
+   - Eliminate ALL non-existent columns in a SINGLE PASS (do NOT remove just one and leave others broken).
+   - If all columns in the query were guessed or if the user asked to inspect all records, safely heal to "SELECT * FROM <table_name> LIMIT 50;".
+3. Ensure the healed query is 100% valid PostgreSQL read-only SQL adhering strictly to the schema.
 
 Respond ONLY with valid JSON:
 {
-  "diagnosis": "Clear explanation of the error cause and how it was fixed",
+  "diagnosis": "Clear 1-2 sentence explanation of the error cause and how it was fixed in a single pass",
   "healed_sql": "SELECT ... LIMIT 50;",
   "sqlstate_code": "42703 (or appropriate code)"
 }`
@@ -444,7 +461,7 @@ Respond ONLY with valid JSON:
       body: JSON.stringify({
         model,
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.1,
+        temperature: 0.05,
         max_tokens: 500,
         response_format: { type: "json_object" },
       }),
@@ -455,17 +472,35 @@ Respond ONLY with valid JSON:
       const data = await res.json()
       const raw = data.choices?.[0]?.message?.content || "{}"
       const parsed = sanitizeAndParseJson(raw)
-      const healed = validateAndEnforceSafety(parsed.healed_sql || failing_sql)
-      return {
-        original_sql: failing_sql,
-        healed_sql: healed,
-        diagnosis: parsed.diagnosis || "Query healed successfully against schema.",
-        sqlstate_code: parsed.sqlstate_code || "42000",
-        can_execute: true,
+      const rawHealed = parsed.healed_sql || parsed.sql_query || parsed.query || parsed.sql || (parsed.extracted_data && parsed.extracted_data.sql_query)
+      if (rawHealed && rawHealed.trim() && rawHealed.trim().toLowerCase() !== failing_sql.trim().toLowerCase()) {
+        const healed = validateAndEnforceSafety(rawHealed)
+        return {
+          original_sql: failing_sql,
+          healed_sql: healed,
+          diagnosis: parsed.diagnosis || "Query healed successfully against live schema.",
+          sqlstate_code: parsed.sqlstate_code || "42703",
+          can_execute: true,
+        }
       }
     }
   } catch (err) {
     console.error("SQL Doctor LLM Error:", err)
+  }
+
+  // Programmatic fallback healing for column does not exist errors if LLM fails
+  const colMatch = error_message.match(/column ["']?([^"'\s]+)["']? does not exist/i)
+  const tblMatch = failing_sql.match(/\bFROM\s+([a-zA-Z0-9_]+)\b/i)
+  if (colMatch && tblMatch) {
+    const tableName = tblMatch[1]
+    const fallbackHealed = `SELECT * FROM ${tableName} LIMIT 50;`
+    return {
+      original_sql: failing_sql,
+      healed_sql: fallbackHealed,
+      diagnosis: `Automatically repaired query by switching to universal table selection 'SELECT * FROM ${tableName} LIMIT 50;' to prevent column '${colMatch[1]}' mismatch.`,
+      sqlstate_code: "42703",
+      can_execute: true,
+    }
   }
 
   return {

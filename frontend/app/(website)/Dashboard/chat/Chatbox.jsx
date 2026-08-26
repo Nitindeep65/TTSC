@@ -254,6 +254,16 @@ export default function Chatbox() {
         user_prompt: msg?.rawContent,
         live_schema: forceSandbox ? null : dbInfo?.schema_sql,
       })
+
+      // If the query was healed in-flight, update the message SQL query so the UI shows the working SQL
+      if (data.was_healed && data.healing_info?.healed_sql) {
+        setMessages(prev => prev.map((m, i) => i === idx ? {
+          ...m,
+          sql_query: data.healing_info.healed_sql,
+          explanation: data.healing_info.diagnosis || m.explanation,
+        } : m))
+      }
+
       setQueryResults(p => ({
         ...p,
         [idx]: {
@@ -261,7 +271,7 @@ export default function Chatbox() {
           columns: data.columns,
           rows: data.rows,
           rowCount: data.row_count,
-          healingInfo: data.healing_info,
+          healingInfo: data.healing_info || (data.was_healed ? { was_healed: true, ...data.healing_info } : null),
         },
       }))
     } catch (err) {
@@ -279,6 +289,57 @@ export default function Chatbox() {
           canFallbackToSandbox: !!connectionUri && !forceSandbox,
         },
       }))
+    } finally {
+      setExecutingIndex(null)
+    }
+  }
+
+  const handleAutoHeal = async (msg, idx, errorMsg) => {
+    setExecutingIndex(idx)
+    try {
+      const diagData = await databaseApi.diagnose({
+        error_message: errorMsg || queryResults[idx]?.error || "Query failed",
+        failing_sql: msg.sql_query,
+        live_schema: dbInfo?.schema_sql || null,
+        user_prompt: msg.rawContent || msg.message,
+      })
+
+      if (diagData?.healed_sql) {
+        // Update the message SQL query with healed query
+        setMessages(prev => prev.map((m, i) => i === idx ? {
+          ...m,
+          sql_query: diagData.healed_sql,
+          explanation: diagData.explanation || diagData.diagnosis || m.explanation,
+        } : m))
+
+        // Execute the healed SQL
+        const data = await databaseApi.execute({
+          connection_uri: connectionUri || "",
+          sql_query: diagData.healed_sql,
+          limit: 50,
+          auto_heal: false,
+          user_prompt: msg?.rawContent,
+          live_schema: dbInfo?.schema_sql || null,
+        })
+
+        setQueryResults(p => ({
+          ...p,
+          [idx]: {
+            success: true,
+            columns: data.columns,
+            rows: data.rows,
+            rowCount: data.row_count,
+            healingInfo: {
+              was_healed: true,
+              original_sql: msg.sql_query,
+              healed_sql: diagData.healed_sql,
+              diagnosis: diagData.explanation || diagData.diagnosis || "Query was self-healed by SQL Doctor to match your schema.",
+            },
+          },
+        }))
+      }
+    } catch (err) {
+      alert("Healing error: " + (err.response?.data?.detail || err.message))
     } finally {
       setExecutingIndex(null)
     }
@@ -636,19 +697,37 @@ export default function Chatbox() {
                                   <p className="text-red-700 text-xs mt-0.5 leading-relaxed">{queryResults[idx].error}</p>
                                 </div>
                               </div>
-                              {queryResults[idx].canFallbackToSandbox && (
-                                <div className="pt-2 border-t border-red-200/70 flex items-center justify-between gap-2">
-                                  <span className="text-[11px] text-red-700 font-medium">Test query in Sandbox mode?</span>
+                              <div className="pt-2 border-t border-red-200/70 flex flex-wrap items-center justify-between gap-2">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={executingIndex === idx}
+                                  onClick={() => handleAutoHeal(msg, idx, queryResults[idx].error)}
+                                  className="h-7 px-3 text-[11px] font-bold bg-[#14231b] hover:bg-[#1f372a] text-[#5de08a] shadow-xs flex items-center gap-1.5 cursor-pointer"
+                                >
+                                  {executingIndex === idx ? (
+                                    <>
+                                      <Loader2 className="size-3 animate-spin text-[#5de08a]" />
+                                      <span>Healing Query…</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles className="size-3 text-[#5de08a]" />
+                                      <span>Auto-Fix with SQL Doctor</span>
+                                    </>
+                                  )}
+                                </Button>
+                                {queryResults[idx].canFallbackToSandbox && (
                                   <Button
                                     type="button"
                                     size="sm"
                                     onClick={() => handleRun(msg.sql_query, idx, msg, true)}
-                                    className="h-7 px-2.5 text-[11px] font-bold bg-[#1f7a47] hover:bg-[#186038] text-white shadow-xs"
+                                    className="h-7 px-2.5 text-[11px] font-semibold bg-white border border-red-200 hover:bg-red-50 text-red-700 shadow-2xs"
                                   >
                                     Run in Demo Sandbox
                                   </Button>
-                                </div>
-                              )}
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>

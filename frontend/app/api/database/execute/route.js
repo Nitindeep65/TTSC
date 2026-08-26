@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { executePostgreSqlQuery, isLocalhostUri } from "@/lib/dbDriver"
 import { proxyToBackendIfAvailable } from "@/lib/serverBackendHelper"
+import { executeLlmDiagnosis } from "@/lib/serverLlm"
 
 function generateSimulatedQueryResults(sqlQuery) {
   const sql = (sqlQuery || "").toLowerCase()
@@ -97,11 +98,48 @@ export async function POST(request) {
         return NextResponse.json(liveResult)
       } catch (execErr) {
         console.warn("Live execution error:", execErr.message)
-        // If it's a real connected DB, return the database error
+
+        // In-flight automatic Critic self-healing if auto_heal is enabled (default true)
+        const autoHealEnabled = body.auto_heal !== false
+        if (autoHealEnabled && !uri.includes("sample") && !uri.includes("demo") && !uri.includes("user:password")) {
+          try {
+            console.log("Invoking SQL Doctor Critic Healer for failed query...")
+            const diagnosis = await executeLlmDiagnosis({
+              error_message: execErr.message,
+              failing_sql: sql,
+              live_schema: body.live_schema || null,
+              user_prompt: body.user_prompt || "",
+            })
+
+            if (diagnosis.can_execute && diagnosis.healed_sql && diagnosis.healed_sql.trim() !== sql.trim()) {
+              console.log("Re-executing healed SQL query:", diagnosis.healed_sql)
+              const healedResult = await executePostgreSqlQuery(uri, diagnosis.healed_sql, limit)
+              return NextResponse.json({
+                ...healedResult,
+                was_healed: true,
+                healing_info: {
+                  original_sql: sql,
+                  healed_sql: diagnosis.healed_sql,
+                  diagnosis: diagnosis.diagnosis,
+                  sqlstate_code: diagnosis.sqlstate_code,
+                  error_healed: execErr.message,
+                },
+              })
+            }
+          } catch (healErr) {
+            console.warn("In-flight self-healing retry failed:", healErr.message)
+          }
+        }
+
+        // If it's a real connected DB and healing was not possible, return error
         if (!uri.includes("sample") && !uri.includes("demo") && !uri.includes("user:password")) {
           const dbMsg = `Database Execution Error: ${execErr.message}`
           return NextResponse.json(
-            { error: dbMsg, detail: dbMsg },
+            {
+              error: dbMsg,
+              detail: dbMsg,
+              failing_sql: sql,
+            },
             { status: 400 }
           )
         }

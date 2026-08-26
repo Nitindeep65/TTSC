@@ -29,14 +29,16 @@ A generated SQL query failed during execution on PostgreSQL.
 ### LIVE DATABASE SCHEMA
 {schema_to_use}
 
-### TASK
+### TASK & DIAGNOSIS RULES
 1. Analyze the exact PostgreSQL error message and the failing SQL.
-2. Identify why it failed (e.g. column name mismatch, invalid data type casting, missing GROUP BY, missing join alias, or syntax error).
+2. If a column does not exist error occurred:
+   - Check ALL columns in the failing query against the schema table definition.
+   - Eliminate ALL non-existent columns in a SINGLE PASS. If columns were guessed or user wanted all rows, use "SELECT * FROM <table_name> LIMIT 50;".
 3. Fix the SQL query so it executes cleanly and adheres strictly to the schema above.
 4. Output ONLY valid raw JSON:
 {{
   "healed_sql": "SELECT ... FROM ... WHERE ...;",
-  "diagnosis": "1-sentence plain English explanation of the root cause and the specific fix applied."
+  "diagnosis": "1-sentence plain English explanation of the root cause and the specific fix applied in a single pass."
 }}"""
 
     user_content = f"""Failing SQL Query:
@@ -66,6 +68,14 @@ Original User Request:
         return healed_sql, diagnosis
     except Exception as e:
         logger.error(f"Critic healing failed: {e}")
+        # Programmatic fallback for column does not exist errors
+        import re
+        col_match = re.search(r'column ["\']?([^"\'\s]+)["\']? does not exist', error_message, re.IGNORECASE)
+        tbl_match = re.search(r'\bFROM\s+([a-zA-Z0-9_]+)\b', failing_sql, re.IGNORECASE)
+        if col_match and tbl_match:
+            table_name = tbl_match.group(1)
+            fallback_healed = f"SELECT * FROM {table_name} LIMIT 50;"
+            return fallback_healed, f"Repaired query to universal 'SELECT * FROM {table_name} LIMIT 50;' to prevent column '{col_match.group(1)}' mismatch."
         return failing_sql, f"Healing attempt failed: {str(e)}"
 
 
