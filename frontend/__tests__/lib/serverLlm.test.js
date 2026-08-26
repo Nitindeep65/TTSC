@@ -143,5 +143,31 @@ CREATE TABLE counterparties (id INT, name VARCHAR(100), created_at TIMESTAMPTZ);
       expect(res30Days.status).toBe("complete")
       expect(res30Days.extracted_data.sql_query).toContain("FROM counterparties WHERE created_at >= NOW() - INTERVAL '30 days'")
     })
+
+    it("corrects spelling mistakes and typos against schema tables (e.g. counterpatis -> counterparties)", () => {
+      const res1 = compileFallbackQuery({
+        user_prompt: "give me the list of the counterpatis",
+        session_history: [],
+        live_schema: schema,
+      })
+      expect(res1.status).toBe("complete")
+      expect(res1.extracted_data.sql_query).toBe("SELECT * FROM counterparties LIMIT 50;")
+
+      const res2 = compileFallbackQuery({
+        user_prompt: "show contarcts",
+        session_history: [],
+        live_schema: schema,
+      })
+      expect(res2.status).toBe("complete")
+      expect(res2.extracted_data.sql_query).toBe("SELECT * FROM contracts LIMIT 50;")
+
+      const res3 = compileFallbackQuery({
+        user_prompt: "bring all usrs",
+        session_history: [],
+        live_schema: schema,
+      })
+      expect(res3.status).toBe("complete")
+      expect(res3.extracted_data.sql_query).toBe("SELECT * FROM users LIMIT 50;")
+    })
   })
 })

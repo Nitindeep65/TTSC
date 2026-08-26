@@ -133,3 +133,42 @@ class TestClarificationApi:
         assert data["visual_intent"]["should_visualize"] is True
         assert data["visual_intent"]["recommended_chart"] == "line"
         assert data["extracted_data"]["visual_intent"]["recommended_chart"] == "line"
+
+
+class TestFuzzySchemaMatching:
+    """Unit tests for typo-tolerant schema resolution and string similarity."""
+
+    def test_calculate_string_similarity(self):
+        from app.services.llm_services import calculate_string_similarity
+
+        assert calculate_string_similarity("counterparties", "counterparties") == 1.0
+        assert calculate_string_similarity("counterpatis", "counterparties") > 0.8
+        assert calculate_string_similarity("contarcts", "contracts") > 0.75
+        assert calculate_string_similarity("usrs", "users") > 0.75
+        assert calculate_string_similarity("apple", "banana") < 0.3
+
+    def test_find_closest_schema_table(self):
+        from app.services.llm_services import find_closest_schema_table
+
+        tables = ["users", "contracts", "counterparties", "orders", "products"]
+        assert find_closest_schema_table("counterpatis", tables) == "counterparties"
+        assert find_closest_schema_table("contarcts", tables) == "contracts"
+        assert find_closest_schema_table("usrs", tables) == "users"
+        assert find_closest_schema_table("prodcts", tables) == "products"
+        assert find_closest_schema_table("xyzabc", tables) is None
+
+    def test_extract_table_name_with_typos(self):
+        from app.services.llm_services import extract_table_name_from_prompt, compile_fallback_query
+
+        tables = ["users", "contracts", "counterparties"]
+        assert extract_table_name_from_prompt("give me the list of the counterpatis", tables) == "counterparties"
+        assert extract_table_name_from_prompt("show contarcts", tables) == "contracts"
+        assert extract_table_name_from_prompt("bring all usrs", tables) == "users"
+
+        res = compile_fallback_query(
+            user_prompt="give me the list of the counterpatis",
+            live_schema="CREATE TABLE counterparties (id INT, name TEXT);"
+        )
+        assert res.status == "complete"
+        assert res.extracted_data.sql_query == "SELECT * FROM counterparties LIMIT 50;"
+

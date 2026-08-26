@@ -235,13 +235,16 @@ Your objective is to analyze user requests, evaluate conversational context, cla
    - Respect data types (e.g., UUID, TIMESTAMPTZ, JSONB, BSON object types).
    - Strictly adhere to any Business Metric definitions provided above.
 
-2. DIRECT DATA RETRIEVAL & INSPECTION (ALWAYS GENERATE QUERY - status = "complete"):
+2. TYPO TOLERANCE & SPELL CORRECTION:
+   - If the user makes a typographical spelling mistake in a table or column name (e.g. "counterpatis" for "counterparties", "contarcts" for "contracts", "usrs" for "users", "prodcts" for "products"), intelligently match and auto-correct it to the most similar table or column name in the provided schema.
+
+3. DIRECT DATA RETRIEVAL & INSPECTION (ALWAYS GENERATE QUERY - status = "complete"):
    - For direct retrieval requests, record inspection, or table viewing requests (e.g., "provide data of users", "show all users", "bring all the users", "list products", "get recent orders", "show rows from users table", "get all customers"):
      * ALWAYS generate the query with status: "complete" immediately.
      * If the user did not specify distinct columns, you may use "SELECT * FROM <table> LIMIT 50;" or select ONLY the exact columns present in the schema definition for that table. Never guess non-existent columns.
      * Always apply a safe read-only LIMIT 50.
 
-3. ERROR NOTICE RECOVERY & SELF-HEALING:
+4. ERROR NOTICE RECOVERY & SELF-HEALING:
    - If the user prompt or session history mentions a database execution error (e.g. 'column "..." does not exist', 'relation "..." does not exist', 'syntax error', or 'Database Execution Notice'):
      * Treat this as an immediate query repair request.
      * Inspect the error and schema, immediately eliminate all invalid/missing columns in a single pass, or switch to "SELECT * FROM <table> LIMIT 50;".
@@ -348,19 +351,83 @@ def validate_and_enforce_sql_safety(sql_query: str) -> str:
     return query
 
 
+def calculate_string_similarity(s1: str, s2: str) -> float:
+    """Computes normalized Levenshtein similarity (0.0 to 1.0) between two strings."""
+    if not s1 or not s2:
+        return 0.0
+    a, b = s1.lower().strip(), s2.lower().strip()
+    if a == b:
+        return 1.0
+
+    len_a, len_b = len(a), len(b)
+    if len_a == 0 or len_b == 0:
+        return 0.0
+
+    matrix = [[0] * (len_b + 1) for _ in range(len_a + 1)]
+    for i in range(len_a + 1):
+        matrix[i][0] = i
+    for j in range(len_b + 1):
+        matrix[0][j] = j
+
+    for i in range(1, len_a + 1):
+        for j in range(1, len_b + 1):
+            cost = 0 if a[i - 1] == b[j - 1] else 1
+            matrix[i][j] = min(
+                matrix[i - 1][j] + 1,       # deletion
+                matrix[i][j - 1] + 1,       # insertion
+                matrix[i - 1][j - 1] + cost # substitution
+            )
+
+    distance = matrix[len_a][len_b]
+    max_len = max(len_a, len_b)
+    return 1.0 - (distance / max_len)
+
+
+def find_closest_schema_table(candidate_word: str, schema_tables: List[str] = None, threshold: float = 0.65) -> Optional[str]:
+    """Finds the closest matching schema table for a potentially misspelled word."""
+    if not candidate_word or not schema_tables:
+        return None
+    word = candidate_word.lower().strip()
+    schema_tables = schema_tables or []
+
+    best_match = None
+    highest_score = 0.0
+
+    for tbl in schema_tables:
+        table_clean = tbl.lower().strip()
+        if word == table_clean or word == f"{table_clean}s" or f"{word}s" == table_clean:
+            return tbl
+
+        similarity = calculate_string_similarity(word, table_clean)
+        if similarity > highest_score:
+            highest_score = similarity
+            best_match = tbl
+
+    if highest_score >= threshold:
+        return best_match
+    return None
+
+
 def extract_table_name_from_prompt(prompt: str, schema_tables: List[str] = None) -> Optional[str]:
     if not prompt:
         return None
     p = prompt.strip().lower()
     schema_tables = schema_tables or []
 
-    # 1. Direct schema table lookup
+    # 1. Direct exact schema table lookup
     for tbl in schema_tables:
         regex = rf"\b{tbl}(?:s|es)?\b"
         if re.search(regex, p, re.IGNORECASE):
             return tbl
 
-    # 2. Phrasal extraction
+    # 2. Scan individual words in prompt for typo-fuzzy matches against schema tables
+    words_in_prompt = [w for w in re.split(r"[^a-zA-Z0-9_]+", p) if len(w) >= 3]
+    for word in words_in_prompt:
+        fuzzy_match = find_closest_schema_table(word, schema_tables, threshold=0.68)
+        if fuzzy_match:
+            return fuzzy_match
+
+    # 3. Phrasal extraction
     cleaned = re.sub(
         r"^(?:please\s+)?(?:can\s+you\s+)?(?:could\s+you\s+)?(?:i\s+just\s+(?:simple\s+)?(?:need|want)\s+)?(?:give|show|get|bring|fetch|display|provide|select|find|list|view|render|count|how\s+many)\s+(?:me\s+)?(?:all\s+)?(?:the\s+)?(?:list\s+of\s+(?:all\s+)?(?:the\s+)?)?",
         "", p, flags=re.IGNORECASE
@@ -378,7 +445,8 @@ def extract_table_name_from_prompt(prompt: str, schema_tables: List[str] = None)
         "day", "days", "month", "months", "year", "years", "date", "status", "range", "completed", "active", "count"
     }
     if first_word and re.match(r"^[a-zA-Z0-9_]+$", first_word) and first_word not in stop_words:
-        return first_word
+        fuzzy = find_closest_schema_table(first_word, schema_tables, threshold=0.65)
+        return fuzzy or first_word
     return None
 
 

@@ -194,23 +194,26 @@ ${schema}
    - NEVER invent or guess columns (such as "name", "role", "is_active", "metadata", "status") if they are not listed in the table's DDL above.
    - Respect data types (e.g., UUID, TIMESTAMPTZ, JSONB, BSON object types).
 
-2. DIRECT DATA RETRIEVAL & INSPECTION (ALWAYS GENERATE QUERY - status = "complete"):
+2. TYPO TOLERANCE & SPELL CORRECTION:
+   - If the user makes a typographical spelling mistake in a table or column name (e.g. "counterpatis" for "counterparties", "contarcts" for "contracts", "usrs" for "users", "prodcts" for "products"), intelligently match and auto-correct it to the most similar table or column name in the provided schema.
+
+3. DIRECT DATA RETRIEVAL & INSPECTION (ALWAYS GENERATE QUERY - status = "complete"):
    - For direct retrieval requests, record inspection, or table viewing requests (e.g., "provide data of users", "show all users", "bring all the users", "list products", "get recent orders", "show rows from users table", "get all customers"):
      * ALWAYS generate the query with status: "complete" immediately.
      * If the user did not specify distinct columns, you may use "SELECT * FROM <table> LIMIT 50;" or select ONLY the exact columns present in the schema definition for that table. Never guess non-existent columns.
      * Always apply a safe read-only LIMIT 50.
 
-3. ERROR NOTICE RECOVERY & SELF-HEALING:
+4. ERROR NOTICE RECOVERY & SELF-HEALING:
    - If the user prompt or session history mentions a database execution error (e.g. 'column "..." does not exist', 'relation "..." does not exist', 'syntax error', or 'Database Execution Notice'):
      * Treat this as an immediate query repair request.
      * Inspect the error and schema, immediately eliminate all invalid/missing columns in a single pass, or switch to "SELECT * FROM <table> LIMIT 50;" if the column structure is uncertain.
      * Set status: "complete" with the healed SQL query. Do NOT ask for clarification on an error message.
 
-4. WHEN TO PAUSE FOR CLARIFICATION (status = "needs_clarification"):
+5. WHEN TO PAUSE FOR CLARIFICATION (status = "needs_clarification"):
    - ONLY set status to "needs_clarification" if the request is fundamentally ambiguous and cannot be fulfilled with standard baseline filters (e.g., "calculate our business churn KPI" when no churn formula is defined, or "are we profitable?" with no financial tables).
    - If the request can be fulfilled with reasonable default assumptions (e.g. recent records, default status), generate the query with status: "complete" and state your assumptions in the "explanation".
 
-5. SAFETY & RESOURCE CONSTRAINTS:
+6. SAFETY & RESOURCE CONSTRAINTS:
    - READ-ONLY ENFORCEMENT: Output ONLY SELECT statements for SQL, or read-only find() / aggregate() for MongoDB. Never generate INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.
    - RESOURCE PROTECTION: Apply an explicit LIMIT (default to 50 if unspecified) on open-ended queries.
 
@@ -339,17 +342,89 @@ export async function executeLlmClarification({
     })
   }
 }
+/**
+ * Computes normalized Levenshtein similarity (0.0 to 1.0) between two strings.
+ */
+export function calculateStringSimilarity(s1, s2) {
+  if (!s1 || !s2) return 0
+  const a = s1.toLowerCase().trim()
+  const b = s2.toLowerCase().trim()
+  if (a === b) return 1.0
+
+  const lenA = a.length
+  const lenB = b.length
+  if (lenA === 0 || lenB === 0) return 0
+
+  const matrix = Array.from({ length: lenA + 1 }, () => new Array(lenB + 1).fill(0))
+
+  for (let i = 0; i <= lenA; i++) matrix[i][0] = i
+  for (let j = 0; j <= lenB; j++) matrix[0][j] = j
+
+  for (let i = 1; i <= lenA; i++) {
+    for (let j = 1; j <= lenB; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,       // deletion
+        matrix[i][j - 1] + 1,       // insertion
+        matrix[i - 1][j - 1] + cost // substitution
+      )
+    }
+  }
+
+  const distance = matrix[lenA][lenB]
+  const maxLen = Math.max(lenA, lenB)
+  return 1 - distance / maxLen
+}
+
+/**
+ * Finds the closest matching schema table for a potentially misspelled word.
+ */
+export function findClosestSchemaTable(candidateWord, schemaTables = [], threshold = 0.65) {
+  if (!candidateWord || !schemaTables || schemaTables.length === 0) return null
+  const word = candidateWord.toLowerCase().trim()
+
+  let bestMatch = null
+  let highestScore = 0
+
+  for (const tbl of schemaTables) {
+    const tableClean = tbl.toLowerCase().trim()
+    if (word === tableClean || word === `${tableClean}s` || `${word}s` === tableClean) {
+      return tbl
+    }
+
+    const similarity = calculateStringSimilarity(word, tableClean)
+    if (similarity > highestScore) {
+      highestScore = similarity
+      bestMatch = tbl
+    }
+  }
+
+  if (highestScore >= threshold) {
+    return bestMatch
+  }
+  return null
+}
+
 export function extractTableNameFromPrompt(prompt, schemaTables = []) {
   if (!prompt) return null
   const p = prompt.trim().toLowerCase()
 
-  // 1. Direct schema table lookup
+  // 1. Direct exact schema table lookup
   for (const tbl of schemaTables) {
     const regex = new RegExp(`\\b${tbl}(?:s|es)?\\b`, "i")
     if (regex.test(p)) return tbl
   }
 
-  // 2. Phrasal extraction
+  // 2. Scan individual words in the prompt for typo-fuzzy matches against schema tables
+  const wordsInPrompt = p.split(/[^a-zA-Z0-9_]+/).filter(w => w.length >= 3)
+  for (const word of wordsInPrompt) {
+    const fuzzyMatch = findClosestSchemaTable(word, schemaTables, 0.68)
+    if (fuzzyMatch) {
+      return fuzzyMatch
+    }
+  }
+
+  // 3. Phrasal extraction with common conversational prefixes stripped
   const cleaned = p
     .replace(/^(?:please\s+)?(?:can\s+you\s+)?(?:could\s+you\s+)?(?:i\s+just\s+(?:simple\s+)?(?:need|want)\s+)?(?:give|show|get|bring|fetch|display|provide|select|find|list|view|render|count|how\s+many)\s+(?:me\s+)?(?:all\s+)?(?:the\s+)?(?:list\s+of\s+(?:all\s+)?(?:the\s+)?)?/i, "")
     .replace(/^(?:top|first|limit)\s+\d+\s+/i, "")
@@ -366,7 +441,9 @@ export function extractTableNameFromPrompt(prompt, schemaTables = []) {
     "day", "days", "month", "months", "year", "years", "date", "status", "range", "completed", "active", "count"
   ]
   if (firstWord && /^[a-zA-Z0-9_]+$/.test(firstWord) && !stopWords.includes(firstWord)) {
-    return firstWord
+    // Check if the extracted word is a typo of a known schema table
+    const fuzzy = findClosestSchemaTable(firstWord, schemaTables, 0.65)
+    return fuzzy || firstWord
   }
   return null
 }
