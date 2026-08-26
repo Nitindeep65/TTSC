@@ -22,7 +22,7 @@ class TestDatabaseService:
         [
             ("postgres://user:pass@ep-cool-db.us-east-1.aws.neon.tech/neondb", "postgres"),
             ("postgresql://postgres:pass@db.supabase.co:5432/postgres", "postgres"),
-            ("mongodb+srv://admin:pass@cluster0.mongodb.net/test?retryWrites=true", "mongodb"),
+            ("mongodb://sample_user:sample_pass@sample-mongodb.internal:27017/test?retryWrites=true", "mongodb"),
             ("mongodb://localhost:27017/analytics", "mongodb"),
             ("redis://default:token@fly-redis.upstash.io:6379", "redis"),
             ("mysql://root:pass@127.0.0.1:3306/shop", "mysql"),
@@ -84,7 +84,7 @@ class TestDatabaseService:
     def test_introspect_mongodb_database(self, mock_pymongo_client):
         """MongoDB introspection discovers cluster databases, collections, and samples document schemas."""
         with patch("pymongo.MongoClient", return_value=mock_pymongo_client):
-            tables, ddl_text = introspect_cloud_database("mongodb+srv://user:pass@cluster0.mongodb.net/test")
+            tables, ddl_text = introspect_cloud_database("mongodb://sample_user:sample_pass@sample-mongodb.internal:27017/test")
 
         assert len(tables) > 0
         assert "Collection:" in ddl_text

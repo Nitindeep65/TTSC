@@ -142,7 +142,7 @@ const DEMO_SANDBOXES = [
     badge: "5 Tables · 28 Columns",
     description: "Includes users, orders, order_items, products, and payments with UUID keys & foreign keys.",
     sampleQueries: ["Top customers by spend", "Monthly revenue trend", "Low stock inventory"],
-    uri: "postgresql://demo_admin:sandbox_demo_pass@db.neon.tech/ecommerce_prod?sslmode=require",
+    uri: "postgresql://sample_admin:sample_pass@sample-db.internal:5432/ecommerce_prod?sslmode=require",
   },
   {
     id: "saas",
@@ -152,7 +152,7 @@ const DEMO_SANDBOXES = [
     badge: "4 Tables · 22 Columns",
     description: "Includes accounts, subscriptions, invoices, usage_events, and plans for MRR analytics.",
     sampleQueries: ["Net MRR breakdown", "Churned accounts", "Plan distribution"],
-    uri: "postgresql://saas_user:sandbox_demo_pass@aws-rds.neon.tech/saas_billing?sslmode=require",
+    uri: "postgresql://sample_user:sample_pass@sample-db.internal:5432/saas_billing?sslmode=require",
   },
   {
     id: "mongodb_telemetry",
@@ -162,7 +162,7 @@ const DEMO_SANDBOXES = [
     badge: "3 Collections · Nested BSON",
     description: "Includes telemetry_events, device_logs, and user_sessions with array unwind fields.",
     sampleQueries: ["Unwind sensor arrays", "Group by device status", "Failed auth count"],
-    uri: "mongodb+srv://demo_read:sandbox_demo_pass@cluster0.mongodb.net/iot_telemetry?retryWrites=true",
+    uri: "mongodb://sample_reader:sample_pass@sample-mongodb.internal:27017/iot_telemetry?retryWrites=true",
   },
 ]
 
