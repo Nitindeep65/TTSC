@@ -13,7 +13,6 @@ import {
   AlertTriangle,
   Zap,
   Shield,
-  Sparkles,
   ChevronRight,
   Loader2,
   Cpu,
@@ -897,7 +896,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                       </div>
 
                       <Button className="w-full gap-2 font-bold text-xs bg-[#1f2d24] hover:bg-[#2e4235] text-white">
-                        <Sparkles className="size-3.5 text-[#5de08a]" />
+                        <Zap className="size-3.5 text-[#5de08a]" />
                         <span>Upgrade to Team Pro — $9/month</span>
                       </Button>
                     </div>

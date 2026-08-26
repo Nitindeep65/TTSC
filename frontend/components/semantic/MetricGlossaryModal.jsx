@@ -11,7 +11,6 @@ import {
   Lightbulb,
   Loader2,
   Plus,
-  Sparkles,
   Trash2,
   X,
   Zap,
@@ -205,7 +204,7 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
                 : "text-[#55675c] hover:bg-[#edf4ef]"
             }`}
           >
-            <Sparkles className="size-3.5 text-[#3ba565]" />
+            <Lightbulb className="size-3.5 text-[#3ba565]" />
             <span>Teach AI</span>
           </button>
 
@@ -326,7 +325,7 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
                     </>
                   ) : (
                     <>
-                      <Sparkles className="size-3.5 text-[#71c897]" />
+                      <Zap className="size-3.5 text-[#71c897]" />
                       <span>Teach &amp; Save Rule</span>
                     </>
                   )}
@@ -389,7 +388,7 @@ export default function MetricGlossaryModal({ isOpen, onClose }) {
                     </>
                   ) : (
                     <>
-                      <Sparkles className="size-3.5 text-[#71c897]" />
+                      <Zap className="size-3.5 text-[#71c897]" />
                       <span>Extract &amp; Save All Rules</span>
                     </>
                   )}

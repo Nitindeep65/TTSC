@@ -33,7 +33,6 @@ import {
   Search,
   Server,
   ShieldCheck,
-  Sparkles,
   Star,
   Table2,
   Terminal,
@@ -526,7 +525,7 @@ export default function Chatbox() {
                 
                 {/* Hero Badge */}
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-white px-3.5 py-1 text-xs font-semibold text-[#1b6b3a] shadow-xs">
-                  <Sparkles className="size-3.5 text-emerald-600 animate-pulse" />
+                  <Database className="size-3.5 text-emerald-600" />
                   <span>Universal SQL &amp; NoSQL Clarification Engine</span>
                 </div>
 
@@ -661,7 +660,7 @@ export default function Chatbox() {
                       {/* 1-Tap Quick Reply Chips */}
                       <div className="pt-2 border-t border-amber-200/60">
                         <p className="text-[10.5px] font-bold uppercase tracking-wider text-amber-800 mb-2 flex items-center gap-1.5">
-                          <Sparkles className="size-3 text-amber-600" />
+                          <HelpCircle className="size-3 text-amber-600" />
                           <span>1-Tap Quick Responses:</span>
                         </p>
                         <div className="flex flex-wrap gap-2">
@@ -694,7 +693,7 @@ export default function Chatbox() {
                           </span>
                           {msg.matched_metrics?.length > 0 && (
                             <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-800">
-                              ✦ {msg.matched_metrics.join(", ")}
+                              {msg.matched_metrics.join(", ")}
                             </span>
                           )}
                         </div>
@@ -863,8 +862,8 @@ export default function Chatbox() {
                                     </>
                                   ) : (
                                     <>
-                                      <Sparkles className="size-3 text-[#5de08a]" />
-                                      <span>✦ Auto-Fix with SQL Doctor</span>
+                                      <Zap className="size-3 text-[#5de08a]" />
+                                      <span>Auto-Fix with SQL Doctor</span>
                                     </>
                                   )}
                                 </Button>

@@ -8,7 +8,6 @@ import {
   BookOpen,
   ArrowRight,
   CheckCircle2,
-  Sparkles,
   Zap,
   ChevronDown,
   ChevronUp,
@@ -272,7 +271,7 @@ export default function V3Roadmap() {
 
         <div className="mx-auto max-w-3xl text-center space-y-3 mb-14">
           <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold">
-            <Sparkles className="size-3.5 text-[#3aa363]" />
+            <Zap className="size-3.5 text-[#3aa363]" />
             <span>Coming in QueryCraft V3</span>
           </Badge>
 

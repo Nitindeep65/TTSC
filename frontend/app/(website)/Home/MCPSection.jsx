@@ -17,7 +17,6 @@ import {
   Radio,
   Server,
   ShieldCheck,
-  Sparkles,
   Terminal,
   Workflow,
   Zap,

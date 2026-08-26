@@ -11,7 +11,7 @@ import {
   Layers,
   Loader2,
   RotateCcw,
-  Sparkles,
+  ShieldCheck,
   Stethoscope,
   Terminal,
   Volume2,
@@ -106,7 +106,7 @@ export default function ExtensionPromptModal() {
         <div className="flex items-center justify-between border-b border-[#1b2b20] px-4 py-3 sm:px-6 sm:py-4.5 bg-[#111a14]/60 shrink-0">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-[#162e1e] text-emerald-400 border border-emerald-500/20 shadow-xs">
-              <Sparkles className="size-4 sm:size-4.5" />
+              <Zap className="size-4 sm:size-4.5" />
             </div>
             <div className="min-w-0">
               <h3 className="text-sm sm:text-[15px] font-semibold text-white tracking-tight leading-none truncate">

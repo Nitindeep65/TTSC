@@ -14,7 +14,6 @@ import {
   Lock,
   Plus,
   Server,
-  Sparkles,
   X,
 } from "lucide-react"
 import { useDatabase } from "@/lib/databaseContext"

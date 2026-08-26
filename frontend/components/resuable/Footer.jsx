@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { Database, Sparkles, Terminal, ShieldCheck, Cloud, Server, Layers } from "lucide-react"
+import { Database, Terminal, ShieldCheck, Cloud, Server, Layers } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -14,7 +14,7 @@ export default function Footer() {
           <div className="md:col-span-2 space-y-3">
             <Link href="/" className="flex items-center gap-2.5">
               <span className="flex size-9 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
-                <Sparkles className="size-4.5" />
+                <Database className="size-4.5" />
               </span>
               <div>
                 <span className="block text-base font-semibold tracking-tight text-[#17241c]">

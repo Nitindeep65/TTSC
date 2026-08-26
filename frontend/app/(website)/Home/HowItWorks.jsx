@@ -5,7 +5,6 @@ import Link from "next/link"
 import {
   Database,
   MessageSquareText,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
   TrendingUp,
@@ -44,7 +43,7 @@ Introspected 5 tables:
     codeSnippet: `User: "give the list of ocunter parties"
 AI: Auto-corrected 'ocunter parties' → 'counterparties'
 Clarification: "Filter by tier (Tier 1/2) or show all?"
-[✦ All Tiers] [✦ Tier 1 Only] [✦ Active Only]`,
+[All Tiers] [Tier 1 Only] [Active Only]`,
   },
   {
     step: "03",
@@ -73,7 +72,7 @@ export default function HowItWorks() {
         {/* Section Header */}
         <div className="mx-auto max-w-3xl text-center space-y-4 mb-16 sm:mb-20">
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-3.5 py-1 text-xs font-semibold text-[#1b6b3a] shadow-xs">
-            <Sparkles className="size-3.5 text-emerald-600 animate-pulse" />
+            <Zap className="size-3.5 text-emerald-600" />
             <span>How QueryCraft Works</span>
           </div>
 

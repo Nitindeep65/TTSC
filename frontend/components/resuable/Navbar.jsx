@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ArrowRight, Database, Menu, MessageSquareText, Sparkles, Terminal, X, Layers } from "lucide-react"
+import { ArrowRight, Database, Menu, MessageSquareText, Terminal, X, Layers, Zap } from "lucide-react"
 
 const navLinks = [
   { name: "Overview", href: "/" },
@@ -25,7 +25,7 @@ function Navbar() {
       <div className="mx-auto flex h-18 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" onClick={closeMenu} className="group flex items-center gap-3">
           <span className="flex size-10 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-sm ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-105">
-            <Sparkles className="size-5" />
+            <Database className="size-5" />
           </span>
           <span className="flex flex-col leading-none">
             <span className="text-base font-semibold tracking-tight text-[#1f2d24]">QueryCraft</span>
@@ -60,7 +60,7 @@ function Navbar() {
             className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#206642] hover:bg-[#eaf5ed] transition"
             title="QueryCraft Chrome Extension & Spotlight Copilot"
           >
-            <Sparkles className="size-3.5 text-[#3aa363]" />
+            <Zap className="size-3.5 text-[#3aa363]" />
             <span>Extension</span>
           </Link>
 

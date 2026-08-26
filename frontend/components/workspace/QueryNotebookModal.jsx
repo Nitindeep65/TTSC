@@ -13,7 +13,6 @@ import {
   Play,
   Plus,
   Search,
-  Sparkles,
   Tag,
   Trash2,
   X,

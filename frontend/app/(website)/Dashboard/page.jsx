@@ -13,7 +13,6 @@ import {
   Loader2,
   MessageSquareText,
   Play,
-  Sparkles,
   Table2,
   TableProperties,
   Terminal,
@@ -168,7 +167,7 @@ export default function Dashboard() {
         <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between min-w-0">
           <div>
             <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-[#d2e2d5] bg-[#edf7f0] px-2.5 sm:px-3 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold text-[#256a44]">
-              <Sparkles className="size-3 sm:size-3.5 shrink-0" />
+              <Terminal className="size-3 sm:size-3.5 shrink-0" />
               <span>SQL Clarification &amp; Generation</span>
             </div>
             <h1 className="mt-1.5 sm:mt-2 text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-[#1f2d24]">
@@ -368,7 +367,7 @@ export default function Dashboard() {
 
                       <div className="pt-2 border-t border-amber-200/70 space-y-2">
                         <p className="text-[11px] font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
-                          <Sparkles className="size-3 text-[#d98b2c]" />
+                          <HelpCircle className="size-3 text-[#d98b2c]" />
                           <span>1-Tap Quick Responses:</span>
                         </p>
                         <div className="flex flex-wrap gap-2">

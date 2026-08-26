@@ -8,7 +8,6 @@ import {
   Table as TableIcon,
   Check,
   Download,
-  Sparkles,
   TrendingUp,
   Activity,
   Layers,

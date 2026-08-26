@@ -20,7 +20,6 @@ import {
   Radio,
   Server,
   ShieldCheck,
-  Sparkles,
   Table2,
   Terminal,
   TrendingUp,
@@ -44,8 +43,8 @@ const DEMO_SCENARIOS = {
     dialect: "PostgreSQL SQL",
     userPrompt: "Show top customers by total spend",
     clarifyQuestion: "Should I filter for completed orders only and calculate spend from order_items?",
-    chips: ["✦ Completed Orders Only", "✦ Top 5 by Total Spend", "✦ All Time"],
-    selectedChip: "✦ Top 5 by Total Spend",
+    chips: ["Completed Orders Only", "Top 5 by Total Spend", "All Time"],
+    selectedChip: "Top 5 by Total Spend",
     query: `SELECT u.id, u.full_name,
   SUM(oi.quantity * oi.unit_price) AS total_spend
 FROM users u
@@ -66,8 +65,8 @@ LIMIT 5;`,
     dialect: "Time-Series SQL",
     userPrompt: "Show monthly completed order revenue for the last 6 months as a trend",
     clarifyQuestion: "Visual intent detected. Grouping by month timestamp with completed orders filter.",
-    chips: ["✦ Last 6 Months", "✦ YTD 2024", "✦ Include Taxes"],
-    selectedChip: "✦ Last 6 Months",
+    chips: ["Last 6 Months", "YTD 2024", "Include Taxes"],
+    selectedChip: "Last 6 Months",
     query: `SELECT 
   TO_CHAR(created_at, 'YYYY-MM') AS month,
   SUM(total_amount) AS monthly_revenue
@@ -87,8 +86,8 @@ LIMIT 6;`,
     dialect: "MongoDB MQL",
     userPrompt: "Calculate total revenue and unit sales per product category in MongoDB",
     clarifyQuestion: "Unwinding nested '$items' array in orders collection before grouping by category.",
-    chips: ["✦ Unwind Items Array", "✦ Group by Category", "✦ Top 5 Categories"],
-    selectedChip: "✦ Unwind Items Array",
+    chips: ["Unwind Items Array", "Group by Category", "Top 5 Categories"],
+    selectedChip: "Unwind Items Array",
     query: `db.orders.aggregate([
   { $match: { status: "completed" } },
   { $unwind: "$items" },
@@ -141,7 +140,7 @@ export default function Hero() {
           {/* Logo & Brand */}
           <Link href="/" className="group flex items-center gap-2.5 font-semibold tracking-tight">
             <span className="flex size-9 items-center justify-center rounded-xl bg-[#111c16] text-[#5de08a] shadow-xs transition-transform duration-200 group-hover:scale-105">
-              <Sparkles className="size-4.5" />
+              <Database className="size-4.5" />
             </span>
             <div>
               <span className="block text-sm font-extrabold text-[#111c16] font-sans leading-none">QueryCraft</span>
@@ -259,7 +258,7 @@ export default function Hero() {
 
           <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold shadow-2xs backdrop-blur-xs">
             <span className="flex size-2 rounded-full bg-[#34c06a] animate-pulse" />
-            <Sparkles className="size-3.5 text-[#2b9b54]" />
+            <Zap className="size-3.5 text-[#2b9b54]" />
             <span>AI Data Analyst for PostgreSQL, MySQL &amp; MongoDB</span>
           </Badge>
 

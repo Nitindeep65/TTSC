@@ -16,7 +16,6 @@ import {
   ScrollText,
   ShieldCheck,
   ShieldOff,
-  Sparkles,
   TrendingUp,
   XCircle,
   Zap,
@@ -279,7 +278,7 @@ export default function ProblemSection() {
         {/* Bottom strip */}
         <div className="rounded-2xl border border-[#d5e7d9] bg-[#edf8f1] px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3">
-            <Sparkles className="size-5 text-[#3aa363] shrink-0 mt-0.5 sm:mt-0" />
+            <ShieldCheck className="size-5 text-[#3aa363] shrink-0 mt-0.5 sm:mt-0" />
             <p className="text-sm font-medium text-[#1e4d35]">
               QueryCraft bridges <strong>Relational SQL and NoSQL Document databases</strong> with a single conversational clarification interface that guarantees zero hallucination.
             </p>

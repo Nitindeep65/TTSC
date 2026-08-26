@@ -13,7 +13,6 @@ import {
   Plus,
   Radio,
   Server,
-  Sparkles,
   Trash2,
 } from "lucide-react"
 import { useDatabase } from "@/lib/databaseContext"

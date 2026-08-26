@@ -15,7 +15,6 @@ import {
   Search,
   ShieldCheck,
   ShoppingBag,
-  Sparkles,
   Users,
   Zap,
   Database,
@@ -146,7 +145,7 @@ export default function DailyUseCases() {
         {/* Header */}
         <div className="mx-auto max-w-3xl text-center space-y-3 mb-10">
           <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold">
-            <Sparkles className="size-3.5 text-[#3aa363]" />
+            <Database className="size-3.5 text-[#3aa363]" />
             <span>Everyday Production Workflows (SQL &amp; NoSQL)</span>
           </Badge>
 

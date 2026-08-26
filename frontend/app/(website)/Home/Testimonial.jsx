@@ -1,6 +1,6 @@
 'use client'
 
-import { MessageSquareQuote, Star, ShieldCheck, Sparkles, CheckCircle2, Database, Cloud, Server, Cpu } from "lucide-react"
+import { MessageSquareQuote, Star, ShieldCheck, CheckCircle2, Database, Cloud, Server, Cpu } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 

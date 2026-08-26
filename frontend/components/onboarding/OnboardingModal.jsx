@@ -2,19 +2,20 @@
 
 import React, { useState } from "react"
 import {
-  Sparkles,
-  Database,
-  ShieldCheck,
-  Zap,
+  Check,
   ArrowRight,
   ArrowLeft,
-  Check,
+  ShieldCheck,
+  Terminal,
+  Zap,
+  X,
+  Database,
+  Cloud,
+  CheckCircle2,
   Code2,
   BarChart3,
   Rocket,
   Layers,
-  Terminal,
-  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTour } from "@/lib/tourContext"
@@ -92,7 +93,7 @@ export default function OnboardingModal({ isOpen, onComplete }) {
         <div className="flex items-center justify-between px-5 sm:px-6 pt-5 pb-3 border-b border-[#1b2b22]">
           <div className="flex items-center gap-2.5">
             <div className="flex size-8 sm:size-9 items-center justify-center rounded-xl bg-linear-to-br from-[#1f3a2c] to-[#14261d] border border-emerald-500/30 text-emerald-400 shadow-inner">
-              <Sparkles className="size-4 sm:size-4.5" />
+              <Database className="size-4 sm:size-4.5" />
             </div>
             <div>
               <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-emerald-400/90">
@@ -330,7 +331,7 @@ export default function OnboardingModal({ isOpen, onComplete }) {
                 </>
               ) : (
                 <>
-                  <Sparkles className="size-3.5 text-emerald-300" />
+                  <Check className="size-3.5 text-emerald-300" />
                   <span>Finish & Enter Sandbox</span>
                 </>
               )}

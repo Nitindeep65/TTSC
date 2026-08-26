@@ -26,8 +26,11 @@ import {
   Plug,
   Plus,
   RefreshCw,
+  Search,
+  Server,
   Settings,
-  Sparkles,
+  ShieldCheck,
+  Table,
   Table2,
   Terminal,
   Unplug,
@@ -107,7 +110,7 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics }) {
         <div className="flex items-center justify-between">
           <Link href="/" className="group flex items-center gap-2.5">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#1b3324] text-[#4ade80] shadow-xs ring-1 ring-white/15 transition-transform duration-150 group-hover:scale-105">
-              <Sparkles className="size-4" />
+              <Database className="size-4" />
             </span>
             <div>
               <div className="flex items-center gap-1.5 leading-none">

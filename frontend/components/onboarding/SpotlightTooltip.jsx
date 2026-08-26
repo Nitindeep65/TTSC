@@ -2,7 +2,7 @@
 
 import React from "react"
 import { useTour } from "@/lib/tourContext"
-import { Sparkles, Database, Plug, ArrowRight, ArrowLeft, X, CheckCircle2 } from "lucide-react"
+import { Database, Plug, ArrowRight, ArrowLeft, X, CheckCircle2, Terminal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const TOUR_STEPS = [
@@ -10,7 +10,7 @@ const TOUR_STEPS = [
     step: 1,
     title: "Start Here: Starter Prompts",
     badge: "Action-Oriented",
-    icon: Sparkles,
+    icon: Terminal,
     content: "Click one of these starter prompts to see how QueryCraft connects to the Mock Database, evaluates time windows, and asks targeted clarifying questions before running SQL.",
     positionClass: "bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2",
   },

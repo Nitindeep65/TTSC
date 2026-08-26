@@ -16,7 +16,6 @@ import {
   Loader2,
   MessageSquareText,
   Settings,
-  Sparkles,
   Terminal,
   Wand2,
   Zap,
@@ -103,7 +102,7 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
             className="gap-1.5 font-semibold text-xs border-emerald-600/30 bg-[#f0f9f3] text-[#164e2d] hover:bg-[#e2f3e8] hover:border-emerald-600/50 shadow-2xs hidden 2xl:flex h-8"
             title="Open on any page with Cmd+Shift+K — Try QueryCraft Chrome Extension"
           >
-            <Sparkles className="size-3.5 text-emerald-600" />
+            <Zap className="size-3.5 text-emerald-600" />
             <span>Try Extension</span>
             <span className="rounded bg-emerald-600/10 px-1 py-0.2 text-[9px] font-mono text-emerald-800">
               Cmd+Shift+K

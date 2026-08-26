@@ -7,7 +7,6 @@ import {
   Database,
   MessageSquareText,
   ShieldCheck,
-  Sparkles,
   Terminal,
   Plug,
   Search,
@@ -77,7 +76,7 @@ export default function CTA() {
 
           <div className="max-w-2xl space-y-4">
             <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold text-[#8ed8a8] border-white/15 bg-white/5 backdrop-blur-sm">
-              <Sparkles className="size-3.5 text-[#71c897]" />
+              <Database className="size-3.5 text-[#71c897]" />
               <span>Universal Database Studio</span>
             </Badge>
 
