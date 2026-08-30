@@ -1,6 +1,7 @@
 'use client'
 
 import Link from "next/link"
+import { motion } from "framer-motion"
 import {
   ArrowRight,
   Cloud,
@@ -52,7 +53,14 @@ export default function CTA() {
         {/* 3-Step strip */}
         <div className="mb-14 grid gap-6 sm:grid-cols-3">
           {steps.map((s, i) => (
-            <div key={i} className="relative flex items-start gap-4">
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.4, delay: i * 0.12 }}
+              className="relative flex items-start gap-4"
+            >
               {/* Connector line */}
               {i < steps.length - 1 && (
                 <div className="pointer-events-none absolute left-[52px] top-5 hidden h-0.5 w-[calc(100%-68px)] bg-gradient-to-r from-[#3aa363]/50 to-transparent sm:block" />
@@ -67,12 +75,18 @@ export default function CTA() {
                 </div>
                 <p className="text-xs text-[#8aad98] leading-relaxed">{s.desc}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* CTA Content */}
-        <div className="flex flex-col items-start justify-between gap-10 md:flex-row md:items-center border-t border-white/10 pt-14">
+        <motion.div
+          initial={{ opacity: 0, y: 25 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-start justify-between gap-10 md:flex-row md:items-center border-t border-white/10 pt-14"
+        >
 
           <div className="max-w-2xl space-y-4">
             <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold text-[#8ed8a8] border-white/15 bg-white/5 backdrop-blur-sm">
@@ -80,7 +94,7 @@ export default function CTA() {
               <span>Universal Database Studio</span>
             </Badge>
 
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl leading-tight">
+            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl leading-tight text-balance">
               Connect your SQL or NoSQL database.{" "}
               <br />
               <span className="bg-gradient-to-r from-[#71c897] via-[#a3e5bd] to-white bg-clip-text text-transparent">
@@ -113,7 +127,7 @@ export default function CTA() {
               <Button
                 variant="primary"
                 size="lg"
-                className="gap-2.5 px-7 py-4 text-sm font-bold shadow-xl shadow-[#4ca873]/25 hover:scale-[1.03] transition-all duration-200"
+                className="gap-2.5 px-7 py-4 text-sm font-bold shadow-xl shadow-[#4ca873]/25 hover:scale-[1.03] transition-all duration-200 cursor-pointer"
               >
                 <MessageSquareText className="size-4.5" />
                 <span>{user ? "Launch Live Studio" : "Get Started Free"}</span>
@@ -125,7 +139,7 @@ export default function CTA() {
               <Button
                 variant="outline"
                 size="lg"
-                className="gap-2.5 border-white/20 bg-white/5 px-7 py-4 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:scale-[1.03] transition-all duration-200"
+                className="gap-2.5 border-white/20 bg-white/5 px-7 py-4 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:scale-[1.03] transition-all duration-200 cursor-pointer"
               >
                 <Terminal className="size-4.5 text-[#71c897]" />
                 <span>{user ? "Query Workspace" : "Sign In to Studio"}</span>
@@ -133,7 +147,7 @@ export default function CTA() {
             </Link>
           </div>
 
-        </div>
+        </motion.div>
       </div>
     </section>
   )

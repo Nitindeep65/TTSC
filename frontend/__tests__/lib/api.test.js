@@ -5,6 +5,7 @@ import {
   semanticApi,
   memoryApi,
   settingsApi,
+  dashboardApi,
   apiClient,
 } from '@/lib/api'
 
@@ -111,5 +112,41 @@ describe('Centralized Frontend API Client (lib/api.js)', () => {
     const usage = await settingsApi.incrementUsage('queries')
     expect(mockPost).toHaveBeenCalledWith('/api/settings/usage/increment?field=queries')
     expect(usage.success).toBe(true)
+  })
+
+  test('dashboardApi.generateDashboard calls /api/dashboard/generate with payload', async () => {
+    const mockPost = jest.spyOn(apiClient, 'post').mockResolvedValueOnce({
+      data: {
+        status: 'complete',
+        dashboard_title: 'SaaS Executive Overview',
+        widgets: [{ id: 'w1', title: 'MRR' }],
+      },
+    })
+
+    const result = await dashboardApi.generateDashboard({
+      user_prompt: 'Build me an Executive SaaS Dashboard',
+      theme: 'executive',
+      live_schema: 'CREATE TABLE orders (id uuid);',
+      connection_uri: 'postgresql://usr:pwd@host/db',
+    })
+
+    expect(mockPost).toHaveBeenCalledWith('/api/dashboard/generate', {
+      user_prompt: 'Build me an Executive SaaS Dashboard',
+      theme: 'executive',
+      live_schema: 'CREATE TABLE orders (id uuid);',
+      connection_uri: 'postgresql://usr:pwd@host/db',
+    })
+    expect(result.status).toBe('complete')
+    expect(result.dashboard_title).toBe('SaaS Executive Overview')
+  })
+
+  test('dashboardApi.getTemplates calls /api/dashboard/templates', async () => {
+    const mockGet = jest.spyOn(apiClient, 'get').mockResolvedValueOnce({
+      data: { templates: [{ id: 'saas_executive', title: 'SaaS Overview' }] },
+    })
+
+    const templates = await dashboardApi.getTemplates()
+    expect(mockGet).toHaveBeenCalledWith('/api/dashboard/templates')
+    expect(templates[0].id).toBe('saas_executive')
   })
 })

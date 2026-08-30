@@ -14,16 +14,12 @@ import Footer from "@/components/resuable/Footer"
 
 export default function Homepage() {
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-[#f7f8f5] overflow-x-hidden w-full max-w-full">
+    <div className="min-h-screen flex flex-col justify-between bg-background text-foreground overflow-x-hidden w-full max-w-full">
       <main className="flex-1 w-full max-w-full">
         <Hero />
-        <HowItWorks />
         <ProblemSection />
         <Features />
         <MCPSection />
-        <DailyUseCases />
-        <V3Roadmap />
-        <Testimonial />
         <CTA />
       </main>
       <Footer />

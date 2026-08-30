@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import {
   Activity,
   AlertTriangle,
@@ -33,6 +34,7 @@ import {
   Search,
   Server,
   ShieldCheck,
+  Sparkles,
   Star,
   Table2,
   Terminal,
@@ -84,6 +86,14 @@ const STARTER_PROMPTS = [
     color: "blue",
     icon: TrendingUp,
   },
+  {
+    type: "Dashboard Architect",
+    text: "Build an Executive SaaS Performance Dashboard with MRR, churn, and top cohorts",
+    desc: "Spins up supervisor planner and 4 parallel workers in Canvas Mode",
+    color: "emerald",
+    icon: Sparkles,
+    isCanvas: true,
+  },
 ]
 
 const FALLBACK_SCHEMA = [
@@ -120,6 +130,7 @@ function generateClarificationChips(text) {
 }
 
 export default function Chatbox() {
+  const router = useRouter()
   const { connectionUri, dbInfo, setIsModalOpen } = useDatabase()
   const { user } = useAuth()
 
@@ -149,6 +160,23 @@ export default function Chatbox() {
   const [schemaTables, setSchemaTables] = useState(FALLBACK_SCHEMA)
   const [schemaSearch, setSchemaSearch] = useState("")
   const [collapsed, setCollapsed] = useState({})
+  const [expandedDetails, setExpandedDetails] = useState({})
+  const [selectedChips, setSelectedChips] = useState({})
+  const [agentStage, setAgentStage] = useState(1) // 1: Planner, 2: SQL Worker, 3: Critic Doctor
+
+  // Multi-agent stage progression while query compiles
+  useEffect(() => {
+    if (!isLoading) {
+      setAgentStage(1)
+      return
+    }
+    const t1 = setTimeout(() => setAgentStage(2), 1100)
+    const t2 = setTimeout(() => setAgentStage(3), 2600)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [isLoading])
 
   const messagesEndRef = useRef(null)
   const textareaRef = useRef(null)
@@ -557,54 +585,10 @@ export default function Chatbox() {
                   </span>
                 </div>
 
-                {/* Suggested Prompts */}
-                <div
-                  id="tour-starter-prompts"
-                  className={`mt-7 sm:mt-9 w-full max-w-2.5xl px-1 transition-all duration-300 ${
-                    isTourActive && currentStep === 1
-                      ? "relative z-[60] p-4 sm:p-5 rounded-2xl bg-white ring-4 ring-emerald-500 shadow-2xl"
-                      : ""
-                  }`}
-                >
-                  <div className="mb-3 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#73887d]">
-                      <Lightbulb className="size-3.5 text-amber-500" />
-                      Interactive Starter Workflows
-                    </span>
-                    <span className="text-[11px] text-[#2b9b54] font-semibold hidden sm:inline">Click any prompt to execute →</span>
-                  </div>
-
-                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-                    {STARTER_PROMPTS.map((p, i) => {
-                      const Icon = p.icon
-                      return (
-                        <button
-                          key={i}
-                          type="button"
-                          disabled={isLoading}
-                          onClick={() => !isLoading && handleSend(p.text)}
-                          className="group relative flex flex-col gap-2 rounded-xl border border-[#dce7e0] bg-white p-3.5 sm:p-4 text-left shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 hover:border-[#a8d4b3] disabled:opacity-50 disabled:pointer-events-none overflow-hidden cursor-pointer"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${BADGE_COLORS[p.color]}`}>
-                              <Icon className="size-3 shrink-0" />
-                              <span>{p.type}</span>
-                            </span>
-                            <span className="text-xs font-bold text-[#34c06a] opacity-0 group-hover:opacity-100 transition-opacity">
-                              Run ↗
-                            </span>
-                          </div>
-
-                          <p className="text-[13px] sm:text-[13.5px] font-bold text-[#111c16] leading-snug group-hover:text-[#1b6b3a] transition-colors">
-                            &ldquo;{p.text}&rdquo;
-                          </p>
-                          <p className="text-[11px] sm:text-[11.5px] text-[#6d8276] leading-relaxed">
-                            {p.desc}
-                          </p>
-                        </button>
-                      )
-                    })}
-                  </div>
+                {/* Bottom Guidance */}
+                <div className="mt-8 text-xs text-[#617469] flex items-center gap-1.5">
+                  <Sparkles className="size-3.5 text-amber-500" />
+                  <span>Choose a starter workflow below or type your database question</span>
                 </div>
               </div>
             )}
@@ -657,25 +641,64 @@ export default function Chatbox() {
                         {msg.content}
                       </p>
 
-                      {/* 1-Tap Quick Reply Chips */}
-                      <div className="pt-2 border-t border-amber-200/60">
-                        <p className="text-[10.5px] font-bold uppercase tracking-wider text-amber-800 mb-2 flex items-center gap-1.5">
-                          <HelpCircle className="size-3 text-amber-600" />
-                          <span>1-Tap Quick Responses:</span>
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {generateClarificationChips(msg.content).map((chip, chipIdx) => (
+                      {/* Multi-Select Clarification Reply Chips */}
+                      <div className="pt-2 border-t border-amber-200/60 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+                            <HelpCircle className="size-3 text-amber-600" />
+                            <span>Select Parameters to Clarify:</span>
+                          </p>
+                          {(selectedChips[idx]?.length || 0) > 0 && (
                             <button
-                              key={chipIdx}
                               type="button"
                               disabled={isLoading}
-                              onClick={() => !isLoading && handleSend(chip)}
-                              className="clarify-chip text-[11.5px] sm:text-xs font-semibold px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50/80 text-amber-950 hover:bg-amber-100/90 active:scale-95 transition-all shadow-2xs flex items-center gap-1.5 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                              onClick={() => {
+                                const selected = selectedChips[idx] || []
+                                if (selected.length > 0) {
+                                  handleSend(`Proceed with: ${selected.join(" AND ")}`)
+                                }
+                              }}
+                              className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 px-2.5 py-1 rounded-md transition flex items-center gap-1 cursor-pointer"
                             >
-                              <span className="truncate max-w-[220px] sm:max-w-none">{chip}</span>
-                              <span className="text-amber-700 text-xs font-bold shrink-0">→</span>
+                              <span>Submit ({selectedChips[idx]?.length})</span>
+                              <ArrowUp className="size-3" />
                             </button>
-                          ))}
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {generateClarificationChips(msg.content).map((chip, chipIdx) => {
+                            const isSelected = (selectedChips[idx] || []).includes(chip)
+                            return (
+                              <button
+                                key={chipIdx}
+                                type="button"
+                                disabled={isLoading}
+                                onClick={() => {
+                                  if (isLoading) return
+                                  setSelectedChips((prev) => {
+                                    const current = prev[idx] || []
+                                    const next = current.includes(chip)
+                                      ? current.filter((c) => c !== chip)
+                                      : [...current, chip]
+                                    return { ...prev, [idx]: next }
+                                  })
+                                }}
+                                className={`text-[11.5px] sm:text-xs font-medium px-3 py-1.5 rounded-lg border transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer select-none ${
+                                  isSelected
+                                    ? "bg-emerald-600 text-white border-emerald-700 font-semibold"
+                                    : "bg-white border-amber-300 text-amber-950 hover:bg-amber-50"
+                                }`}
+                              >
+                                {isSelected ? (
+                                  <Check className="size-3" />
+                                ) : (
+                                  <span className="size-1.5 rounded-full bg-amber-500" />
+                                )}
+                                <span className="truncate max-w-[220px] sm:max-w-none">{chip}</span>
+                              </button>
+                            )
+                          })}
                         </div>
                       </div>
                     </div>
@@ -737,14 +760,48 @@ export default function Chatbox() {
                             {msg.explanation}
                           </p>
                         )}
-                        {msg.tables?.length > 0 && (
-                          <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                            <span className="text-[10.5px] font-bold text-[#718578] uppercase tracking-wide">Tables:</span>
-                            {msg.tables.map(t => (
-                              <span key={t} className="font-mono text-[11px] rounded-md bg-[#edf5ef] border border-[#cde2d4] px-2 py-0.5 text-[#1b5c38] font-semibold">
-                                {t}
+                        {/* Progressive Details Drawer */}
+                        {(msg.tables?.length > 0 || msg.matched_metrics?.length > 0) && (
+                          <div className="pt-0.5">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedDetails(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 transition cursor-pointer"
+                            >
+                              {expandedDetails[idx] ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+                              <span>
+                                {msg.tables?.length ? `Grounded in ${msg.tables.length} table${msg.tables.length > 1 ? "s" : ""}` : "Execution Details"}
                               </span>
-                            ))}
+                            </button>
+
+                            {expandedDetails[idx] && (
+                              <div className="mt-2 rounded-lg border border-border bg-muted/30 p-2.5 space-y-2 animate-in fade-in duration-100 text-xs">
+                                {msg.tables?.length > 0 && (
+                                  <div>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Catalog Tables:</span>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {msg.tables.map(t => (
+                                        <span key={t} className="font-mono text-[10.5px] rounded bg-white border border-border px-1.5 py-0.5 text-foreground font-medium">
+                                          {t}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {msg.matched_metrics?.length > 0 && (
+                                  <div>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Matched KPI Rules:</span>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {msg.matched_metrics.map(m => (
+                                        <span key={m} className="text-[10.5px] rounded bg-blue-50 border border-blue-200 px-1.5 py-0.5 text-blue-800 font-medium">
+                                          {m}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -914,15 +971,58 @@ export default function Chatbox() {
               </div>
             ))}
 
-            {/* Loading Indicator */}
+            {/* LangGraph Streaming Multi-Agent Status Indicator */}
             {isLoading && (
               <div className="flex gap-3 sm:gap-4 animate-fade-up">
-                <div className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-[#111c16] text-[#5de08a] ring-1 ring-emerald-500/20">
-                  <Bot className="size-4 sm:size-4.5 animate-pulse" />
+                <div className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-card border border-border text-emerald-600">
+                  <Bot className="size-4 animate-pulse" />
                 </div>
-                <div className="flex items-center gap-2.5 rounded-2xl rounded-tl-md border border-[#dce7e0] bg-white px-4 py-3 sm:px-5 sm:py-3.5 text-xs sm:text-[13px] text-[#55695e] shadow-2xs">
-                  <span className="size-3.5 sm:size-4 animate-spin rounded-full border-2 border-[#34c06a] border-t-transparent shrink-0" />
-                  <span className="font-medium">Reasoning over schema, metrics &amp; multi-turn context…</span>
+                <div className="rounded-2xl rounded-tl-md border border-border bg-card p-3 sm:p-4 text-xs shadow-2xs space-y-2 max-w-lg">
+                  <div className="flex items-center justify-between gap-2 border-b border-border pb-1.5">
+                    <span className="text-[10.5px] font-medium text-muted-foreground uppercase tracking-wider">
+                      LangGraph Multi-Agent Pipeline
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                      Active
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-foreground">
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+                      agentStage === 1
+                        ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 font-semibold"
+                        : agentStage > 1
+                        ? "text-muted-foreground line-through opacity-70"
+                        : "text-muted-foreground"
+                    }`}>
+                      {agentStage === 1 && <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                      01. Planner
+                    </span>
+                    <span className="text-muted-foreground">→</span>
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+                      agentStage === 2
+                        ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 font-semibold"
+                        : agentStage > 2
+                        ? "text-muted-foreground line-through opacity-70"
+                        : "text-muted-foreground"
+                    }`}>
+                      {agentStage === 2 && <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                      02. SQL Worker
+                    </span>
+                    <span className="text-muted-foreground">→</span>
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all ${
+                      agentStage === 3
+                        ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 font-semibold"
+                        : "text-muted-foreground"
+                    }`}>
+                      {agentStage === 3 && <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                      03. Critic Doctor
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground font-mono">
+                    {agentStage === 1 && "Supervisor decomposing prompt & introspecting catalog..."}
+                    {agentStage === 2 && "Synthesizing schema-grounded SQL query with safe LIMIT..."}
+                    {agentStage === 3 && "Running critic safety checks & EXPLAIN cost guard..."}
+                  </p>
                 </div>
               </div>
             )}
@@ -932,7 +1032,27 @@ export default function Chatbox() {
 
         {/* ─────── Floating Input Dock ─────── */}
         <div className="shrink-0 px-3 sm:px-6 md:px-8 pb-3.5 sm:pb-5">
-          <div className="mx-auto max-w-3.5xl">
+          <div className="mx-auto max-w-3.5xl space-y-2">
+            
+            {/* Compact Horizontal Starter Pills */}
+            <div id="tour-starter-prompts" className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#799081] shrink-0 flex items-center gap-1 mr-1">
+                <Sparkles className="size-3 text-amber-500" />
+                <span>Starters:</span>
+              </span>
+              {STARTER_PROMPTS.map((p, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => !isLoading && (p.isCanvas ? router.push(`/Dashboard/canvas`) : handleSend(p.text))}
+                  className="shrink-0 rounded-full border border-[#dce7e0] bg-white hover:bg-[#edf5ef] hover:text-[#111c16] px-2.5 py-1 text-[11.5px] font-medium text-[#4a5e53] transition shadow-2xs cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>{p.text}</span>
+                </button>
+              ))}
+            </div>
+
             <div className="relative rounded-2xl border border-[#d4e2d8] bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.06)] focus-within:border-[#34c06a] focus-within:ring-2 focus-within:ring-[#34c06a]/20 transition-all duration-200">
               <textarea
                 ref={textareaRef}

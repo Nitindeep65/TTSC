@@ -20,6 +20,7 @@ export default function TableDataProfilerModal({ isOpen, onClose, tableName, con
   const [loading, setLoading] = useState(false)
   const [profileData, setProfileData] = useState(null)
   const [error, setError] = useState("")
+  const [copiedVal, setCopiedVal] = useState(null)
 
   useEffect(() => {
     let ignore = false
@@ -139,14 +140,29 @@ export default function TableDataProfilerModal({ isOpen, onClose, tableName, con
                           {p.name}
                         </span>
                         <div className="flex flex-wrap gap-1">
-                          {p.distinct_values.map((val) => (
-                            <span
-                              key={val}
-                              className="rounded-md bg-[#eef7f1] border border-[#c1e2cd] px-1.5 py-0.5 text-[10px] font-mono font-semibold text-[#1f6b3d]"
-                            >
-                              &apos;{val}&apos;
-                            </span>
-                          ))}
+                          {p.distinct_values.map((val) => {
+                            const isThisCopied = copiedVal === `${p.name}:${val}`
+                            const filterText = `${p.name} = '${val}'`
+                            return (
+                              <button
+                                key={val}
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(filterText)
+                                  setCopiedVal(`${p.name}:${val}`)
+                                  setTimeout(() => setCopiedVal(null), 1500)
+                                }}
+                                title={`Click to copy SQL filter: ${filterText}`}
+                                className={`group/val relative rounded-md border px-1.5 py-0.5 text-[10px] font-mono font-semibold transition-all cursor-pointer ${
+                                  isThisCopied
+                                    ? "bg-emerald-600 text-white border-emerald-700 shadow-2xs scale-105"
+                                    : "bg-[#eef7f1] border-[#c1e2cd] text-[#1f6b3d] hover:bg-emerald-100 hover:border-emerald-400 hover:shadow-2xs"
+                                }`}
+                              >
+                                {isThisCopied ? "Copied filter!" : `'${val}'`}
+                              </button>
+                            )
+                          })}
                         </div>
                       </div>
                     ))}

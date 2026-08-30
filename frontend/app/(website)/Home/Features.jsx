@@ -1,6 +1,7 @@
 'use client'
 
 import React from "react"
+import { motion } from "framer-motion"
 import {
   AlertCircle,
   CheckCircle2,
@@ -84,13 +85,19 @@ export default function Features() {
       <div className="mx-auto max-w-7xl">
 
         {/* Header */}
-        <div className="mx-auto max-w-3xl text-center space-y-3 mb-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+          className="mx-auto max-w-3xl text-center space-y-3 mb-16"
+        >
           <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold">
             <Layers className="size-3.5 text-[#3aa363]" />
             <span>Universal Multi-Engine Intelligence</span>
           </Badge>
 
-          <h2 className="text-3xl font-semibold tracking-tight text-[#17241c] sm:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-[#17241c] sm:text-4xl text-balance">
             One engine for all your{" "}
             <span className="bg-gradient-to-r from-[#1f663c] to-[#4ca873] bg-clip-text text-transparent">
               SQL &amp; NoSQL databases.
@@ -100,14 +107,19 @@ export default function Features() {
           <p className="text-base text-[#5c6e63] leading-relaxed">
             From relational tables to nested document collections, QueryCraft clarifies intent, grounds queries in live schemas, and executes safe analytics anywhere.
           </p>
-        </div>
+        </motion.div>
 
         {/* Feature Cards Grid */}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 min-w-0">
           {featureList.map((f, idx) => (
-            <div
+            <motion.div
               key={idx}
-              className="group relative flex flex-col justify-between rounded-2xl border border-[#e0e8e2] bg-white p-6 hover-lift hover:border-[#71c897]/80 hover:shadow-lg hover:shadow-[#1f2d24]/5 transition-all duration-200 overflow-hidden"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.4, delay: idx * 0.08 }}
+              whileHover={{ y: -5 }}
+              className="group relative flex flex-col justify-between rounded-2xl border border-[#e0e8e2] bg-white p-6 hover:border-[#71c897]/80 hover:shadow-lg hover:shadow-[#1f2d24]/5 transition-all duration-200 overflow-hidden cursor-default"
             >
               {/* Hover accent */}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-[#3aa363] to-[#71c897] opacity-0 transition-opacity duration-200 group-hover:opacity-100 rounded-b-2xl" />
@@ -141,7 +153,7 @@ export default function Features() {
                 <CheckCircle2 className="size-3.5 text-[#3ba565]" />
                 <span>{f.highlight}</span>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 

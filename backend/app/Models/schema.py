@@ -218,3 +218,66 @@ class NotebookQueriesResponse(BaseModel):
     status: str
     queries: List[SavedNotebookQuery]
     total_count: int
+
+# --- DASHBOARD ARCHITECT & MULTI-AGENT SUB-GRAPH ---
+class DashboardWidgetPlan(BaseModel):
+    id: str
+    title: str
+    prompt: str
+    recommended_chart: Literal["bar", "line", "area", "pie", "donut", "table", "kpi"] = "bar"
+    grid_span: int = 1  # 1 column or 2 columns in a responsive 2-3 column layout
+    metric_type: Optional[str] = None  # e.g. "currency", "percentage", "count", "trend"
+    description: Optional[str] = None
+
+class DashboardPlan(BaseModel):
+    theme: str
+    dashboard_title: str
+    summary: str
+    widgets: List[DashboardWidgetPlan]
+
+class DashboardWidgetResult(BaseModel):
+    id: str
+    title: str
+    prompt: str
+    sql_query: str
+    dialect: str = "postgresql"
+    explanation: str
+    recommended_chart: str = "bar"
+    grid_span: int = 1
+    columns: List[str] = []
+    rows: List[Dict[str, Any]] = []
+    row_count: int = 0
+    kpi_value: Optional[str] = None
+    kpi_delta: Optional[str] = None
+    db_error: Optional[str] = None
+    execution_time_ms: Optional[int] = 0
+
+class DashboardGenerateRequest(BaseModel):
+    user_prompt: str = Field(description="High-level dashboard goal e.g. 'Build me a SaaS Executive Dashboard for Q3'")
+    theme: Optional[str] = "executive"
+    connection_uri: Optional[str] = None
+    db_uri: Optional[str] = None
+    live_schema: Optional[str] = None
+
+class DashboardCanvasResponse(BaseModel):
+    status: str
+    dashboard_title: str
+    executive_summary: str
+    theme: str = "executive"
+    widgets: List[DashboardWidgetResult]
+    total_widgets: int
+    execution_time_total_ms: int = 0
+    timestamp: str
+
+class DashboardTemplate(BaseModel):
+    id: str
+    title: str
+    badge: str
+    description: str
+    prompt: str
+    icon: str
+    tags: List[str] = []
+
+class DashboardTemplatesResponse(BaseModel):
+    status: str
+    templates: List[DashboardTemplate]

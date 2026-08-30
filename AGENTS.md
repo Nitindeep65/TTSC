@@ -3,32 +3,33 @@
 
 > **Repository**: `TTS` (Text-To-SQL / Text-To-NoSQL Engine)  
 > **Brand / Product Name**: **QueryCraft**  
-> **Version**: `1.2.0` (Vercel Serverless Ready + Native `pg` Driver + Multi-Device Responsive)  
-> **Primary Interfaces**: Next.js Web Dashboard & Manifest V3 Chrome Extension (Spotlight Copilot)  
+> **Version**: `1.5.0` (Production Hardened · Autonomous Dashboard Architect · Canvas Mode · Global Command Palette · Multi-Workspace · Recents History · Quotas & Billing)  
+> **Primary Interfaces**: Next.js 16 Web Dashboard & Manifest V3 Chrome Extension (Spotlight Copilot)  
 > **Dual AI Backend Support**: 
 >   1. **Serverless AI Engine**: Next.js Route Handlers (`serverLlm.js` + `dbDriver.js`) with Llama 3.1 70B Instruct via NVIDIA NIM & native `pg` driver.
->   2. **Microservice Backend**: FastAPI (Python 3.10+) + LangGraph Multi-Agent Orchestration + `psycopg2` / `pymongo`.  
+>   2. **Microservice Backend**: FastAPI (Python 3.10+) + LangGraph Multi-Agent Supervisor Orchestration + `psycopg2` / `pymongo`.  
 > **Supported Engines**: PostgreSQL (Supabase, Neon, AWS RDS, CockroachDB), MySQL, MongoDB Atlas, Amazon DynamoDB, Redis/Upstash  
 
 ---
 
 ## 1. Executive Summary & Problem Space
 
-Traditional Text-to-SQL / Text-to-NoSQL tools frequently fail in real-world production environments because of five fundamental flaws:
-1. **Ambiguity & Blind Guessing**: When given vague natural language requests (*"Show top customers"*), standard models guess timeframes, metrics, and filters without asking, leading to inaccurate queries.
-2. **Schema & Collection Hallucination**: LLMs invent non-existent table names, MongoDB document fields, or misuse database-specific types (`UUID`, `TIMESTAMPTZ`, `JSONB`, BSON object types).
+Traditional Text-to-SQL / Text-to-NoSQL tools frequently fail in real-world production environments because of fundamental flaws:
+1. **Ambiguity & Blind Guessing**: Standard models guess timeframes, metrics, and filters without asking, leading to inaccurate queries.
+2. **Schema & Typo Hallucinations**: LLMs invent non-existent table names, misspell similar entities (e.g. `ocunter parties` vs `counterparties`), or misuse database-specific types (`UUID`, `TIMESTAMPTZ`, `JSONB`, BSON object types).
 3. **Runtime Failures & Broken Pipelines**: Generated queries fail due to missing `GROUP BY` clauses, column type mismatches, or invalid MongoDB aggregation pipeline stages (`$lookup`, `$unwind`, `$group`).
 4. **Dangerous Runaway Scans & Missing Indexes**: Queries trigger expensive full sequential table scans or memory spikes on production databases without warning.
 5. **Missing Organizational Context**: Models lack domain-specific business definitions (e.g., how an organization defines *"Active Churn"* or calculates *"Net MRR"*).
 
-### QueryCraft Solution Architecture
-QueryCraft resolves these with an integrated 6-pillar pipeline:
-* **Conversational Clarification Loop**: Evaluates context and pauses to ask targeted clarifying questions with **1-tap interactive response chips** before query compilation if parameters are ambiguous, while immediately executing direct data inspection requests.
+### QueryCraft 7-Pillar Architecture
+QueryCraft resolves these with an integrated end-to-end pipeline:
+* **Fuzzy Schema & Typo Mapping**: Automatically maps misspelled entity requests (e.g. `custmers` $\rightarrow$ `customers`, `ocunter parties` $\rightarrow$ `counterparties`) strictly against live introspected tables before query compilation.
+* **Conversational Clarification Loop**: Evaluates context and pauses to ask targeted clarifying questions with **1-tap interactive response chips** and multi-selection before compilation if parameters are ambiguous, while executing direct data inspection requests immediately.
 * **Zero-Hallucination Live Schema Grounding**: Automatically introspects live PostgreSQL Information Schemas and MongoDB Atlas cluster databases & collections to ground prompts strictly in valid schemas.
+* **Autonomous Dashboard Architect (Canvas Mode)**: Supervisor planner decomposes high-level requests into 4 parallel query streams, assembling comprehensive multi-widget analytical dashboards with live DAG telemetry.
 * **Self-Healing Critic Loop ("SQL & MQL Doctor")**: Intercepts database runtime execution errors, parses SQLSTATE codes, uses an LLM Critic to diagnose root causes, and automatically repairs queries with up to 3 self-healing retries.
 * **Performance Guard & Index Advisor**: Dry-runs PostgreSQL `EXPLAIN (FORMAT JSON, COSTS TRUE, VERBOSE TRUE)` to estimate cost, detect sequential scans, and generate `CREATE INDEX CONCURRENTLY` statements.
 * **Cross-Engine Semantic Layer & Policy Ingestion**: Custom KPI glossary with keyword/RAG retrieval, conversational metric learning ("Teach AI"), and automated policy document metric extraction.
-* **Few-Shot Verified Memory & Notebook**: Dynamic token-overlap RAG retrieval for verified gold-standard queries and a tagged query snippet notebook with bidirectional cloud sync.
 
 ```
                                   ┌───────────────────────────────┐
@@ -38,7 +39,7 @@ QueryCraft resolves these with an integrated 6-pillar pipeline:
                                                   ▼
                                 ┌───────────────────────────────────┐
                                 │   Node 1: Intent & Clarifier      │
-                                │   - Visual Intent Detection       │
+                                │   - Typo & Fuzzy Schema Matcher   │
                                 │   - Ambiguity & Retrieval Routing │
                                 └─────────┬───────────────┬─────────┘
                                           │               │
@@ -53,7 +54,7 @@ QueryCraft resolves these with an integrated 6-pillar pipeline:
                       └───────────────────────┘                    │
                                                                    ▼
                                                  ┌───────────────────────────────────┐
-                                                 │   Node 3: Query Compiler          │
+                                                 │   Node 3: Query / Canvas Compiler │
                                                  │   - Grounded Llama 3.1 70B Prompt │
                                                  │   - Safe Read-Only & LIMIT 50     │
                                                  └─────────────────┬─────────────────┘
@@ -73,7 +74,7 @@ QueryCraft resolves these with an integrated 6-pillar pipeline:
                                                                    │                                               │
                                                                    ▼                                               ▼
                                                  ┌───────────────────────────────────┐           ┌───────────────────────────────────┐
-                                                 │   Node 6: Visualizer Router       │           │   Node 5: Critic Healer (Doctor)  │
+                                                 │   Node 6: Visualizer / Canvas     │           │   Node 5: Critic Healer (Doctor)  │
                                                  │   - Bar / Line / Pie / Area/ Table│◀──────────│   - SQLSTATE Error Diagnosis      │
                                                  │   - CSV One-Click Export          │  [Healed] │   - Schema-Aware Auto Heal & Retry│
                                                  └───────────────────────────────────┘           └───────────────────────────────────┘
@@ -99,11 +100,13 @@ TTS/
 │   │   │   └── schema.py           # Pydantic data models & request/response schemas
 │   │   ├── routers/
 │   │   │   ├── clarification.py    # /api/clarification - Multi-turn clarify & LangGraph compile
+│   │   │   ├── dashboard.py        # /api/dashboard - Multi-agent supervisor dashboard generation
 │   │   │   ├── database.py         # /api/database - Connect, introspect, execute, explain, diagnose, sample
 │   │   │   ├── memory.py           # /api/memory - Verified few-shot memory & notebook snippets
 │   │   │   ├── semantic.py         # /api/semantic - Semantic rules, teach AI, policy upload
 │   │   │   └── settings.py         # /api/settings - Sync settings, shortcuts, usage counters
 │   │   ├── services/
+│   │   │   ├── dashboard_service.py# Supervisor multi-agent planner & worker synthesis
 │   │   │   ├── db_service.py       # PostgreSQL & MongoDB connection, introspection, execution, sampling
 │   │   │   ├── explain_service.py  # PostgreSQL EXPLAIN cost analyzer & index advisor
 │   │   │   ├── healing_service.py  # Critic agent self-healing loop & SQL Doctor error diagnoser
@@ -112,6 +115,15 @@ TTS/
 │   │   │   ├── semantic_service.py # Semantic metric CRUD, RAG matcher, policy doc extraction
 │   │   │   └── sql_graph.py        # LangGraph multi-agent StateGraph workflow & self-healing loop
 │   │   └── main.py                 # FastAPI application initialization & CORS config
+│   ├── tests/                      # Pytest Automated Test Suite (83 tests passed)
+│   │   ├── test_clarification.py
+│   │   ├── test_dashboard_service.py
+│   │   ├── test_database.py
+│   │   ├── test_explain.py
+│   │   ├── test_healing.py
+│   │   ├── test_memory.py
+│   │   ├── test_semantic.py
+│   │   └── test_settings.py
 │   ├── pyproject.toml              # Dependencies & build definition
 │   ├── requirements.txt            # Production pip dependencies for deployment
 │   ├── uv.lock                     # UV package lock
@@ -124,12 +136,14 @@ TTS/
 │   │   │   └── Register/           # Auth register view with responsive Card backdrop
 │   │   ├── (website)/
 │   │   │   ├── Dashboard/
+│   │   │   │   ├── canvas/
+│   │   │   │   │   └── page.jsx    # Autonomous Dashboard Architect & Canvas Studio
 │   │   │   │   ├── chat/
 │   │   │   │   │   ├── Chatbox.jsx # Responsive interactive clarification chat studio
 │   │   │   │   │   └── page.jsx    # Chat view route
-│   │   │   │   ├── layout.jsx      # Responsive shell, header status pill, view switcher
+│   │   │   │   ├── layout.jsx      # 3-Zone shell, ⌘1/⌘2/⌘3 hotkeys, header status pill
 │   │   │   │   ├── page.jsx        # Direct SQL/NoSQL compiler & execution sandbox
-│   │   │   │   └── slidebar.jsx    # Collapsible sidebar navigation, workspaces, starter prompts
+│   │   │   │   └── slidebar.jsx    # Workspace switcher, Recents drawer, 2-tab schema explorer
 │   │   │   ├── Home/               # Modern landing page components
 │   │   │   │   ├── Hero.jsx        # Interactive landing hero with live demo simulation
 │   │   │   │   ├── Features.jsx    # Feature showcase
@@ -140,13 +154,16 @@ TTS/
 │   │   │   │   ├── Testimonial.jsx # Social proof & developer testimonials
 │   │   │   │   ├── CTA.jsx         # Call to action & workflow steps
 │   │   │   │   └── Homepage.jsx    # Assembled landing page
-│   │   │   ├── globals.css         # TailwindCSS styles, custom scrollbars, animations
+│   │   │   ├── globals.css         # TailwindCSS styles, custom scrollbars, tokens
 │   │   │   ├── layout.js           # Root HTML layout with font imports (Plus Jakarta Sans & JetBrains Mono)
 │   │   │   └── page.js             # Root route rendering Homepage
 │   │   ├── api/                    # Serverless Next.js API Routes (Vercel & Node.js)
 │   │   │   ├── clarification/
 │   │   │   │   ├── route.js        # POST /api/clarification (Llama 3.1 70B AI compilation)
 │   │   │   │   └── schema/route.js # GET /api/clarification/schema (Grounding schema)
+│   │   │   ├── dashboard/
+│   │   │   │   ├── generate/route.js # POST /api/dashboard/generate
+│   │   │   │   └── templates/route.js# GET /api/dashboard/templates
 │   │   │   ├── database/
 │   │   │   │   ├── connect/route.js    # POST /api/database/connect (pg live introspection)
 │   │   │   │   ├── diagnose/route.js   # POST /api/database/diagnose (SQL Doctor healing)
@@ -157,8 +174,11 @@ TTS/
 │   │   │   └── settings/
 │   │   │       └── route.js        # GET/POST /api/settings
 │   │   ├── components/
+│   │   │   ├── canvas/
+│   │   │   │   ├── DashboardCanvas.jsx       # Multi-widget responsive 3-column canvas grid
+│   │   │   │   └── PipelineExecutionFlow.jsx # Multi-agent DAG visualizer
 │   │   │   ├── database/
-│   │   │   │   ├── ConnectDatabaseModal.jsx    # Multi-engine connection modal with templates
+│   │   │   │   ├── ConnectDatabaseModal.jsx    # Dual mode URI/Builder, Password encoder, Sandboxes
 │   │   │   │   └── TableDataProfilerModal.jsx  # 5-row sample preview & distinct distribution
 │   │   │   ├── extension/
 │   │   │   │   └── ExtensionPromptModal.jsx    # Interactive Spotlight demo & 3-step setup
@@ -168,12 +188,14 @@ TTS/
 │   │   │   ├── semantic/
 │   │   │   │   └── MetricGlossaryModal.jsx     # Semantic layer glossary, "Teach AI", policy upload
 │   │   │   ├── settings/
-│   │   │   │   └── SettingsPanel.jsx           # Account, preferences, shortcuts, usage drawer
-│   │   │   ├── ui/                             # Shadcn & Base-UI reusable components
+│   │   │   │   └── SettingsPanel.jsx           # 8-Tab Settings (AI Engine, Safety, Studio, Quotas, Plans, Workspaces)
+│   │   │   ├── shell/
+│   │   │   │   └── CommandPalette.jsx          # Raycast/Linear-style global ⌘K command modal
+│   │   │   ├── ui/                             # Base-UI reusable components (command, dropdown, button, badge)
 │   │   │   ├── visualization/
 │   │   │   │   └── DataVisualizer.jsx          # SVG Bar/Line/Pie/Area/Table chart visualizer
 │   │   │   └── workspace/
-│   │   │       ├── CreateWorkspaceModal.jsx    # Workspace creation modal
+│   │   │       ├── CreateWorkspaceModal.jsx    # Multi-workspace creation modal with environment tags
 │   │   │       ├── QueryNotebookModal.jsx      # Tagged SQL snippet notebook
 │   │   │       └── WorkspaceSwitcher.jsx       # Adaptive workspace dropdown switcher
 │   │   ├── hooks/
@@ -181,18 +203,18 @@ TTS/
 │   │   ├── lib/
 │   │   │   ├── api.js                          # Centralized frontend API client
 │   │   │   ├── authContext.jsx                 # Firebase Auth Context (Email, Google, GitHub)
-│   │   │   ├── databaseContext.jsx             # Active workspace, connection, live query state
+│   │   │   ├── databaseContext.jsx             # Multi-workspace, connection, live query state
 │   │   │   ├── dbDriver.js                     # Native 'pg' client for live introspection & execution
 │   │   │   ├── extensionContext.jsx            # Extension detection & spotlight manager
 │   │   │   ├── firebase.js                     # Firebase Web SDK initialization & providers
 │   │   │   ├── serverBackendHelper.js          # Safe microservice proxying & timeout guard
-│   │   │   ├── serverLlm.js                    # Serverless Llama 3.1 70B AI engine & validator
-│   │   │   ├── settingsContext.jsx             # Synced settings & preferences context
+│   │   │   ├── serverLlm.js                    # Serverless Llama 3.1 70B AI engine & typo corrector
+│   │   │   ├── settingsContext.jsx             # Synced settings, usage metrics & preferences context
 │   │   │   ├── soundUtils.js                   # Audio feedback utilities
 │   │   │   ├── tourContext.jsx                 # Spotlight walkthrough tour context & state
 │   │   │   └── utils.js                        # Tailwind merge & clsx utility
-│   │   ├── __tests__/                          # Jest Automated Test Suites (9 suites / 46 tests)
-│   │   │   ├── components/                     # OnboardingModal, SpotlightTour, ExtensionPromptModal, DataVisualizer tests
+│   │   ├── __tests__/                          # Jest Automated Test Suites (11 suites / 73 tests)
+│   │   │   ├── components/                     # ConnectDatabaseModal, DashboardCanvas, ExtensionPrompt, Onboarding, Visualizer tests
 │   │   │   └── lib/                            # serverLlm, databaseContext, authContext, api, soundUtils tests
 │   │   ├── .env.local                          # NVIDIA NIM API Key, model, Firebase credentials
 │   │   ├── .env.example                        # Example env configuration
@@ -208,6 +230,8 @@ TTS/
 │   ├── popup.css                   # Refined dark aesthetic styles
 │   └── icons/                      # 16, 32, 48, 128px extension icons
 │
+├── docs/
+│   └── UI_UX_AUDIT_REPORT.md       # Comprehensive UI/UX Audit & Transformation Roadmap
 ├── vercel.json                     # Vercel monorepo deployment routing
 ├── package.json                    # Root monorepo workspace definition
 ├── README.md                       # High-level overview & setup instructions
@@ -222,43 +246,61 @@ TTS/
 ### 3.1. Dual AI Execution Architecture
 QueryCraft provides dual deployment paths:
 1. **Serverless Next.js Node.js Execution (`frontend/lib/serverLlm.js` & `frontend/lib/dbDriver.js`)**:
-   - Runs directly inside Next.js Edge/Serverless Route Handlers on Vercel without requiring a separate Python service.
-   - Directly calls **Llama 3.1 70B Instruct** via NVIDIA NIM with grounded system prompts.
-   - Direct PostgreSQL live introspection & query execution powered by native `pg` (`node-postgres`).
-   - Categorizes user intent: immediate query compilation for direct inspection (`SELECT ... FROM users LIMIT 50;`) vs. 1-tap clarification chips for ambiguous multi-dimensional requests.
+   - Runs directly inside Next.js Edge/Serverless Route Handlers on Vercel without requiring Python dependencies.
+   - Grounded Llama 3.1 70B Instruct via NVIDIA NIM with live schema context injection.
+   - Built-in fuzzy table & typo matching mapping misspelled user inputs to existing catalog tables.
+   - Native `pg` (`node-postgres`) client for PostgreSQL introspection and read-only execution.
 2. **Microservice LangGraph Workflow (`backend/app/services/sql_graph.py`)**:
-   - Full 6-node StateGraph state machine in Python with critic self-healing retries and memory RAG.
+   - 6-node StateGraph state machine in Python with critic self-healing retries and memory RAG.
 
-### 3.2. Live Database Introspection & Driver Subsystem
-* **Location**: `frontend/lib/dbDriver.js` & `backend/app/services/db_service.py`
-* **PostgreSQL Engine**:
-  - Introspects `information_schema.tables`, `columns`, `table_constraints`, `key_column_usage`, and foreign keys.
-  - Generates synthetic live DDL statements formatted for LLM system prompt grounding.
-  - Read-only execution enforced with `SET TRANSACTION READ ONLY;` and an 8000ms statement timeout.
-* **MongoDB Atlas Engine**:
-  - Cluster Discovery: Introspects databases, collections, and infers BSON document schemas (`ObjectId`, `String`, `Date`, `Array<T>`, `Object`).
-* **Cloud vs. Localhost Safety**:
-  - Intelligently detects private `localhost` / `127.0.0.1` URIs when executing on Vercel cloud serverless functions and returns friendly actionable advice to use cloud databases or run locally.
+### 3.2. Autonomous Dashboard Architect & Canvas Mode
+* **Location**: `frontend/app/(website)/Dashboard/canvas/page.jsx` & `frontend/components/canvas/DashboardCanvas.jsx`
+* **Features**:
+  - **Supervisor Multi-Agent Decomposition**: One natural language prompt generates 4 parallel queries (*Primary Trend*, *Cohort Distribution*, *Leaderboard*, *Status Breakdown*) and synthesizes a unified analytical canvas.
+  - **Multi-Agent Pipeline DAG Flow**: `PipelineExecutionFlow.jsx` animates the 4 nodes (*Supervisor Planner*, *4 Parallel Workers*, *Critic Doctor Guard*, *Canvas Assembler*) with dedicated execution indicators.
+  - **KPI Hero Tiles with Sparklines**: Inline trend sparklines provide immediate executive context.
+  - **Interactive Widget Controls**: Dynamic chart switching (`[ Bar | Line | Pie | Table ]`), SQL inspection dialog, CSV download, and zoom modal.
 
-### 3.3. Self-Healing Critic Loop ("SQL & MQL Doctor")
-* **Location**: `frontend/app/api/database/diagnose/route.js`, `backend/app/services/healing_service.py`
-* **Mechanisms**:
-  - Extracts runtime SQLSTATE codes (`42703` Undefined Column, `42P01` Undefined Table, `22P02` Invalid Representation, `42803` Grouping Error).
-  - Schema-grounded critic analyzes error trace and automatically repairs SQL queries before re-executing.
+### 3.3. Global Command Palette (`⌘K` / `Ctrl+K`)
+* **Location**: `frontend/components/shell/CommandPalette.jsx`
+* **Features**:
+  - Instant keyboard access from any dashboard page.
+  - Grouped categories: *Views & Studios* (`G C`, `G V`, `G X`), *Recent Queries* (1-tap re-run), *Database & Schema* (`⌘D`), *Workspaces*, and *Tools & Settings* (`⌘,`, `⌘G`).
 
-### 3.4. Multi-Device Responsive Design System
-* **Breakpoints Supported**:
-  - **Mobile Phones (< 640px)**: Compact status pills, horizontal swipeable tab bars, slide-over schema drawer with backdrop blur, single-column cards.
-  - **Tablets (640px - 1024px)**: Adaptive header layout, flexible workspace trigger buttons, responsive SQL preview cards.
-  - **Small Laptops / MacBooks (1024px - 1280px)**: Seamless non-overflowing sidebar and drawer widths.
-  - **Large Displays (1440px+)**: Multi-column studio with live schema inspector sidebar and DataVisualizer chart panels.
+### 3.4. Database Connector & Sandbox Architecture
+* **Location**: `frontend/components/database/ConnectDatabaseModal.jsx`
+* **Features**:
+  - **Dual Input Modes**: Fast single URI paste mode alongside structured Parameter Builder mode with live two-way sync.
+  - **Password Auto-Encoder**: Detects unescaped special characters (`#`, `@`, `/`, `?`) and encodes them automatically.
+  - **Safe Internal Demo Sandboxes**: Pre-configured mock schemas for E-Commerce, SaaS Billing, and MongoDB IoT events using RFC-compliant `.internal` domains (prevents false-positive secret scanning alerts).
+  - **Pre-Flight Security Guards**: Explicitly documents `SET TRANSACTION READ ONLY`, 8000ms statement timeouts, and stateless in-memory sessions.
+
+### 3.5. Sidebar & Workspace Project Manager
+* **Location**: `frontend/app/(website)/Dashboard/slidebar.jsx`
+* **Key Components**:
+  - **Workspace & Project Switcher**: Fast 1-click workspace switching with environment badges (`Production`, `Staging`, `Development`, `Analytics`) and `+ Create New Workspace` action.
+  - **Recents Query History Drawer**: Collapsible list tracking recent natural language prompts and compiled SQL/MQL statements with 1-click re-run and clipboard copy.
+  - **Schema Explorer**: Searchable data dictionary with column types, primary key badges, and explicit `[ Live Introspected ]` vs `[ Sandbox Mock ]` banner indicators.
+
+### 3.6. Settings Studio & Quota Engine
+* **Location**: `frontend/components/settings/SettingsPanel.jsx`
+* **8 Core Sections**:
+  1. **AI Engine & Doctor**: Model selection, Temperature slider (`0.0` to `0.5`), SQL Doctor Critic auto-healing, Schema Pruning.
+  2. **Database Safety**: `SET TRANSACTION READ ONLY` enforcement, Statement execution timeouts, Safe Result LIMIT clamps, EXPLAIN cost warnings.
+  3. **Studio & Formatting**: SQL keyword casing (`UPPERCASE` vs `lowercase`), CSV export delimiters, Haptic audio effects.
+  4. **Usage & Quotas**: Real-time monthly query quota progress (`X / 500 Queries`), auto-heals count, verified snippets, live schema tables, dialect distribution.
+  5. **Plans & Billing**: Developer Free Tier vs Team Pro ($19/mo) comparison & upgrade path.
+  6. **Keybindings & Copilot**: Hotkey bindings (`Cmd+Shift+K`, `Cmd+Enter`, `Cmd+,`, `Cmd+K`).
+  7. **Projects & Workspaces**: Workspace CRUD management with environment tags.
+  8. **Profile & Cloud Sync**: Profile info and factory defaults reset.
 
 ---
 
 ## 4. Current Verification & Quality Assurance
 
-* **Automated Unit & Integration Tests**: `9 passed, 9 total` (46 tests in `frontend/__tests__`).
-* **Production Build**: `next build` compiles all 16 static and dynamic routes cleanly with Turbopack.
+* **Automated Frontend Tests**: `11 passed, 11 total` (73 tests in `frontend/__tests__`).
+* **Automated Backend Tests**: `83 passed, 83 total` (in `backend/tests`).
+* **Production Build**: `next build` compiles all 19 static and dynamic routes cleanly with Turbopack.
 * **Firebase Authentication**: Active email/password, Google OAuth, GitHub OAuth, and session tokens.
 * **Chrome Extension Hotkey**: `Cmd + Shift + K` global Spotlight Copilot.
 
@@ -276,13 +318,24 @@ npm run dev
 ### 5.2. Starting the Python FastAPI Backend (Optional / Microservice Mode)
 ```bash
 cd /Users/nitindeep/Developer/TTS/backend
-source venv/bin/activate
+source .venv/bin/activate
 uvicorn app.main:app --reload --port 8000
 ```
 *API documentation is available at `http://127.0.0.1:8000/docs`.*
 
 ### 5.3. Running Test Suites
 ```bash
+# Frontend Jest Suites (11 suites / 73 tests)
 cd /Users/nitindeep/Developer/TTS/frontend
 npm test
+
+# Backend Pytest Suites (83 tests)
+cd /Users/nitindeep/Developer/TTS/backend
+uv run pytest
+```
+
+### 5.4. Building for Production
+```bash
+cd /Users/nitindeep/Developer/TTS/frontend
+npm run build
 ```

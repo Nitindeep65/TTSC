@@ -59,16 +59,38 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { API_BASE_URL, settingsApi } from "@/lib/api"
 
-const TABS = [
-  { id: "engine",      label: "AI Engine & Doctor",   icon: Cpu,                badge: "70B NIM" },
-  { id: "safety",      label: "Database Safety",       icon: ShieldCheck,        badge: "Read-Only" },
-  { id: "editor",      label: "Studio & Formatting",   icon: SlidersHorizontal,  badge: null },
-  { id: "usage",       label: "Usage & Quotas",        icon: BarChart3,          badge: "Quota" },
-  { id: "plans",       label: "Plans & Billing",       icon: CreditCard,         badge: "Free" },
-  { id: "shortcuts",   label: "Keybindings & Copilot", icon: Keyboard,           badge: "Cmd+K" },
-  { id: "workspaces",  label: "Projects & Workspaces", icon: FolderKanban,       badge: null },
-  { id: "account",     label: "Profile & Cloud Sync",  icon: User,               badge: null },
+const SECTIONS = [
+  {
+    title: "1. Engine & AI",
+    items: [
+      { id: "engine", label: "AI Engine & Doctor", icon: Cpu, badge: "70B NIM" },
+      { id: "editor", label: "Studio & Formatting", icon: SlidersHorizontal, badge: null },
+    ],
+  },
+  {
+    title: "2. Database & Security",
+    items: [
+      { id: "safety", label: "Database Safety", icon: ShieldCheck, badge: "Read-Only" },
+    ],
+  },
+  {
+    title: "3. Workspaces & Keybindings",
+    items: [
+      { id: "workspaces", label: "Projects & Workspaces", icon: FolderKanban, badge: null },
+      { id: "shortcuts", label: "Keybindings & Copilot", icon: Keyboard, badge: "⌘K" },
+    ],
+  },
+  {
+    title: "4. Account & Billing",
+    items: [
+      { id: "usage", label: "Usage & Quotas", icon: BarChart3, badge: "Quota" },
+      { id: "plans", label: "Plans & Billing", icon: CreditCard, badge: "Free" },
+      { id: "account", label: "Profile & Cloud Sync", icon: User, badge: null },
+    ],
+  },
 ]
+
+const TABS = SECTIONS.flatMap((s) => s.items)
 
 const ROLES = [
   "Data Architect",
@@ -264,40 +286,49 @@ export default function SettingsPanel({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto p-1.5 md:p-2 gap-1 md:space-y-1 shrink-0 md:flex-1 no-scrollbar">
-            {TABS.map((tab) => {
-              const Icon = tab.icon
-              const isActive = activeTab === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold text-left transition-all duration-150 shrink-0 whitespace-nowrap md:whitespace-normal md:w-full cursor-pointer ${
-                    isActive
-                      ? "bg-[#1f2d24] text-white shadow-xs"
-                      : "text-[#4a5e53] hover:bg-[#eef5f0] hover:text-[#141a17]"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`size-3.5 ${isActive ? "text-[#5de08a]" : "text-[#7b9283]"}`} />
-                    <span>{tab.label}</span>
-                  </div>
-                  {tab.badge && (
-                    <span
-                      className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md hidden sm:inline ml-2 ${
-                        isActive
-                          ? "bg-white/20 text-[#a5f3bc]"
-                          : "bg-[#e5eee7] text-[#55695d]"
-                      }`}
-                    >
-                      {tab.badge}
-                    </span>
-                  )}
-                </button>
-              )
-            })}
+          {/* Navigation Tabs grouped by 4 Sections */}
+          <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto p-1.5 md:p-2 gap-1 md:space-y-2.5 shrink-0 md:flex-1 no-scrollbar">
+            {SECTIONS.map((sec, sIdx) => (
+              <div key={sIdx} className="space-y-1">
+                <p className="hidden md:block px-2 text-[9.5px] font-bold uppercase tracking-wider text-muted-foreground">
+                  {sec.title}
+                </p>
+                <div className="flex md:flex-col gap-1">
+                  {sec.items.map((tab) => {
+                    const Icon = tab.icon
+                    const isActive = activeTab === tab.id
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold text-left transition-all duration-150 shrink-0 whitespace-nowrap md:whitespace-normal md:w-full cursor-pointer ${
+                          isActive
+                            ? "bg-primary text-primary-foreground shadow-2xs"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Icon className={`size-3.5 ${isActive ? "text-emerald-400" : "text-muted-foreground"}`} />
+                          <span>{tab.label}</span>
+                        </div>
+                        {tab.badge && (
+                          <span
+                            className={`text-[8.5px] font-bold px-1.5 py-0.2 rounded hidden sm:inline ml-2 ${
+                              isActive
+                                ? "bg-white/20 text-emerald-200"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {tab.badge}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* Active Workspace Pill in Footer */}

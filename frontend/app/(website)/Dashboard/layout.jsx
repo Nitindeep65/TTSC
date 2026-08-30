@@ -16,9 +16,16 @@ import {
   Loader2,
   MessageSquareText,
   Settings,
+  Sparkles,
   Terminal,
   Wand2,
   Zap,
+  Search,
+  User,
+  LogOut,
+  ChevronDown,
+  BookOpen,
+  Command as CommandIcon,
 } from "lucide-react"
 import { DatabaseProvider, useDatabase } from "@/lib/databaseContext"
 import { SettingsProvider, useSettings } from "@/lib/settingsContext"
@@ -35,27 +42,70 @@ import SpotlightTooltip from "@/components/onboarding/SpotlightTooltip"
 import { TourProvider, useTour } from "@/lib/tourContext"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { CommandPalette } from "@/components/shell/CommandPalette"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu"
 
-function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
+function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, logout } = useAuth()
   const { dbInfo, setIsModalOpen } = useDatabase()
   const { isInstalled, openModal } = useExtension()
   const { isTourActive, currentStep } = useTour()
 
-  const isQueryTester = pathname === "/Dashboard"
-  const isChat = pathname === "/Dashboard/chat"
+  const isChat = pathname?.startsWith("/Dashboard/chat")
+  const isCanvas = pathname?.startsWith("/Dashboard/canvas")
+  const isCompiler = pathname === "/Dashboard"
+
+  // Ergonomic keyboard shortcuts: ⌘1 (Chat), ⌘2 (Canvas), ⌘3 (Compiler)
+  useEffect(() => {
+    const handleViewShortcuts = (e) => {
+      if (["INPUT", "TEXTAREA"].includes(e.target.tagName) || e.target.isContentEditable) {
+        return
+      }
+      if (e.metaKey || e.ctrlKey) {
+        if (e.key === "1") {
+          e.preventDefault()
+          router.push("/Dashboard/chat")
+        } else if (e.key === "2") {
+          e.preventDefault()
+          router.push("/Dashboard/canvas")
+        } else if (e.key === "3") {
+          e.preventDefault()
+          router.push("/Dashboard")
+        }
+      }
+    }
+    window.addEventListener("keydown", handleViewShortcuts)
+    return () => window.removeEventListener("keydown", handleViewShortcuts)
+  }, [router])
+
+  const userInitials = (user?.displayName || user?.email || "U")
+    .split(" ")
+    .filter(Boolean)
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "U"
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 sm:h-16 w-full shrink-0 items-center justify-between border-b border-border bg-white/95 px-3 sm:px-6 backdrop-blur-md min-w-0 max-w-full overflow-x-hidden">
-      {/* Left: Sidebar trigger & Workspace Switcher */}
-      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1 sm:flex-initial pr-2">
-        <SidebarTrigger className="size-8 shrink-0 text-[#1f2d24] hover:bg-[#edf5ef]" />
-        <div className="hidden xs:block h-4 sm:h-5 w-px bg-border shrink-0" />
+    <header className="sticky top-0 z-40 flex h-14 w-full shrink-0 items-center justify-between border-b border-border bg-card/90 px-3 sm:px-5 backdrop-blur-md min-w-0 max-w-full">
+      {/* ── ZONE 1: LEFT (Sidebar + Brand + Workspace Switcher) ── */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <SidebarTrigger className="size-8 shrink-0 text-foreground hover:bg-accent rounded-lg" />
+        <div className="hidden sm:block h-4 w-px bg-border shrink-0" />
         <div
           id="tour-connect-db"
-          className={`min-w-0 flex-1 sm:flex-initial transition-all duration-300 ${
+          className={`min-w-0 transition-all duration-200 ${
             isTourActive && currentStep === 3
-              ? "relative z-[60] ring-4 ring-emerald-500 rounded-xl bg-white shadow-2xl p-0.5"
+              ? "relative z-[60] ring-4 ring-emerald-500 rounded-xl bg-card shadow-2xl p-0.5"
               : ""
           }`}
         >
@@ -63,133 +113,149 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings }) {
         </div>
       </div>
 
-      {/* Right: Actions & Tools */}
-      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-
-        {/* Metric Glossary (Desktop / Tablet) */}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onOpenMetrics}
-          className="gap-1.5 font-semibold text-xs text-[#206642] hidden xl:flex h-8"
-          title="Open Custom Business Metrics & Rules"
+      {/* ── ZONE 2: CENTER (Canonical Segmented Switcher: Chat | Canvas | Compiler) ── */}
+      <div className="flex items-center rounded-xl border border-border bg-muted/60 p-0.5 text-xs font-semibold shadow-2xs">
+        <Link
+          href="/Dashboard/chat"
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 transition-all duration-150 ${
+            isChat
+              ? "bg-primary text-primary-foreground shadow-2xs"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+          }`}
+          title="Interactive Conversational AI Assistant (⌘1)"
         >
-          <Wand2 className="size-3.5 text-[#3aa363]" />
-          <span>Metrics Glossary</span>
-        </Button>
+          <MessageSquareText className="size-3.5" />
+          <span>Chat</span>
+        </Link>
 
-        {/* Chrome Extension Status / Try Extension (Large screen) */}
-        {isInstalled ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => openModal(false)}
-            className="gap-1.5 font-semibold text-xs border-emerald-500/40 bg-emerald-50 text-[#14532d] hover:bg-emerald-100 hidden 2xl:flex h-8"
-            title="QueryCraft Chrome Extension is installed. Press Cmd+Shift+K anywhere on the web."
-          >
-            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-            <Zap className="size-3.5 text-emerald-600" />
-            <span>Copilot Active</span>
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => openModal(true)}
-            className="gap-1.5 font-semibold text-xs border-emerald-600/30 bg-[#f0f9f3] text-[#164e2d] hover:bg-[#e2f3e8] hover:border-emerald-600/50 shadow-2xs hidden 2xl:flex h-8"
-            title="Open on any page with Cmd+Shift+K — Try QueryCraft Chrome Extension"
-          >
-            <Zap className="size-3.5 text-emerald-600" />
-            <span>Try Extension</span>
-            <span className="rounded bg-emerald-600/10 px-1 py-0.2 text-[9px] font-mono text-emerald-800">
-              Cmd+Shift+K
-            </span>
-          </Button>
-        )}
+        <Link
+          href="/Dashboard/canvas"
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 transition-all duration-150 ${
+            isCanvas
+              ? "bg-primary text-primary-foreground shadow-2xs"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+          }`}
+          title="Autonomous Multi-Agent Dashboard Studio (⌘2)"
+        >
+          <Sparkles className="size-3.5 text-emerald-400" />
+          <span>Canvas</span>
+        </Link>
 
-        {/* DB Status / Connect DB Pill */}
-        <Button
+        <Link
+          href="/Dashboard"
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 transition-all duration-150 ${
+            isCompiler
+              ? "bg-primary text-primary-foreground shadow-2xs"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+          }`}
+          title="Natural Language Query Compiler (⌘3)"
+        >
+          <Terminal className="size-3.5" />
+          <span>Compiler</span>
+        </Link>
+      </div>
+
+      {/* ── ZONE 3: RIGHT (DB Status + ⌘K Palette + User Menu) ── */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Command Palette Trigger Button */}
+        <button
           type="button"
-          suppressHydrationWarning
-          variant={dbInfo ? "secondary" : "default"}
-          size="sm"
+          onClick={onOpenCommandPalette}
+          className="hidden md:flex items-center gap-2 h-8 px-2.5 rounded-lg border border-border bg-background text-xs text-muted-foreground hover:border-border-hover hover:text-foreground transition shadow-2xs"
+          title="Search views, database schema, commands (⌘K)"
+        >
+          <Search className="size-3.5" />
+          <span className="text-[11px] font-medium">Search...</span>
+          <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[9.5px] font-mono text-muted-foreground">
+            ⌘K
+          </kbd>
+        </button>
+
+        {/* Connected DB Status Pill */}
+        <button
+          type="button"
           onClick={() => setIsModalOpen(true)}
-          className="gap-1.5 font-semibold text-xs shadow-2xs h-8 px-2 sm:px-3"
-          title={dbInfo ? `Connected to ${dbInfo.host} (${dbInfo.tables_count} tables)` : "Connect your cloud database"}
+          className={`flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-xs font-semibold transition shadow-2xs cursor-pointer ${
+            dbInfo
+              ? "border-emerald-200/80 bg-emerald-50 text-emerald-900 hover:bg-emerald-100/80"
+              : "border-border bg-primary text-primary-foreground hover:bg-primary/90"
+          }`}
+          title={dbInfo ? `Connected to ${dbInfo.host} (${dbInfo.tables_count} live tables)` : "Connect database"}
         >
           {dbInfo ? (
             <>
-              <span className="size-2 rounded-full bg-[#3ba565] animate-pulse shrink-0" />
-              <Database className="size-3.5 text-[#3ba565] shrink-0" />
-              <span className="hidden lg:inline font-mono truncate max-w-[120px]">{dbInfo.host}</span>
-              <span className="hidden sm:inline lg:hidden font-medium">DB</span>
-              <Badge variant="emerald" className="px-1.5 py-0 text-[9px] bg-white">
-                {dbInfo.tables_count} <span className="hidden xs:inline">tbls</span>
-              </Badge>
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <Database className="size-3.5 text-emerald-600 shrink-0" />
+              <span className="hidden sm:inline font-mono truncate max-w-[110px]">{dbInfo.host}</span>
+              <span className="rounded bg-white/90 px-1 py-0.2 text-[9px] font-bold text-emerald-800">
+                {dbInfo.tables_count}
+              </span>
             </>
           ) : (
             <>
-              <Cloud className="size-3.5 text-[#71c897] shrink-0" />
-              <span className="hidden sm:inline">Connect DB</span>
-              <span className="sm:hidden text-xs">Connect</span>
+              <Cloud className="size-3.5 text-emerald-400 shrink-0" />
+              <span>Connect DB</span>
             </>
           )}
-        </Button>
+        </button>
 
-        {/* View Switcher: Tester / Live Chat */}
-        <div className="flex items-center rounded-xl border border-border bg-[#f8fbf8] p-0.5 text-xs">
-          <Link
-            href="/Dashboard"
-            className={`flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 font-semibold transition-all duration-150 ${isQueryTester
-                ? "bg-[#1f2d24] text-white shadow-2xs"
-                : "text-[#55675c] hover:bg-[#eef4ef] hover:text-[#1f2d24]"
-              }`}
-            title="Query Compiler Tester"
-          >
-            <Terminal className="size-3.5" />
-            <span className="hidden sm:inline">Tester</span>
-          </Link>
-          <Link
-            href="/Dashboard/chat"
-            className={`flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 font-semibold transition-all duration-150 ${isChat
-                ? "bg-[#1f2d24] text-white shadow-2xs"
-                : "text-[#55675c] hover:bg-[#eef4ef] hover:text-[#1f2d24]"
-              }`}
-            title="Interactive Multi-Turn AI Chat"
-          >
-            <MessageSquareText className="size-3.5" />
-            <span className="hidden sm:inline">Chat</span>
-          </Link>
-        </div>
+        {/* User Profile & Global Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex size-8 items-center justify-center rounded-lg border border-border bg-muted/60 text-xs font-bold text-foreground hover:bg-accent transition shadow-2xs">
+            {userInitials}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="right" className="w-56">
+            <DropdownMenuLabel>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-foreground truncate">
+                  {user?.displayName || "Developer Account"}
+                </span>
+                <span className="text-[10px] text-muted-foreground truncate normal-case">
+                  {user?.email || "Local Session"}
+                </span>
+              </div>
+            </DropdownMenuLabel>
 
-        {/* Settings Button */}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onOpenSettings}
-          className="gap-1.5 font-semibold text-xs text-[#4a5e53] border-[#e0e8e2] hover:bg-[#edf5ef] hover:text-[#1a2920] h-8 px-2 sm:px-3"
-          title="Settings (Cmd+,) — synced with extension"
-        >
-          <Settings className="size-3.5" />
-          <span className="hidden md:inline">Settings</span>
-        </Button>
+            <DropdownMenuSeparator />
 
-        {/* Back to Landing */}
-        <Link href="/" className="hidden sm:block">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 font-semibold text-xs text-[#32483a] h-8 px-2 sm:px-3"
-            title="Back to Landing Page"
-          >
-            <ArrowLeft className="size-3.5 text-[#5e7065]" />
-            <span className="hidden md:inline">Home</span>
-          </Button>
-        </Link>
+            <DropdownMenuItem onClick={onOpenCommandPalette}>
+              <CommandIcon className="size-3.5 text-emerald-600" />
+              <span>Command Palette</span>
+              <span className="ml-auto font-mono text-[10px] text-muted-foreground">⌘K</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={onOpenSettings}>
+              <Settings className="size-3.5 text-muted-foreground" />
+              <span>Settings &amp; Engine</span>
+              <span className="ml-auto font-mono text-[10px] text-muted-foreground">⌘,</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={onOpenMetrics}>
+              <BookOpen className="size-3.5 text-muted-foreground" />
+              <span>Metrics Glossary</span>
+              <span className="ml-auto font-mono text-[10px] text-muted-foreground">⌘G</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={() => openModal(!isInstalled)}>
+              <Zap className="size-3.5 text-emerald-600" />
+              <span>{isInstalled ? "Copilot Extension Active" : "Get Chrome Extension"}</span>
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem onClick={() => window.location.assign("/")}>
+              <ArrowLeft className="size-3.5 text-muted-foreground" />
+              <span>Back to Landing Page</span>
+            </DropdownMenuItem>
+
+            {user && (
+              <DropdownMenuItem onClick={logout} className="text-destructive hover:text-destructive">
+                <LogOut className="size-3.5" />
+                <span>Sign Out</span>
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )
@@ -200,6 +266,7 @@ function DashboardShell({ children }) {
   const { user, loading } = useAuth()
   const [isMetricModalOpen, setIsMetricModalOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
 
   // First-time user onboarding detection
@@ -254,11 +321,20 @@ function DashboardShell({ children }) {
         <DashboardNavbar
           onOpenMetrics={() => setIsMetricModalOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         />
         <div className="w-full max-w-full min-w-0 overflow-x-hidden flex-1">
           {children}
         </div>
       </SidebarInset>
+
+      {/* Global Command Palette (⌘K) */}
+      <CommandPalette
+        open={isCommandPaletteOpen}
+        onOpenChange={setIsCommandPaletteOpen}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenMetrics={() => setIsMetricModalOpen(true)}
+      />
 
       {/* Modals */}
       <ConnectDatabaseModal />

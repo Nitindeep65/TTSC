@@ -3,6 +3,9 @@ import {
   generateClarificationChips,
   validateAndEnforceSafety,
   sanitizeAndParseJson,
+  getDashboardStarterTemplates,
+  getFallbackDashboardPlan,
+  generateServerlessMockDataForWidget,
 } from "@/lib/serverLlm"
 
 describe("serverLlm utilities", () => {
@@ -184,6 +187,35 @@ CREATE TABLE counterparties (id INT, name VARCHAR(100), created_at TIMESTAMPTZ);
       })
       expect(res5.status).toBe("complete")
       expect(res5.extracted_data.sql_query).toBe("SELECT * FROM counterparties LIMIT 50;")
+    })
+  })
+
+  describe("Dashboard Architect utilities", () => {
+    it("returns 4 starter templates", () => {
+      const templates = getDashboardStarterTemplates()
+      expect(templates.length).toBe(4)
+      expect(templates[0].id).toBe("saas_executive")
+    })
+
+    it("generates fallback dashboard plan with 4 widgets for SaaS", () => {
+      const plan = getFallbackDashboardPlan("Build me an Executive SaaS Dashboard")
+      expect(plan.theme).toBe("executive")
+      expect(plan.widgets.length).toBe(4)
+      expect(plan.widgets[0].recommended_chart).toBe("line")
+    })
+
+    it("generates fallback dashboard plan for general e-commerce", () => {
+      const plan = getFallbackDashboardPlan("Orders and products dashboard")
+      expect(plan.theme).toBe("ecommerce")
+      expect(plan.widgets.length).toBe(4)
+    })
+
+    it("generates mock rows and columns for widgets", () => {
+      const data = generateServerlessMockDataForWidget({ id: "net_mrr", recommended_chart: "line" })
+      expect(data.columns).toContain("month")
+      expect(data.columns).toContain("gross_revenue")
+      expect(data.rows.length).toBeGreaterThan(0)
+      expect(data.kpi_value).toBeDefined()
     })
   })
 })

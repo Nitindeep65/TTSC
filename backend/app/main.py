@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import clarification, database, semantic, memory, settings
+from app.routers import clarification, database, semantic, memory, settings, dashboard
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,6 +13,7 @@ app.include_router(database.router)
 app.include_router(semantic.router)
 app.include_router(memory.router)
 app.include_router(settings.router)
+app.include_router(dashboard.router)
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from "react"
+import { motion } from "framer-motion"
 import {
   AlertTriangle,
   Ban,
@@ -133,7 +134,13 @@ export default function ProblemSection() {
       <div className="relative mx-auto max-w-7xl">
 
         {/* Section header */}
-        <div className="mx-auto max-w-3xl text-center space-y-4 mb-16 lg:mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+          className="mx-auto max-w-3xl text-center space-y-4 mb-16 lg:mb-20"
+        >
           <Badge
             variant="secondary"
             className="gap-2 px-3.5 py-1 text-xs font-semibold border-red-200 bg-red-50 text-red-700"
@@ -142,7 +149,7 @@ export default function ProblemSection() {
             <span>Universal AI Database Pitfalls</span>
           </Badge>
 
-          <h2 className="text-3xl font-semibold tracking-tight text-[#17241c] sm:text-4xl lg:text-5xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-[#17241c] sm:text-4xl lg:text-5xl text-balance">
             Generic AI{" "}
             <span className="relative">
               <span className="relative text-red-500">guesses schemas.</span>
@@ -156,13 +163,19 @@ export default function ProblemSection() {
           <p className="text-base leading-relaxed text-[#56675d] max-w-2xl mx-auto">
             Whether your data lives in relational PostgreSQL tables, MySQL, or MongoDB document collections, standard LLMs hallucinate fields and assume silent defaults. QueryCraft brings live schema grounding to all your data engines.
           </p>
-        </div>
+        </motion.div>
 
         {/* Before / After grid */}
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-6 xl:gap-10 mb-16">
 
           {/* BEFORE — Problems column */}
-          <div className="space-y-4">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5 }}
+            className="space-y-4"
+          >
             <div className="flex items-center gap-3 mb-6">
               <div className="flex size-8 items-center justify-center rounded-xl bg-red-100 border border-red-200">
                 <XCircle className="size-4 text-red-500" />
@@ -175,11 +188,13 @@ export default function ProblemSection() {
 
             <div className="space-y-3">
               {problems.map((p, idx) => (
-                <button
+                <motion.button
                   key={idx}
                   type="button"
+                  whileHover={{ scale: 1.01 }}
+                  transition={{ duration: 0.15 }}
                   onClick={() => setActiveIndex(activeIndex === idx ? null : idx)}
-                  className={`w-full text-left group flex items-start gap-3.5 rounded-xl border p-4 transition-all duration-200 hover:shadow-sm ${
+                  className={`w-full text-left group flex items-start gap-3.5 rounded-xl border p-4 transition-all duration-200 hover:shadow-sm cursor-pointer ${
                     activeIndex === idx
                       ? "border-red-300 bg-red-50 shadow-sm"
                       : "border-[#e8edea] bg-white hover:border-red-200"
@@ -205,7 +220,7 @@ export default function ProblemSection() {
                       {p.pain}
                     </p>
                   </div>
-                </button>
+                </motion.button>
               ))}
             </div>
 
@@ -223,10 +238,16 @@ export default function ProblemSection() {
                 <code>{brokenSql}</code>
               </pre>
             </div>
-          </div>
+          </motion.div>
 
           {/* AFTER — Solutions column */}
-          <div className="space-y-4">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="space-y-4"
+          >
             <div className="flex items-center gap-3 mb-6">
               <div className="flex size-8 items-center justify-center rounded-xl bg-emerald-100 border border-emerald-200">
                 <CheckCircle2 className="size-4 text-emerald-600" />
@@ -239,8 +260,10 @@ export default function ProblemSection() {
 
             <div className="space-y-3">
               {solutions.map((s, idx) => (
-                <div
+                <motion.div
                   key={idx}
+                  whileHover={{ scale: 1.01 }}
+                  transition={{ duration: 0.15 }}
                   className="flex items-start gap-3.5 rounded-xl border border-[#e8edea] bg-white p-4 hover:border-emerald-200 hover:shadow-sm transition-all duration-200"
                 >
                   <div className={`flex size-9 shrink-0 items-center justify-center rounded-lg border ${s.bg} transition-transform duration-200 hover:scale-105`}>
@@ -250,7 +273,7 @@ export default function ProblemSection() {
                     <p className="text-sm font-semibold text-[#17241c]">{s.label}</p>
                     <p className="mt-0.5 text-xs text-[#6b7f74] leading-relaxed">{s.fix}</p>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
 
@@ -272,11 +295,17 @@ export default function ProblemSection() {
                 <code>{healedSql}</code>
               </pre>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Bottom strip */}
-        <div className="rounded-2xl border border-[#d5e7d9] bg-[#edf8f1] px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4 }}
+          className="rounded-2xl border border-[#d5e7d9] bg-[#edf8f1] px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        >
           <div className="flex items-start sm:items-center gap-3">
             <ShieldCheck className="size-5 text-[#3aa363] shrink-0 mt-0.5 sm:mt-0" />
             <p className="text-sm font-medium text-[#1e4d35]">
@@ -286,7 +315,7 @@ export default function ProblemSection() {
           <Badge variant="emerald" className="shrink-0 self-start sm:self-auto text-xs font-semibold px-3 py-1">
             Universal SQL &amp; NoSQL Support
           </Badge>
-        </div>
+        </motion.div>
 
       </div>
     </section>
