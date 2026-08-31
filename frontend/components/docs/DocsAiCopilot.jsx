@@ -1,42 +1,44 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Sparkles, Send, X, Terminal, Database,
   Copy, Check, ExternalLink, RotateCcw, BookOpen,
   ArrowRight, ShieldCheck, Zap, Key, HelpCircle,
-  ChevronRight, CornerDownLeft
+  ChevronRight, CornerDownLeft, MessageSquare,
+  Bot, RefreshCw, Layers, CheckCircle2, Search
 } from "lucide-react"
 import Link from "next/link"
 
-const STARTER_CARDS = [
+const QUICK_TOPICS = [
   {
-    title: "1-Click AI Assistant Hook",
-    desc: "Connect to Claude Desktop, Cursor & Antigravity",
     icon: Zap,
-    color: "#34d399",
+    title: "1-Click AI Assistant Hook",
+    badge: "setup",
+    color: "#10b981",
     query: "How do I connect QueryCraft to Claude Desktop, Cursor, and Antigravity?",
   },
   {
-    title: "Natural Language SQL",
-    desc: "Compile English prompts to safe queries via CLI",
     icon: Sparkles,
-    color: "#60a5fa",
-    query: "How do I run natural language queries using querycraft ask?",
+    title: "Natural Language SQL in Terminal",
+    badge: "ask",
+    color: "#3b82f6",
+    query: "How does querycraft ask compile English to SQL with cost checks?",
   },
   {
-    title: "Connect Live Database",
-    desc: "Link PostgreSQL, Supabase, Neon & MongoDB",
     icon: Database,
-    color: "#fbbf24",
-    query: "How do I connect my live PostgreSQL database to a workspace?",
+    title: "Connect Live PostgreSQL / Supabase",
+    badge: "connect",
+    color: "#f59e0b",
+    query: "How do I connect my live PostgreSQL / Supabase database?",
   },
   {
-    title: "Browser OAuth & Security",
-    desc: "gh-style authentication & session isolation",
-    icon: Key,
-    color: "#a78bfa",
-    query: "How does querycraft auth login and whoami work?",
+    icon: Terminal,
+    title: "Introspect Database Schemas & Keys",
+    badge: "schema",
+    color: "#8b5cf6",
+    query: "How does querycraft schema show tables, primary keys, and foreign keys?",
   },
 ]
 
@@ -45,10 +47,11 @@ export default function DocsAiCopilot() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
-  const [copiedIndex, setCopiedIndex] = useState(null)
+  const [copiedKey, setCopiedKey] = useState(null)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
+  // Auto focus & scroll
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 150)
@@ -56,7 +59,7 @@ export default function DocsAiCopilot() {
     }
   }, [isOpen, messages])
 
-  // ESC key to close
+  // Global keyboard shortcut: Esc to close
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape" && isOpen) {
@@ -89,7 +92,7 @@ export default function DocsAiCopilot() {
         }),
       })
 
-      if (!res.ok) throw new Error("Could not reach Craft AI.")
+      if (!res.ok) throw new Error("Failed to reach Craft AI.")
       const data = await res.json()
 
       setMessages((prev) => [
@@ -106,10 +109,10 @@ export default function DocsAiCopilot() {
     }
   }
 
-  const handleCopyCode = (code, index) => {
+  const handleCopyCode = (code, key) => {
     navigator.clipboard.writeText(code)
-    setCopiedIndex(index)
-    setTimeout(() => setCopiedIndex(null), 1800)
+    setCopiedKey(key)
+    setTimeout(() => setCopiedKey(null), 1800)
   }
 
   const handleResetChat = () => {
@@ -117,69 +120,45 @@ export default function DocsAiCopilot() {
     setInput("")
   }
 
-  // Precision Markdown Formatter
-  const renderMessageContent = (content, msgIndex) => {
+  // Render markdown code blocks, bold headers, and list items
+  const renderMessageContent = (content, msgIdx) => {
     const parts = content.split(/(```[\s\S]*?```)/g)
 
     return parts.map((part, partIdx) => {
       if (part.startsWith("```")) {
         const codeContent = part.replace(/^```[a-z]*\n?/, "").replace(/```$/, "").trim()
-        const codeId = `${msgIndex}-${partIdx}`
-        const isCopied = copiedIndex === codeId
+        const key = `${msgIdx}-${partIdx}`
+        const isCopied = copiedKey === key
 
         return (
           <div
             key={partIdx}
-            style={{
-              position: "relative",
-              margin: "10px 0",
-              background: "#040711",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
-              borderRadius: 10,
-              overflow: "hidden",
-            }}
+            className="my-2 rounded-xl overflow-hidden border border-white/10 bg-[#060913] shadow-md"
           >
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "6px 12px",
-              background: "rgba(255, 255, 255, 0.02)",
-              borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
-            }}>
-              <span style={{ fontSize: 10, color: "#64748b", fontFamily: "'JetBrains Mono', monospace" }}>
-                terminal
-              </span>
+            <div className="flex items-center justify-between px-3 py-1.5 bg-white/[0.03] border-b border-white/[0.06]">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500/80" />
+                <span className="text-[11px] font-mono text-slate-400 font-medium">terminal</span>
+              </div>
               <button
                 type="button"
-                onClick={() => handleCopyCode(codeContent, codeId)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: isCopied ? "#34d399" : "#94a3b8",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                  padding: "2px 6px",
-                  borderRadius: 4,
-                }}
+                onClick={() => handleCopyCode(codeContent, key)}
+                className="flex items-center gap-1.5 text-[11px] font-mono font-medium text-slate-400 hover:text-emerald-400 transition-colors px-1.5 py-0.5 rounded hover:bg-white/[0.06]"
               >
-                {isCopied ? <Check size={11} color="#34d399" /> : <Copy size={11} />}
-                <span>{isCopied ? "Copied" : "Copy"}</span>
+                {isCopied ? (
+                  <>
+                    <Check size={11} className="text-emerald-400" />
+                    <span className="text-emerald-400">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={11} />
+                    <span>Copy</span>
+                  </>
+                )}
               </button>
             </div>
-            <pre style={{
-              margin: 0,
-              padding: "12px 14px",
-              fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-              fontSize: 12,
-              color: "#34d399",
-              lineHeight: 1.6,
-              overflowX: "auto",
-            }}>
+            <pre className="p-3 font-mono text-[12px] text-emerald-400 leading-relaxed overflow-x-auto selection:bg-emerald-500/20">
               {codeContent}
             </pre>
           </div>
@@ -188,25 +167,25 @@ export default function DocsAiCopilot() {
 
       const lines = part.split("\n")
       return (
-        <div key={partIdx} style={{ lineHeight: 1.65 }}>
+        <div key={partIdx} className="space-y-1 text-[13px] leading-relaxed text-slate-200">
           {lines.map((line, lIdx) => {
-            if (!line.trim()) return <div key={lIdx} style={{ height: 6 }} />
+            if (!line.trim()) return <div key={lIdx} className="h-1.5" />
             if (line.startsWith("### ")) {
               return (
-                <div key={lIdx} style={{ fontWeight: 700, color: "#fff", fontSize: 13.5, margin: "8px 0 3px" }}>
+                <div key={lIdx} className="font-bold text-white text-[14px] mt-2 mb-1">
                   {line.replace("### ", "")}
                 </div>
               )
             }
             if (line.startsWith("- ") || line.startsWith("* ")) {
               return (
-                <div key={lIdx} style={{ display: "flex", gap: 6, margin: "2px 0", paddingLeft: 4 }}>
-                  <span style={{ color: "#10b981", fontWeight: 700 }}>•</span>
+                <div key={lIdx} className="flex items-start gap-2 pl-1 my-0.5">
+                  <span className="text-emerald-400 mt-1 font-bold text-xs">•</span>
                   <span>{line.replace(/^[-*]\s+/, "")}</span>
                 </div>
               )
             }
-            return <div key={lIdx} style={{ marginBottom: 3 }}>{line}</div>
+            return <div key={lIdx}>{line}</div>
           })}
         </div>
       )
@@ -215,439 +194,242 @@ export default function DocsAiCopilot() {
 
   return (
     <>
-      {/* ── Sleek Floating Launcher Trigger ────────────────────────── */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 24,
-          right: 24,
-          zIndex: 9999,
-        }}
-      >
-        {!isOpen && (
-          <button
-            type="button"
-            onClick={() => setIsOpen(true)}
-            className="craft-ai-launcher"
-            style={{
-              background: "#080d1a",
-              border: "1px solid rgba(16, 185, 129, 0.35)",
-              borderRadius: 40,
-              padding: "8px 16px 8px 10px",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              cursor: "pointer",
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.15)",
-              transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
-              backdropFilter: "blur(12px)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-2px)"
-              e.currentTarget.style.borderColor = "rgba(16, 185, 129, 0.6)"
-              e.currentTarget.style.boxShadow = "0 14px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(16, 185, 129, 0.3)"
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)"
-              e.currentTarget.style.borderColor = "rgba(16, 185, 129, 0.35)"
-              e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.15)"
-            }}
-          >
-            {/* Glowing Avatar */}
-            <div style={{
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              background: "linear-gradient(135deg, #059669, #10b981)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-              boxShadow: "0 0 12px rgba(16, 185, 129, 0.4)",
-            }}>
-              <Sparkles size={16} color="#ffffff" />
-              <span style={{
-                position: "absolute",
-                top: -1, right: -1,
-                width: 8, height: 8,
-                borderRadius: "50%",
-                background: "#34d399",
-                border: "2px solid #080d1a",
-                boxShadow: "0 0 6px #34d399",
-              }} />
-            </div>
+      {/* ── Floating Launcher Widget (Bottom-Right) ────────────────── */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <AnimatePresence>
+          {!isOpen && (
+            <motion.button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              initial={{ scale: 0.85, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 10 }}
+              whileHover={{ scale: 1.04, y: -2 }}
+              whileTap={{ scale: 0.96 }}
+              className="group relative flex items-center gap-3 px-4 py-2.5 rounded-full bg-[#080d1a]/95 hover:bg-[#0c1324] border border-emerald-500/30 hover:border-emerald-500/60 shadow-[0_12px_32px_rgba(0,0,0,0.5),0_0_20px_rgba(16,185,129,0.18)] backdrop-blur-xl transition-all duration-200 cursor-pointer"
+            >
+              {/* Glowing Icon Beacon */}
+              <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 shadow-[0_0_14px_rgba(16,185,129,0.45)]">
+                <Sparkles size={16} className="text-white" />
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#080d1a] shadow-[0_0_6px_#34d399]" />
+              </div>
 
-            <div style={{ textAlign: "left" }}>
-              <div style={{
-                fontSize: 13,
-                fontWeight: 800,
-                color: "#ffffff",
-                letterSpacing: "-0.2px",
-                lineHeight: 1.2,
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-              }}>
-                <span>Craft AI</span>
+              {/* Text label */}
+              <div className="text-left pr-1">
+                <div className="text-[13px] font-bold text-white tracking-tight flex items-center gap-1.5">
+                  <span>Craft AI</span>
+                  <span className="text-[9.5px] font-semibold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/30">
+                    Docs
+                  </span>
+                </div>
+                <div className="text-[10.5px] text-slate-400 font-medium flex items-center gap-1">
+                  <span>Ask anything</span>
+                  <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform text-emerald-400" />
+                </div>
               </div>
-              <div style={{
-                fontSize: 10.5,
-                color: "#34d399",
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-              }}>
-                <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#34d399" }} />
-                <span>Docs Copilot</span>
-              </div>
-            </div>
-          </button>
-        )}
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* ── Studio Copilot Dialog Window ──────────────────────────── */}
-      {isOpen && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 24,
-            right: 24,
-            width: 410,
-            maxWidth: "calc(100vw - 32px)",
-            height: 580,
-            maxHeight: "calc(100vh - 48px)",
-            background: "#080c16",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            borderRadius: 20,
-            boxShadow: "0 30px 80px rgba(0, 0, 0, 0.7), 0 0 35px rgba(16, 185, 129, 0.15)",
-            zIndex: 10000,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            backdropFilter: "blur(20px)",
-            animation: "craftAiSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1)",
-          }}
-        >
-          {/* Header Bar */}
-          <div style={{
-            padding: "12px 16px",
-            background: "rgba(255, 255, 255, 0.02)",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{
-                width: 30, height: 30, borderRadius: 8,
-                background: "linear-gradient(135deg, #059669, #10b981)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 0 10px rgba(16, 185, 129, 0.3)",
-              }}>
-                <Sparkles size={15} color="#fff" />
-              </div>
-              <div>
-                <div style={{ fontSize: 13.5, fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", gap: 6 }}>
-                  <span>Craft AI</span>
-                  <span style={{
-                    fontSize: 9.5, fontWeight: 700,
-                    background: "rgba(16, 185, 129, 0.15)",
-                    border: "1px solid rgba(16, 185, 129, 0.3)",
-                    color: "#34d399",
-                    padding: "1px 6px", borderRadius: 4,
-                  }}>
-                    Docs Copilot
-                  </span>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 16 }}
+            transition={{ type: "spring", stiffness: 350, damping: 28 }}
+            className="fixed bottom-6 right-6 w-[430px] max-w-[calc(100vw-32px)] h-[600px] max-h-[calc(100vh-48px)] bg-[#070b16]/98 border border-white/10 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.7),0_0_35px_rgba(16,185,129,0.12)] z-50 flex flex-col overflow-hidden backdrop-blur-2xl"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3.5 bg-white/[0.02] border-b border-white/[0.07]">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+                  <Sparkles size={16} className="text-white" />
                 </div>
-                <div style={{ fontSize: 10, color: "#64748b", display: "flex", alignItems: "center", gap: 4 }}>
-                  <ShieldCheck size={11} color="#34d399" />
-                  <span>Grounded in QueryCraft Docs</span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[14px] font-extrabold text-white tracking-tight">Craft AI</span>
+                    <span className="text-[9.5px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 px-1.5 py-0.5 rounded">
+                      Official Docs Copilot
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10.5px] text-slate-400 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Grounded in QueryCraft v1.5.0</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              {messages.length > 0 && (
+              {/* Controls */}
+              <div className="flex items-center gap-1">
+                {messages.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleResetChat}
+                    title="Reset conversation"
+                    className="p-1.5 text-slate-400 hover:text-white hover:bg-white/[0.06] rounded-lg transition-all"
+                  >
+                    <RotateCcw size={14} />
+                  </button>
+                )}
+
+                <Link
+                  href="/docs/cli"
+                  target="_blank"
+                  className="flex items-center gap-1 text-[11px] font-medium text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] px-2.5 py-1 rounded-lg transition-all"
+                >
+                  <BookOpen size={11} className="text-emerald-400" />
+                  <span>Docs</span>
+                  <ExternalLink size={10} className="text-slate-400" />
+                </Link>
+
                 <button
                   type="button"
-                  onClick={handleResetChat}
-                  title="Clear Chat"
-                  style={{
-                    background: "none", border: "none",
-                    color: "#64748b", cursor: "pointer", padding: "5px 7px",
-                    borderRadius: 6, display: "flex", alignItems: "center",
-                    transition: "all 0.12s",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,0.05)" }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.background = "none" }}
+                  onClick={() => setIsOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-white hover:bg-white/[0.06] rounded-lg transition-all ml-0.5"
                 >
-                  <RotateCcw size={13} />
+                  <X size={16} />
                 </button>
+              </div>
+            </div>
+
+            {/* Chat Thread Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Welcome Screen / Quick Topics */}
+              {messages.length === 0 && (
+                <div className="space-y-4 py-2">
+                  <div className="text-center px-2 py-3 bg-white/[0.02] border border-white/[0.05] rounded-2xl">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 mb-2.5 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+                      <Sparkles size={22} className="text-emerald-400" />
+                    </div>
+                    <h3 className="text-[15px] font-bold text-white tracking-tight">
+                      How can I help with QueryCraft?
+                    </h3>
+                    <p className="text-[12px] text-slate-400 max-w-[280px] mx-auto mt-1 leading-relaxed">
+                      Ask about CLI commands, 1-click AI setups for Claude & Cursor, or live database configurations.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-1">
+                      Quick Topics
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {QUICK_TOPICS.map((topic, i) => {
+                        const Icon = topic.icon
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => handleSend(topic.query)}
+                            className="group flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.06] hover:border-emerald-500/30 text-left transition-all duration-150 cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div
+                                className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/[0.04] shrink-0"
+                                style={{ color: topic.color }}
+                              >
+                                <Icon size={14} />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-[12.5px] font-semibold text-slate-200 group-hover:text-white truncate">
+                                  {topic.title}
+                                </div>
+                              </div>
+                            </div>
+                            <span className="font-mono text-[10px] text-slate-400 group-hover:text-emerald-400 bg-white/[0.04] px-1.5 py-0.5 rounded shrink-0 ml-2">
+                              {topic.badge}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
               )}
 
-              <Link
-                href="/docs/cli"
-                target="_blank"
-                style={{
-                  padding: "4px 8px", borderRadius: 6,
-                  background: "rgba(255, 255, 255, 0.04)",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                  color: "#94a3b8", fontSize: 11, fontWeight: 600,
-                  textDecoration: "none", display: "flex", alignItems: "center", gap: 4,
-                }}
-              >
-                <BookOpen size={11} />
-                <span>Docs</span>
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                style={{
-                  background: "none", border: "none",
-                  color: "#94a3b8", cursor: "pointer", padding: "5px",
-                  borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.color = "#fff"}
-                onMouseLeave={(e) => e.currentTarget.style.color = "#94a3b8"}
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-
-          {/* Body Content / Chat Thread */}
-          <div style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: "16px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 14,
-            fontSize: 12.5,
-          }}>
-            {/* Empty State: Curated Cards */}
-            {messages.length === 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: "8px 0" }}>
-                <div style={{ textAlign: "center", padding: "10px 0 6px" }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 14,
-                    background: "rgba(16, 185, 129, 0.1)",
-                    border: "1px solid rgba(16, 185, 129, 0.25)",
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    marginBottom: 10,
-                  }}>
-                    <Sparkles size={20} color="#34d399" />
-                  </div>
-                  <h3 style={{ fontSize: 15, fontWeight: 800, color: "#fff", marginBottom: 4 }}>
-                    How can I help you with QueryCraft?
-                  </h3>
-                  <p style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.5, maxWidth: 320, margin: "0 auto" }}>
-                    Ask about CLI commands, 1-click AI configuration for Claude & Cursor, or live database setups.
-                  </p>
-                </div>
-
-                {/* 4 Interactive Starter Cards */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {STARTER_CARDS.map((card, i) => {
-                    const Icon = card.icon
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => handleSend(card.query)}
-                        style={{
-                          background: "rgba(255, 255, 255, 0.02)",
-                          border: "1px solid rgba(255, 255, 255, 0.06)",
-                          borderRadius: 10,
-                          padding: "10px 12px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          cursor: "pointer",
-                          textAlign: "left",
-                          transition: "all 0.15s ease",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"
-                          e.currentTarget.style.borderColor = "rgba(16, 185, 129, 0.3)"
-                          e.currentTarget.style.transform = "translateX(2px)"
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "rgba(255, 255, 255, 0.02)"
-                          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.06)"
-                          e.currentTarget.style.transform = "translateX(0)"
-                        }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <div style={{
-                            width: 28, height: 28, borderRadius: 7,
-                            background: "rgba(255,255,255,0.04)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            flexShrink: 0,
-                          }}>
-                            <Icon size={14} color={card.color} />
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 12.5, fontWeight: 700, color: "#f1f5f9" }}>
-                              {card.title}
-                            </div>
-                            <div style={{ fontSize: 11, color: "#64748b" }}>
-                              {card.desc}
-                            </div>
-                          </div>
-                        </div>
-                        <ChevronRight size={14} color="#64748b" />
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Conversation Messages */}
-            {messages.map((m, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: m.role === "user" ? "flex-end" : "flex-start",
-                }}
-              >
-                {m.role === "assistant" && (
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 6,
-                    fontSize: 10.5, fontWeight: 700, color: "#34d399",
-                    marginBottom: 4, paddingLeft: 2,
-                  }}>
-                    <Sparkles size={11} />
-                    <span>Craft AI</span>
-                  </div>
-                )}
+              {/* Message List */}
+              {messages.map((m, idx) => (
                 <div
-                  style={{
-                    maxWidth: "92%",
-                    padding: "10px 14px",
-                    borderRadius: m.role === "user" ? "14px 14px 2px 14px" : "12px",
-                    background: m.role === "user"
-                      ? "linear-gradient(135deg, #059669, #047857)"
-                      : "rgba(255, 255, 255, 0.03)",
-                    border: m.role === "user"
-                      ? "none"
-                      : "1px solid rgba(255, 255, 255, 0.07)",
-                    color: "#f8fafc",
-                    fontSize: 12.5,
-                  }}
+                  key={idx}
+                  className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}
                 >
-                  {renderMessageContent(m.content, idx)}
+                  {m.role === "assistant" && (
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 mb-1 pl-1">
+                      <Sparkles size={11} />
+                      <span>Craft AI</span>
+                    </div>
+                  )}
+
+                  <div
+                    className={`max-w-[92%] rounded-2xl px-3.5 py-2.5 text-[12.5px] ${
+                      m.role === "user"
+                        ? "bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-br-sm shadow-md"
+                        : "bg-white/[0.04] border border-white/[0.08] text-slate-200 rounded-bl-sm"
+                    }`}
+                  >
+                    {renderMessageContent(m.content, idx)}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {loading && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#34d399", fontSize: 12, padding: "6px 8px" }}>
-                <div style={{ display: "flex", gap: 3 }}>
-                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", animation: "craftAiPulse 1s infinite" }} />
-                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", animation: "craftAiPulse 1s infinite 0.2s" }} />
-                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34d399", animation: "craftAiPulse 1s infinite 0.4s" }} />
+              {/* Loading Animation */}
+              {loading && (
+                <div className="flex items-center gap-2 text-emerald-400 text-xs px-2 py-1">
+                  <RefreshCw size={13} className="animate-spin" />
+                  <span className="font-medium text-slate-300">Craft AI is searching documentation...</span>
                 </div>
-                <span>Craft AI is reading docs...</span>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+              )}
 
-          {/* Bottom Input Form */}
-          <div style={{
-            padding: "12px",
-            background: "rgba(255, 255, 255, 0.02)",
-            borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-          }}>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                handleSend()
-              }}
-              style={{ display: "flex", alignItems: "center", gap: 8 }}
-            >
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="Ask Craft AI about CLI commands, AI setup..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                disabled={loading}
-                style={{
-                  flex: 1,
-                  background: "rgba(255, 255, 255, 0.04)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  borderRadius: 10,
-                  padding: "9px 12px",
-                  color: "#fff",
-                  fontSize: 12.5,
-                  outline: "none",
-                  fontFamily: "inherit",
-                }}
-                onFocus={(e) => e.currentTarget.style.borderColor = "rgba(16, 185, 129, 0.4)"}
-                onBlur={(e) => e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"}
-              />
-              <button
-                type="submit"
-                disabled={loading || !input.trim()}
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  background: input.trim() ? "linear-gradient(135deg, #059669, #10b981)" : "rgba(255, 255, 255, 0.05)",
-                  border: "none",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: input.trim() ? "pointer" : "default",
-                  transition: "all 0.15s ease",
-                  flexShrink: 0,
-                  boxShadow: input.trim() ? "0 0 12px rgba(16, 185, 129, 0.3)" : "none",
-                }}
-              >
-                <Send size={14} />
-              </button>
-            </form>
-
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginTop: 8,
-              padding: "0 4px",
-              fontSize: 10.5,
-              color: "#64748b",
-            }}>
-              <span>Grounded in QueryCraft Engine</span>
-              <span>Press <kbd style={{ fontFamily: "inherit", background: "rgba(255,255,255,0.06)", padding: "1px 4px", borderRadius: 3 }}>↵ Enter</kbd></span>
+              <div ref={messagesEndRef} />
             </div>
-          </div>
-        </div>
-      )}
 
-      <style jsx global>{`
-        @keyframes craftAiSlideUp {
-          from {
-            opacity: 0;
-            transform: translateY(14px) scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-        @keyframes craftAiPulse {
-          0%, 100% { opacity: 0.3; transform: scale(0.8); }
-          50% { opacity: 1; transform: scale(1.1); }
-        }
-      `}</style>
+            {/* Bottom Input Field */}
+            <div className="p-3 bg-white/[0.02] border-t border-white/[0.07]">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  handleSend()
+                }}
+                className="flex items-center gap-2"
+              >
+                <div className="relative flex-1">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    placeholder="Ask Craft AI about CLI, MCP, databases..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    disabled={loading}
+                    className="w-full bg-white/[0.04] border border-white/10 focus:border-emerald-500/50 rounded-xl px-3.5 py-2 text-[12.5px] text-white placeholder-slate-500 outline-none transition-colors"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading || !input.trim()}
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-150 ${
+                    input.trim()
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)] cursor-pointer hover:opacity-95"
+                      : "bg-white/[0.05] text-slate-500 cursor-default"
+                  }`}
+                >
+                  <Send size={14} />
+                </button>
+              </form>
+
+              <div className="flex items-center justify-between mt-2 px-1 text-[10px] text-slate-500 font-medium">
+                <span className="flex items-center gap-1">
+                  <ShieldCheck size={11} className="text-emerald-400" />
+                  <span>Privacy & Grounding Protected</span>
+                </span>
+                <span>Press <kbd className="font-mono bg-white/[0.06] px-1 py-0.5 rounded text-[9px] text-slate-400">↵</kbd></span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
