@@ -43,11 +43,28 @@ def connect_and_introspect(request: DBConnectRequest):
     """
     Connects to the cloud PostgreSQL database (Supabase, Neon, AWS RDS, etc.),
     introspects all tables, columns, types, and constraints, and returns the live schema.
+    Persists connection to workspaces.json so MCP tools have immediate access.
     """
     uri = request.connection_uri.strip()
     try:
         table_infos, schema_sql = introspect_cloud_database(uri)
         conn_info = parse_connection_info(uri)
+
+        # Automatically sync with workspaces.json
+        try:
+            import json
+            import os
+            workspaces_path = os.path.join(os.path.dirname(__file__), "..", "data", "workspaces.json")
+            if os.path.exists(workspaces_path):
+                with open(workspaces_path, "r") as f:
+                    ws_list = json.load(f)
+                if isinstance(ws_list, list) and len(ws_list) > 0:
+                    ws_list[0]["connectionUri"] = uri
+                    ws_list[0]["engine"] = conn_info.get("engine", "postgres")
+                    with open(workspaces_path, "w") as f:
+                        json.dump(ws_list, f, indent=2)
+        except Exception as e:
+            logger.warning(f"Could not persist workspace connection: {e}")
 
         return DBConnectResponse(
             status="connected",

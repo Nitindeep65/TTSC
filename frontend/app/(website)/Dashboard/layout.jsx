@@ -16,6 +16,7 @@ import {
   Loader2,
   MessageSquareText,
   Settings,
+  ShieldCheck,
   Sparkles,
   Terminal,
   Wand2,
@@ -63,8 +64,9 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
   const isChat = pathname?.startsWith("/Dashboard/chat")
   const isCanvas = pathname?.startsWith("/Dashboard/canvas")
   const isCompiler = pathname === "/Dashboard"
+  const isGuard = pathname?.startsWith("/Dashboard/guard")
 
-  // Ergonomic keyboard shortcuts: ⌘1 (Chat), ⌘2 (Canvas), ⌘3 (Compiler)
+  // Ergonomic keyboard shortcuts: ⌘1 (Chat), ⌘2 (Canvas), ⌘3 (Compiler), ⌘4 (Guard)
   useEffect(() => {
     const handleViewShortcuts = (e) => {
       if (["INPUT", "TEXTAREA"].includes(e.target.tagName) || e.target.isContentEditable) {
@@ -80,6 +82,9 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
         } else if (e.key === "3") {
           e.preventDefault()
           router.push("/Dashboard")
+        } else if (e.key === "4") {
+          e.preventDefault()
+          router.push("/Dashboard/guard")
         }
       }
     }
@@ -113,7 +118,7 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
         </div>
       </div>
 
-      {/* ── ZONE 2: CENTER (Canonical Segmented Switcher: Chat | Canvas | Compiler) ── */}
+      {/* ── ZONE 2: CENTER (Canonical Segmented Switcher: Chat | Canvas | Compiler | Guard) ── */}
       <div className="flex items-center rounded-xl border border-border bg-muted/60 p-0.5 text-xs font-semibold shadow-2xs">
         <Link
           href="/Dashboard/chat"
@@ -153,6 +158,19 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
           <Terminal className="size-3.5" />
           <span>Compiler</span>
         </Link>
+
+        <Link
+          href="/Dashboard/guard"
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 transition-all duration-150 ${
+            isGuard
+              ? "bg-primary text-primary-foreground shadow-2xs"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+          }`}
+          title="Pre-Flight Cost Guard AI Firewall (⌘4)"
+        >
+          <ShieldCheck className="size-3.5 text-emerald-400" />
+          <span>Cost Guard</span>
+        </Link>
       </div>
 
       {/* ── ZONE 3: RIGHT (DB Status + ⌘K Palette + User Menu) ── */}
@@ -171,30 +189,38 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
           </kbd>
         </button>
 
-        {/* Connected DB Status Pill */}
+        {/* Connected DB Status Pill — High Visibility Database Context */}
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className={`flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-xs font-semibold transition shadow-2xs cursor-pointer ${
+          className={`flex items-center gap-2 h-8 px-2.5 sm:px-3 rounded-lg border text-xs font-semibold transition shadow-2xs cursor-pointer ${
             dbInfo
-              ? "border-emerald-200/80 bg-emerald-50 text-emerald-900 hover:bg-emerald-100/80"
-              : "border-border bg-primary text-primary-foreground hover:bg-primary/90"
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15"
+              : "border-border bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
           }`}
-          title={dbInfo ? `Connected to ${dbInfo.host} (${dbInfo.tables_count} live tables)` : "Connect database"}
+          title={dbInfo ? `Connected to ${dbInfo.db_type || "PostgreSQL"} at ${dbInfo.host} (${dbInfo.tables_count} live tables)` : "No database connected — click to connect"}
         >
           {dbInfo ? (
             <>
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <Database className="size-3.5 text-emerald-600 shrink-0" />
-              <span className="hidden sm:inline font-mono truncate max-w-[110px]">{dbInfo.host}</span>
-              <span className="rounded bg-white/90 px-1 py-0.2 text-[9px] font-bold text-emerald-800">
-                {dbInfo.tables_count}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="font-mono text-[11px] font-bold text-foreground">
+                  {dbInfo.db_type ? dbInfo.db_type.toUpperCase() : "POSTGRES"}
+                </span>
+                <span className="hidden lg:inline text-muted-foreground text-[10px]">·</span>
+                <span className="hidden lg:inline font-mono text-[11px] text-muted-foreground truncate max-w-[100px]">
+                  {dbInfo.host || "localhost"}
+                </span>
+              </div>
+              <span className="rounded bg-emerald-500/20 px-1.5 py-0.2 text-[9.5px] font-mono font-bold text-emerald-700 dark:text-emerald-300">
+                {dbInfo.tables_count} tbl
               </span>
             </>
           ) : (
             <>
-              <Cloud className="size-3.5 text-emerald-400 shrink-0" />
-              <span>Connect DB</span>
+              <span className="size-2 rounded-full bg-amber-500 shrink-0" />
+              <Cloud className="size-3.5 text-muted-foreground shrink-0" />
+              <span className="text-[11px]">Connect DB</span>
             </>
           )}
         </button>
@@ -298,11 +324,11 @@ function DashboardShell({ children }) {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-[#f8faf8] space-y-3">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-[#1f2d24] text-[#4ade80] shadow-md animate-pulse">
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background space-y-3">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md">
           <Loader2 className="size-5 animate-spin" />
         </div>
-        <p className="text-xs font-semibold text-[#5e7467]">Verifying authentication...</p>
+        <p className="text-xs font-semibold text-muted-foreground">Verifying authentication...</p>
       </div>
     )
   }

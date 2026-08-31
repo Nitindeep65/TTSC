@@ -107,6 +107,23 @@ export async function POST(request) {
     const host = uri.split("@")[1]?.split("/")[0] || (isMongo ? "atlas-cluster.mongodb.net" : "cloud-postgres.neon.tech")
     const database = isMongo ? "production_db" : "ecommerce_db"
 
+    // Sync with backend/app/data/workspaces.json in local environment
+    try {
+      const fs = await import("fs")
+      const path = await import("path")
+      const wsFile = path.join(process.cwd(), "..", "backend", "app", "data", "workspaces.json")
+      if (fs.existsSync(wsFile) && uri) {
+        const content = JSON.parse(fs.readFileSync(wsFile, "utf-8"))
+        if (Array.isArray(content) && content.length > 0) {
+          content[0].connectionUri = uri
+          content[0].engine = isMongo ? "mongodb" : "postgres"
+          fs.writeFileSync(wsFile, JSON.stringify(content, null, 2))
+        }
+      }
+    } catch (fsErr) {
+      // ignore on edge/vercel
+    }
+
     return NextResponse.json({
       engine: isMongo ? "mongodb" : "postgresql",
       host,

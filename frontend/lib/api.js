@@ -242,6 +242,54 @@ export const databaseApi = {
 }
 
 // ============================================================================
+// 2.5 USER WORKSPACES & MULTI-TENANT SYNC APIs
+// ============================================================================
+export const workspaceApi = {
+  /**
+   * Retrieves all workspaces for a user account.
+   */
+  list: async (user_email = null) => {
+    try {
+      const url = user_email ? `/api/workspaces?email=${encodeURIComponent(user_email)}` : "/api/workspaces"
+      const res = await apiClient.get(url)
+      return res.data
+    } catch {
+      return []
+    }
+  },
+
+  /**
+   * Synchronizes full workspace array from browser to backend for active user.
+   */
+  sync: async ({ email, user_id, workspaces }) => {
+    try {
+      const res = await apiClient.post("/api/workspaces/sync", {
+        email: email || "default_user",
+        user_id,
+        workspaces,
+      })
+      return res.data
+    } catch (err) {
+      console.warn("Workspace sync warning:", err?.message)
+      return null
+    }
+  },
+
+  /**
+   * Connects and binds a live database URI to a user workspace.
+   */
+  connect: async ({ email, user_id, workspace_id, connection_uri }) => {
+    const res = await apiClient.post("/api/workspaces/connect", {
+      email: email || "default_user",
+      user_id,
+      workspace_id,
+      connection_uri,
+    })
+    return res.data
+  },
+}
+
+// ============================================================================
 // 3. SEMANTIC LAYER & BUSINESS RULES APIs
 // ============================================================================
 export const semanticApi = {

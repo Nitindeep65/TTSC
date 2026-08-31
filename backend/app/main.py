@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from app.routers import clarification, database, semantic, memory, settings, dashboard
+from app.routers import clarification, database, semantic, memory, settings, dashboard, guard, workspaces
+from app.routers.workspaces import auth_router
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -14,6 +15,9 @@ app.include_router(semantic.router)
 app.include_router(memory.router)
 app.include_router(settings.router)
 app.include_router(dashboard.router)
+app.include_router(guard.router)
+app.include_router(workspaces.router)
+app.include_router(auth_router)  # CLI OAuth token exchange: /api/auth/cli-token, /api/auth/cli-verify
 
 app.add_middleware(
     CORSMiddleware,

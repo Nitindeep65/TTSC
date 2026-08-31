@@ -4,150 +4,165 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import {
   ArrowRight,
-  Cloud,
   Database,
+  Layers,
   MessageSquareText,
-  ShieldCheck,
-  Terminal,
   Plug,
   Search,
+  ShieldCheck,
+  Terminal,
   Zap,
-  Layers,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/authContext"
 
-const steps = [
+const STEPS = [
   {
     num: "01",
     icon: Plug,
-    title: "Connect any SQL or NoSQL database",
-    desc: "Paste your connection URI — Supabase, Neon, AWS RDS, MongoDB Atlas, Redis, or DynamoDB. Live schema discovery happens in seconds.",
+    title: "Connect your database",
+    desc: "Paste a connection URI. Live schema discovery in under 3 seconds.",
   },
   {
     num: "02",
     icon: Search,
-    title: "Ask in plain natural language",
-    desc: "Type your query. QueryCraft clarifies any ambiguous date ranges, nested arrays, or metrics before compiling code.",
+    title: "Ask in plain English",
+    desc: "No SQL knowledge needed. QueryCraft clarifies before compiling.",
   },
   {
     num: "03",
     icon: Zap,
-    title: "Execute verified queries safely",
-    desc: "Review verified SQL, MongoDB MQL, or Redis commands, inspect performance plans, and execute with read-only sandboxing.",
+    title: "Execute with confidence",
+    desc: "Verified, read-only queries with EXPLAIN cost analysis.",
   },
+]
+
+const TRUST_ITEMS = [
+  { icon: ShieldCheck, label: "Safe read-only sandboxing" },
+  { icon: Layers, label: "SQL, MQL & Key-Value engines" },
+  { icon: Zap, label: "Self-healing critic loop" },
+  { icon: Database, label: "Live schema grounding" },
 ]
 
 export default function CTA() {
   const { user } = useAuth()
 
   return (
-    <section id="cta" className="relative overflow-hidden bg-[#121d16] px-4 py-20 text-white sm:px-6 lg:px-8 lg:py-24">
-      {/* Glow Accents */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(76,168,115,0.22),transparent_50%),radial-gradient(circle_at_80%_70%,rgba(36,105,68,0.30),transparent_40%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:3rem_3rem]" />
+    <section
+      id="cta"
+      className="relative overflow-hidden bg-[#0f172a] px-4 py-20 text-white sm:px-6 lg:px-8 lg:py-28"
+    >
+      {/* Grid overlay */}
+      <div
+        className="pointer-events-none absolute inset-0 grid-overlay-dark opacity-80"
+        aria-hidden="true"
+      />
+
+      {/* Ambient emerald glow */}
+      <div
+        className="pointer-events-none absolute left-1/4 top-1/4 w-[600px] h-[600px] rounded-full opacity-20"
+        style={{ background: "radial-gradient(circle, rgba(16,185,129,0.35) 0%, transparent 70%)" }}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute right-0 bottom-0 w-[400px] h-[400px] rounded-full opacity-15"
+        style={{ background: "radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%)" }}
+        aria-hidden="true"
+      />
 
       <div className="relative mx-auto max-w-7xl">
 
-        {/* 3-Step strip */}
-        <div className="mb-14 grid gap-6 sm:grid-cols-3">
-          {steps.map((s, i) => (
+        {/* 3-step strip */}
+        <div className="mb-16 grid gap-8 sm:grid-cols-3">
+          {STEPS.map((step, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.4, delay: i * 0.12 }}
+              transition={{ duration: 0.4, delay: i * 0.1 }}
               className="relative flex items-start gap-4"
             >
-              {/* Connector line */}
-              {i < steps.length - 1 && (
-                <div className="pointer-events-none absolute left-[52px] top-5 hidden h-0.5 w-[calc(100%-68px)] bg-gradient-to-r from-[#3aa363]/50 to-transparent sm:block" />
+              {/* Connector */}
+              {i < STEPS.length - 1 && (
+                <div className="pointer-events-none absolute left-[52px] top-5 hidden h-px w-[calc(100%-56px)] bg-gradient-to-r from-emerald-500/40 to-transparent sm:block" />
               )}
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#1f3a28] border border-[#3aa363]/30 text-[#71c897]">
-                <s.icon className="size-5" />
+
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                <step.icon className="size-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-mono text-[10px] font-bold text-[#71c897]/60">{s.num}</span>
-                  <p className="text-sm font-semibold text-white">{s.title}</p>
+                  <span className="font-mono text-[10px] font-bold text-emerald-500/70">{step.num}</span>
+                  <p className="text-sm font-semibold text-white">{step.title}</p>
                 </div>
-                <p className="text-xs text-[#8aad98] leading-relaxed">{s.desc}</p>
+                <p className="text-[13px] text-slate-400 leading-relaxed">{step.desc}</p>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* CTA Content */}
+        {/* CTA body */}
         <motion.div
           initial={{ opacity: 0, y: 25 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-40px" }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col items-start justify-between gap-10 md:flex-row md:items-center border-t border-white/10 pt-14"
+          className="border-t border-white/10 pt-14 flex flex-col items-start justify-between gap-10 lg:flex-row lg:items-center"
         >
+          <div className="max-w-2xl space-y-5">
 
-          <div className="max-w-2xl space-y-4">
-            <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold text-[#8ed8a8] border-white/15 bg-white/5 backdrop-blur-sm">
-              <Database className="size-3.5 text-[#71c897]" />
-              <span>Universal Database Studio</span>
-            </Badge>
+            {/* Terminal decoration */}
+            <div className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3.5 py-2 font-mono text-sm text-emerald-400 backdrop-blur-sm">
+              <span className="text-emerald-500/70">$</span>
+              <span>querycraft connect postgres://your-database-url</span>
+              <span className="animate-pulse text-white/50">█</span>
+            </div>
 
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl leading-tight text-balance">
-              Connect your SQL or NoSQL database.{" "}
-              <br />
-              <span className="bg-gradient-to-r from-[#71c897] via-[#a3e5bd] to-white bg-clip-text text-transparent">
-                Start querying in seconds.
-              </span>
-            </h2>
-
-            <p className="max-w-xl text-sm sm:text-base leading-relaxed text-[#bad1c2]">
-              No manual prompt crafting. No hallucinated collections or table joins. Connect Supabase, Neon, MongoDB Atlas, Redis, or AWS RDS — QueryCraft handles the rest.
+            <p className="section-kicker text-emerald-500">
+              <Database className="size-3.5" />
+              Universal Database Studio
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-[#a0beaa]">
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="size-4 text-[#71c897]" />
-                Safe Read-Only Sandboxing
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Layers className="size-4 text-[#71c897]" />
-                Multi-Model (SQL, MQL, Key-Value)
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Zap className="size-4 text-[#71c897]" />
-                Dual-Engine Self-Healing Critic
-              </span>
+            <h2 className="text-white">
+              Your database deserves{" "}
+              <br className="hidden sm:block" />
+              <span className="gradient-text-light">a smarter analyst.</span>
+            </h2>
+
+            <p className="max-w-xl text-[15px] leading-relaxed text-slate-400">
+              No manual prompt crafting. No hallucinated table joins. Connect Supabase, Neon, MongoDB Atlas, or AWS RDS — QueryCraft handles schema discovery, clarification, and safe execution.
+            </p>
+
+            {/* Trust grid */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1">
+              {TRUST_ITEMS.map((item, i) => (
+                <span key={i} className="flex items-center gap-1.5 text-[13px] text-slate-400">
+                  <item.icon className="size-3.5 text-emerald-500" />
+                  {item.label}
+                </span>
+              ))}
             </div>
           </div>
 
+          {/* CTA Buttons */}
           <div className="flex flex-col gap-3.5 sm:flex-row shrink-0">
             <Link href={user ? "/Dashboard/chat" : "/Login"}>
-              <Button
-                variant="primary"
-                size="lg"
-                className="gap-2.5 px-7 py-4 text-sm font-bold shadow-xl shadow-[#4ca873]/25 hover:scale-[1.03] transition-all duration-200 cursor-pointer"
-              >
+              <button className="group flex items-center gap-2.5 rounded-xl bg-emerald-500 px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_24px_rgba(16,185,129,0.3)] hover:bg-emerald-400 hover:shadow-[0_0_32px_rgba(16,185,129,0.4)] hover:scale-[1.03] transition-all duration-200">
                 <MessageSquareText className="size-4.5" />
-                <span>{user ? "Launch Live Studio" : "Get Started Free"}</span>
-                <ArrowRight className="size-4" />
-              </Button>
+                <span>{user ? "Launch Live Studio" : "Start for Free"}</span>
+                <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              </button>
             </Link>
 
             <Link href={user ? "/Dashboard" : "/Login"}>
-              <Button
-                variant="outline"
-                size="lg"
-                className="gap-2.5 border-white/20 bg-white/5 px-7 py-4 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:scale-[1.03] transition-all duration-200 cursor-pointer"
-              >
-                <Terminal className="size-4.5 text-[#71c897]" />
+              <button className="flex items-center gap-2.5 rounded-xl border border-white/15 bg-white/5 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/10 hover:scale-[1.03] hover:border-white/25 transition-all duration-200">
+                <Terminal className="size-4.5 text-emerald-400" />
                 <span>{user ? "Query Workspace" : "Sign In to Studio"}</span>
-              </Button>
+              </button>
             </Link>
           </div>
-
         </motion.div>
+
       </div>
     </section>
   )

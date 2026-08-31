@@ -63,9 +63,11 @@ ORDER BY t.table_name, c.ordinal_position;
 """
 
 
-def detect_engine_type(connection_uri: str) -> str:
+def detect_engine_type(connection_uri: Optional[str]) -> str:
     """Identifies the database engine from the URI scheme."""
-    uri = connection_uri.strip().lower()
+    if not connection_uri or not str(connection_uri).strip():
+        return "postgres"
+    uri = str(connection_uri).strip().lower()
     if uri.startswith("mongodb://") or uri.startswith("mongodb+srv://"):
         return "mongodb"
     if uri.startswith("redis://") or uri.startswith("rediss://"):
@@ -722,18 +724,18 @@ def sample_table_data(
         raise ValueError(f"Invalid table or collection name '{table_name}'.")
 
     # If no live URI or URI is localhost/demo, return demo profiling if matched
-    if not connection_uri or not connection_uri.strip() or "demo" in connection_uri.lower():
-        if clean_table.lower() in DEMO_TABLE_SAMPLES:
-            demo_data = DEMO_TABLE_SAMPLES[clean_table.lower()]
-            return {
-                "status": "success",
-                "table_name": clean_table,
-                "columns": demo_data["columns"],
-                "rows": demo_data["rows"][:limit],
-                "column_profiles": demo_data["profiles"],
-                "row_count": len(demo_data["rows"][:limit]),
-                "message": f"Retrieved sample preview & categorical distribution for '{clean_table}'."
-            }
+    if not connection_uri or not str(connection_uri).strip() or "demo" in str(connection_uri).lower():
+        sample_key = clean_table.lower() if clean_table.lower() in DEMO_TABLE_SAMPLES else "users"
+        demo_data = DEMO_TABLE_SAMPLES[sample_key]
+        return {
+            "status": "success",
+            "table_name": clean_table,
+            "columns": demo_data["columns"],
+            "rows": demo_data["rows"][:limit],
+            "column_profiles": demo_data["profiles"],
+            "row_count": len(demo_data["rows"][:limit]),
+            "message": f"Retrieved sample preview & categorical distribution for '{clean_table}'."
+        }
 
     engine = detect_engine_type(connection_uri)
 

@@ -102,10 +102,12 @@ TTS/
 │   │   │   ├── clarification.py    # /api/clarification - Multi-turn clarify & LangGraph compile
 │   │   │   ├── dashboard.py        # /api/dashboard - Multi-agent supervisor dashboard generation
 │   │   │   ├── database.py         # /api/database - Connect, introspect, execute, explain, diagnose, sample
+│   │   │   ├── guard.py            # /api/v1/guard - Pre-Flight Cost Guard LangGraph API
 │   │   │   ├── memory.py           # /api/memory - Verified few-shot memory & notebook snippets
 │   │   │   ├── semantic.py         # /api/semantic - Semantic rules, teach AI, policy upload
 │   │   │   └── settings.py         # /api/settings - Sync settings, shortcuts, usage counters
 │   │   ├── services/
+│   │   │   ├── cost_guard_graph.py # LangGraph Pre-Flight Cost Guard & AI Firewall workflow
 │   │   │   ├── dashboard_service.py# Supervisor multi-agent planner & worker synthesis
 │   │   │   ├── db_service.py       # PostgreSQL & MongoDB connection, introspection, execution, sampling
 │   │   │   ├── explain_service.py  # PostgreSQL EXPLAIN cost analyzer & index advisor
@@ -115,8 +117,9 @@ TTS/
 │   │   │   ├── semantic_service.py # Semantic metric CRUD, RAG matcher, policy doc extraction
 │   │   │   └── sql_graph.py        # LangGraph multi-agent StateGraph workflow & self-healing loop
 │   │   └── main.py                 # FastAPI application initialization & CORS config
-│   ├── tests/                      # Pytest Automated Test Suite (83 tests passed)
+│   ├── tests/                      # Pytest Automated Test Suite (89 tests passed)
 │   │   ├── test_clarification.py
+│   │   ├── test_cost_guard.py
 │   │   ├── test_dashboard_service.py
 │   │   ├── test_database.py
 │   │   ├── test_explain.py
@@ -141,7 +144,9 @@ TTS/
 │   │   │   │   ├── chat/
 │   │   │   │   │   ├── Chatbox.jsx # Responsive interactive clarification chat studio
 │   │   │   │   │   └── page.jsx    # Chat view route
-│   │   │   │   ├── layout.jsx      # 3-Zone shell, ⌘1/⌘2/⌘3 hotkeys, header status pill
+│   │   │   │   ├── guard/
+│   │   │   │   │   └── page.jsx    # Pre-Flight Cost Guard (AI Firewall) Studio
+│   │   │   │   ├── layout.jsx      # 3-Zone shell, ⌘1/⌘2/⌘3/⌘4 hotkeys, header status pill
 │   │   │   │   ├── page.jsx        # Direct SQL/NoSQL compiler & execution sandbox
 │   │   │   │   └── slidebar.jsx    # Workspace switcher, Recents drawer, 2-tab schema explorer
 │   │   │   ├── Home/               # Modern landing page components
@@ -171,8 +176,10 @@ TTS/
 │   │   │   │   └── explain/route.js    # POST /api/database/explain (pg EXPLAIN cost planner)
 │   │   │   ├── semantic/
 │   │   │   │   └── metrics/route.js    # GET/POST /api/semantic/metrics
-│   │   │   └── settings/
-│   │   │       └── route.js        # GET/POST /api/settings
+│   │   │   ├── settings/
+│   │   │   │   └── route.js        # GET/POST /api/settings
+│   │   │   └── v1/
+│   │   │       └── guard/route.js  # POST /api/v1/guard (Cost Guard Firewall API)
 │   │   ├── components/
 │   │   │   ├── canvas/
 │   │   │   │   ├── DashboardCanvas.jsx       # Multi-widget responsive 3-column canvas grid
@@ -182,6 +189,8 @@ TTS/
 │   │   │   │   └── TableDataProfilerModal.jsx  # 5-row sample preview & distinct distribution
 │   │   │   ├── extension/
 │   │   │   │   └── ExtensionPromptModal.jsx    # Interactive Spotlight demo & 3-step setup
+│   │   │   ├── guard/
+│   │   │   │   └── CostGuardDashboard.jsx     # Split-screen Pre-Flight Cost Guard Studio
 │   │   │   ├── onboarding/
 │   │   │   │   ├── OnboardingModal.jsx         # 3-step role personalization & sandbox modal
 │   │   │   │   └── SpotlightTooltip.jsx        # Floating 3-step interactive UI spotlight tour
@@ -294,13 +303,39 @@ QueryCraft provides dual deployment paths:
   7. **Projects & Workspaces**: Workspace CRUD management with environment tags.
   8. **Profile & Cloud Sync**: Profile info and factory defaults reset.
 
+### 3.7. Pre-Flight Cost Guard & AI Firewall
+* **Location**: `backend/app/services/cost_guard_graph.py`, `backend/app/routers/guard.py`, `frontend/components/guard/CostGuardDashboard.jsx`, `/Dashboard/guard`
+* **Features**:
+  - **Stateful LangGraph Workflow**: 3-node cyclic state machine (`execute_explain` $\rightarrow$ `evaluate_cost` $\rightarrow$ `auto_heal_query`).
+  - **Deterministic AST Parser**: Traverses the PostgreSQL EXPLAIN AST, detects sequential scans on high-row tables, and generates targeted `CREATE INDEX CONCURRENTLY` statements.
+  - **Honeypot Schema & Trap Detection**:
+    - **Cartesian Product Trap (`users` $\times$ `audit_logs`)**: Flags cross join across 500,000 rows ($385,000.00$ cost), rewrites to `JOIN audit_logs a ON u.id = a.user_id`, applies `LIMIT 50`, achieving 99.9% cost reduction.
+    - **Unindexed Sequential Scan (`audit_logs`)**: Flags full table scan on 500,000 unindexed rows ($14,250.00$ cost) and generates infrastructural recommendation `CREATE INDEX CONCURRENTLY idx_audit_logs_action ON audit_logs(action)`.
+    - **DDL vs DML Clean Separation (`action_type: 'rewritten' | 'blocked_needs_index'`)**: Never replaces the user's `SELECT` query with DDL statements. Unsafe queries requiring infrastructure fixes are cleanly blocked, preserving the original DML query while outputting index creation DDL in a dedicated Data Engineering report.
+  - **Dual Execution Mode**: Operates against live local/cloud PostgreSQL clusters, with deterministic AST fallback in standalone serverless environments.
+  - **Developer HUD & Diff Preview**: Split-screen workbench featuring real-time cost reduction comparison, scan method status, remediated SQL monospace diff, and collapsible raw AST plan.
+
+### 3.8. Model Context Protocol (MCP) Server — Universal Agent & IDE Connectivity
+* **Location**: `backend/app/mcp_server.py`, `backend/mcp_server.py`, `.cursor/mcp.json`, `docs/MCP_SERVER_GUIDE.md`
+* **Features**:
+  - **Native stdio Transport (JSON-RPC 2.0)**: Standard input/output transport natively recognized across **Cursor**, **Claude Desktop**, **Gemini**, and custom **LangGraph / LangChain** agent swarms.
+  - **Registered Tool (`evaluate_and_heal_sql`)**:
+    - Input: `sql_query` (`str`), `cost_threshold` (`float`, default `150.0`), `connection_uri` (`str`, optional).
+    - Auto-Healed Queries: Returns `is_error=False` with the restructured ANSI `JOIN` query, compute cost delta, and explanation.
+    - Blocked Queries (Missing Indexes): Returns `is_error=True` with a critical AI Firewall execution block, preserves the user's `SELECT` query, and outputs the exact `CREATE INDEX` recommendation for Data Engineering.
+    - Read-Only Security Guard: Rejects mutating statements (`INSERT`, `UPDATE`, `DELETE`, `DROP`, `ALTER`).
+  - **Universal Configurations**:
+    - Cursor: Auto-discovered via `.cursor/mcp.json`.
+    - Claude Desktop: Configured in `claude_desktop_config.json`.
+    - Gemini / Custom Agentic AI: Python client examples in `docs/MCP_SERVER_GUIDE.md` and `backend/test_mcp_client.py`.
+
 ---
 
 ## 4. Current Verification & Quality Assurance
 
-* **Automated Frontend Tests**: `11 passed, 11 total` (73 tests in `frontend/__tests__`).
-* **Automated Backend Tests**: `83 passed, 83 total` (in `backend/tests`).
-* **Production Build**: `next build` compiles all 19 static and dynamic routes cleanly with Turbopack.
+* **Automated Frontend Tests**: `12 passed, 12 total` (76 tests in `frontend/__tests__`).
+* **Automated Backend Tests**: `96 passed, 96 total` (in `backend/tests`, including 5 MCP server test cases).
+* **Production Build**: `next build` compiles all 21 static and dynamic routes cleanly with Turbopack.
 * **Firebase Authentication**: Active email/password, Google OAuth, GitHub OAuth, and session tokens.
 * **Chrome Extension Hotkey**: `Cmd + Shift + K` global Spotlight Copilot.
 

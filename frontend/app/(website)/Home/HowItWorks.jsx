@@ -1,164 +1,235 @@
 'use client'
 
 import React from "react"
-import Link from "next/link"
+import { motion } from "framer-motion"
 import {
+  ArrowRight,
+  Bot,
+  CheckCircle2,
   Database,
   MessageSquareText,
-  ArrowRight,
+  Play,
+  Plug,
   ShieldCheck,
-  TrendingUp,
-  HelpCircle,
-  Zap,
+  Sparkles,
   Terminal,
-  Layers,
-  CheckCircle2,
+  Zap,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 
-const steps = [
+const STEPS = [
   {
-    step: "01",
+    num: "01",
+    icon: Plug,
     title: "Connect Your Database",
-    subtitle: "Instant Introspection",
-    desc: "Paste your connection string (Supabase, Neon, AWS RDS, PostgreSQL, MySQL, MongoDB Atlas) or use our 1-click Demo Sandbox. QueryCraft introspects your real schema, columns, foreign keys, and indexes in milliseconds.",
-    badge: "10-Second Setup",
-    badgeColor: "bg-emerald-50 text-emerald-800 border-emerald-200",
-    icon: Database,
-    codeSnippet: `// Live Schema Introspection
-Introspected 5 tables:
-• users (id, email, full_name, created_at)
-• contracts (id, title, value, status)
-• counterparties (id, name, tier)
-• orders, payments...`,
+    desc: "Paste a connection URI — Supabase, Neon, AWS RDS, PostgreSQL, MongoDB Atlas, or Redis. Live schema discovery runs in under 3 seconds.",
+    accent: "bg-blue-50 border-blue-200 text-blue-700",
+    iconBg: "bg-blue-600",
+    preview: (
+      <div className="rounded-lg border border-slate-200 bg-white overflow-hidden shadow-xs">
+        <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2">
+          <Database className="size-3.5 text-slate-400" />
+          <span className="font-mono text-[10px] text-slate-500">Connect Database</span>
+        </div>
+        <div className="p-3 space-y-2">
+          <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5">
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-mono text-[10px] text-slate-600">postgresql://user:***@db.neon.tech/app</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5">
+            <CheckCircle2 className="size-3 text-emerald-600" />
+            <span className="font-mono text-[10px] font-semibold text-emerald-700">12 tables introspected · Schema grounded</span>
+          </div>
+        </div>
+      </div>
+    ),
   },
   {
-    step: "02",
-    title: "Ask in Plain English",
-    subtitle: "1-Tap Clarification Loop",
-    desc: "Ask any data question. If your query is ambiguous (e.g. 'Show top customers' without a date range), QueryCraft asks 1-tap clarifying questions instead of guessing. It also automatically catches spelling typos against your real schema.",
-    badge: "Zero Guessing & Typo-Tolerant",
-    badgeColor: "bg-amber-50 text-amber-800 border-amber-200",
-    icon: HelpCircle,
-    codeSnippet: `User: "give the list of ocunter parties"
-AI: Auto-corrected 'ocunter parties' → 'counterparties'
-Clarification: "Filter by tier (Tier 1/2) or show all?"
-[All Tiers] [Tier 1 Only] [Active Only]`,
+    num: "02",
+    icon: MessageSquareText,
+    title: "Ask in Plain Language",
+    desc: "Type your question naturally. No SQL knowledge needed. QueryCraft detects ambiguity and asks targeted clarifying questions before compiling anything.",
+    accent: "bg-violet-50 border-violet-200 text-violet-700",
+    iconBg: "bg-violet-600",
+    preview: (
+      <div className="rounded-lg border border-slate-200 bg-white overflow-hidden shadow-xs">
+        <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2">
+          <Bot className="size-3.5 text-slate-400" />
+          <span className="font-mono text-[10px] text-slate-500">Chat Studio</span>
+        </div>
+        <div className="p-3 space-y-2">
+          <div className="flex justify-end">
+            <div className="rounded-2xl rounded-tr-sm bg-[#0f172a] px-3 py-1.5 text-white font-medium text-[10.5px]">
+              Top customers by revenue last quarter
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <div className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-[#0f172a] text-emerald-400">
+              <Bot className="size-3" />
+            </div>
+            <div className="rounded-xl rounded-tl-sm border border-amber-200 bg-amber-50 px-2.5 py-2 text-[10px] font-medium text-amber-800">
+              Completed orders only, or include all statuses?
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
   },
   {
-    step: "03",
-    title: "Get Live Data & Charts",
-    subtitle: "Read-Only Safety & Auto-Heal",
-    desc: "QueryCraft compiles optimized SQL or MongoDB MQL with safe read-only LIMIT 50 protections. Query runtime errors are automatically diagnosed and fixed in-flight by the SQL Doctor critic agent.",
-    badge: "Interactive Charts & CSV Export",
-    badgeColor: "bg-blue-50 text-blue-800 border-blue-200",
-    icon: TrendingUp,
-    codeSnippet: `SELECT name, tier, contract_count
-FROM counterparties
-ORDER BY contract_count DESC LIMIT 50;
-→ 12ms execution · Read-Only Protected
-→ Rendered: Table, Bar Chart, Donut & CSV`,
+    num: "03",
+    icon: Sparkles,
+    title: "Review Verified Query",
+    desc: "Get a schema-grounded, hallucination-free SQL or MQL query. Inspect the EXPLAIN plan, check the cost estimate, and edit before execution.",
+    accent: "bg-emerald-50 border-emerald-200 text-emerald-700",
+    iconBg: "bg-emerald-600",
+    preview: (
+      <div className="rounded-lg border border-slate-200 bg-white overflow-hidden shadow-xs">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-3 py-2">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="size-3 text-emerald-600" />
+            <span className="font-mono text-[10px] font-semibold text-emerald-700">Verified · Read-Only</span>
+          </div>
+          <span className="font-mono text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">LIMIT 50</span>
+        </div>
+        <div className="p-3">
+          <div className="rounded-md bg-[#0d1117] border border-[#21262d] p-2.5">
+            <pre className="font-mono text-[9.5px] leading-relaxed text-emerald-300/90 overflow-x-auto">{`SELECT u.name,
+  SUM(oi.qty * oi.price) AS rev
+FROM users u
+JOIN orders o ON u.id=o.user_id
+JOIN order_items oi ON o.id=oi.id
+WHERE o.status='completed'
+GROUP BY u.name LIMIT 50;`}</pre>
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    num: "04",
+    icon: Play,
+    title: "Execute & Visualize",
+    desc: "Run the query safely against your live database. Results render as interactive tables, bar charts, line charts, or pie charts — with one-click CSV export.",
+    accent: "bg-orange-50 border-orange-200 text-orange-700",
+    iconBg: "bg-orange-500",
+    preview: (
+      <div className="rounded-lg border border-slate-200 bg-white overflow-hidden shadow-xs">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-3 py-2">
+          <div className="flex items-center gap-1.5">
+            <Terminal className="size-3 text-slate-400" />
+            <span className="font-mono text-[10px] text-slate-500">Live Results — 5 rows</span>
+          </div>
+          <Zap className="size-3 text-emerald-500" />
+        </div>
+        <div className="p-3">
+          {[
+            { name: "Acme Corp", val: "$24,500" },
+            { name: "Global Logistics", val: "$18,200" },
+            { name: "Stripe Inc", val: "$14,890" },
+          ].map((row, i) => (
+            <div key={i} className={`flex justify-between items-center py-1 text-[10px] ${i < 2 ? "border-b border-slate-50" : ""}`}>
+              <span className="font-medium text-slate-700">{row.name}</span>
+              <span className="font-bold text-emerald-700 tabular-nums">{row.val}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
   },
 ]
 
 export default function HowItWorks() {
   return (
-    <section className="relative overflow-hidden border-b border-border bg-white px-4 py-20 sm:px-6 lg:px-8 lg:py-28" id="how-it-works">
-      {/* Background ambient radial glow */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(52,192,106,0.06),transparent_60%)]" />
+    <section
+      className="relative bg-white px-4 py-20 sm:px-6 lg:px-8 lg:py-24 border-b border-slate-100"
+      id="how-it-works"
+    >
+      <div className="mx-auto max-w-7xl">
 
-      <div className="relative mx-auto max-w-7xl">
-        
-        {/* Section Header */}
-        <div className="mx-auto max-w-3xl text-center space-y-4 mb-16 sm:mb-20">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-3.5 py-1 text-xs font-semibold text-[#1b6b3a] shadow-xs">
-            <Zap className="size-3.5 text-emerald-600" />
-            <span>How QueryCraft Works</span>
-          </div>
-
-          <h2 className="text-3xl font-extrabold tracking-tight text-[#111c16] sm:text-4xl lg:text-5xl leading-tight">
-            From natural question to verified insights in{" "}
-            <span className="bg-gradient-to-r from-[#1f7a47] via-[#2b9b54] to-[#34c06a] bg-clip-text text-transparent">
-              3 simple steps.
-            </span>
-          </h2>
-
-          <p className="text-sm sm:text-base leading-relaxed text-[#55695e] max-w-2xl mx-auto">
-            Traditional AI guesses blindly and breaks in production. QueryCraft connects to your actual database schema, clarifies ambiguity, and compiles guaranteed read-only queries.
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+          className="mx-auto max-w-2xl text-center space-y-3 mb-16"
+        >
+          <p className="section-kicker justify-center">
+            <Zap className="size-3.5" />
+            How It Works
           </p>
-        </div>
+          <h2 className="text-[#0f172a]">
+            From question to verified query{" "}
+            <span className="gradient-text">in four steps.</span>
+          </h2>
+          <p className="text-base text-slate-500 leading-relaxed">
+            No SQL knowledge required. No prompt engineering. Connect your database and start asking business questions in plain English.
+          </p>
+        </motion.div>
 
-        {/* 3-Step Cards Grid */}
-        <div className="grid gap-8 lg:grid-cols-3 lg:gap-6 xl:gap-8">
-          {steps.map((s, idx) => {
-            const Icon = s.icon
-            return (
-              <div
-                key={idx}
-                className="group relative flex flex-col justify-between rounded-2xl border border-[#dce7e0] bg-[#fbfdfb] p-6 sm:p-7 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 hover:border-[#a8d4b3]"
-              >
-                {/* Step Pill Header */}
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-5">
-                    <span className="font-mono text-2xl sm:text-3xl font-black text-[#1b5c38]/40 group-hover:text-[#1b5c38] transition-colors">
-                      {s.step}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-[11px] font-bold ${s.badgeColor}`}>
-                      {s.badge}
-                    </span>
+        {/* Steps grid */}
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map((step, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-30px" }}
+              transition={{ duration: 0.45, delay: idx * 0.09 }}
+              className="relative group"
+            >
+              {/* Connector line (except last) */}
+              {idx < STEPS.length - 1 && (
+                <div className="hidden lg:block pointer-events-none absolute top-[22px] left-full w-8 h-px bg-gradient-to-r from-slate-300 to-slate-200 z-10" />
+              )}
+
+              <div className="flex flex-col h-full">
+                {/* Step number + icon */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${step.iconBg} text-white shadow-sm transition-transform duration-200 group-hover:scale-110`}>
+                    <step.icon className="size-4.5" />
                   </div>
-
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="flex size-10 items-center justify-center rounded-xl bg-[#111c16] text-[#5de08a] shadow-xs group-hover:scale-105 transition-transform">
-                      <Icon className="size-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-[#111c16] leading-tight">{s.title}</h3>
-                      <p className="text-xs font-semibold text-[#1b6b3a]">{s.subtitle}</p>
-                    </div>
-                  </div>
-
-                  <p className="text-xs sm:text-[13px] leading-relaxed text-[#55695e] mb-6">
-                    {s.desc}
-                  </p>
+                  <span className="font-mono text-4xl font-black text-slate-100 leading-none select-none">
+                    {step.num}
+                  </span>
                 </div>
 
-                {/* Code Window Preview */}
-                <div className="rounded-xl border border-[#1b2b22] bg-[#0c1410] overflow-hidden shadow-xs">
-                  <div className="flex items-center justify-between border-b border-[#1b2b22] bg-[#080e0b] px-3 py-1.5 text-[10px] text-[#75ab8f] font-mono">
-                    <span>Live Verification</span>
-                    <span className="text-[#34c06a]">● Active</span>
-                  </div>
-                  <pre className="p-3 font-mono text-[10.5px] sm:text-[11px] leading-relaxed text-[#c6ebd4] overflow-x-auto whitespace-pre-wrap">
-                    <code>{s.codeSnippet}</code>
-                  </pre>
-                </div>
+                {/* Content */}
+                <h3 className="text-base font-semibold text-[#0f172a] mb-2">{step.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">{step.desc}</p>
+
+                {/* Mini UI preview */}
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
+                  className="mt-auto"
+                >
+                  {step.preview}
+                </motion.div>
               </div>
-            )
-          })}
+            </motion.div>
+          ))}
         </div>
 
-        {/* Bottom Fast Action Strip */}
-        <div className="mt-12 sm:mt-16 rounded-2xl border border-emerald-200/80 bg-gradient-to-r from-emerald-50 via-white to-emerald-50/50 p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="space-y-1 text-center sm:text-left">
-            <h4 className="text-base sm:text-lg font-extrabold text-[#111c16]">
-              Ready to test QueryCraft on your database?
-            </h4>
-            <p className="text-xs sm:text-sm text-[#55695e]">
-              Try the interactive Chat Studio right now with 0 setup or connect your live Supabase / Neon / MongoDB database.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <Link href="/Dashboard/chat">
-              <Button size="lg" className="h-10 px-5 text-xs sm:text-sm font-bold bg-[#111c16] hover:bg-[#1e3328] text-white shadow-md hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
-                <span>Launch Chat Studio</span>
-                <ArrowRight className="size-4 text-[#5de08a]" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-
+        {/* Bottom CTA bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-6 py-5"
+        >
+          <p className="text-sm font-medium text-slate-700 text-center sm:text-left">
+            Ready to stop guessing? Connect your database in seconds.
+          </p>
+          <a
+            href="/Dashboard/chat"
+            className="shrink-0 inline-flex items-center gap-2 rounded-lg bg-[#0f172a] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition-all duration-200 hover:scale-[1.03]"
+          >
+            <Sparkles className="size-4 text-emerald-400" />
+            Try It Free
+            <ArrowRight className="size-3.5 text-emerald-400" />
+          </a>
+        </motion.div>
       </div>
     </section>
   )

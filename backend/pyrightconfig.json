@@ -1,0 +1,8 @@
+{
+  "venvPath": "/Users/nitindeep/Developer/TTS/backend",
+  "venv": ".venv",
+  "pythonVersion": "3.11",
+  "extraPaths": [
+    "/Users/nitindeep/Developer/TTS/backend"
+  ]
+}

@@ -1,0 +1,279 @@
+{
+  "default_user": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ],
+  "alice@company.com": [
+    {
+      "id": "ws-prod-a",
+      "name": "Alice Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "postgresql://alice:pass@db-a.neon.tech/prod",
+      "color": "#3aa363",
+      "is_active": true
+    }
+  ],
+  "bob@enterprise.org": [
+    {
+      "id": "ws-analytics-b",
+      "name": "Bob Mongo Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "mongodb+srv://bob:pass@cluster.mongodb.net/analytics",
+      "color": "#3b82f6",
+      "is_active": true
+    }
+  ],
+  "developer@startup.io": [
+    {
+      "id": "ws-1",
+      "name": "Core Postgres",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "postgresql://dev:secret@db.supabase.co:5432/postgres",
+      "is_active": true
+    },
+    {
+      "id": "ws-2",
+      "name": "Metrics Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "postgresql://dev:secret@stg.neon.tech/neondb",
+      "is_active": false
+    }
+  ],
+  "admin@platform.dev": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ],
+  "nitindeep@company.com": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#3aa363",
+      "is_active": true
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308",
+      "is_active": false
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6",
+      "is_active": false
+    }
+  ],
+  "nitindeep@enterprise.com": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ],
+  "nitindeep@test.com": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ],
+  "state@test.com": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ],
+  "newuser@company.com": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ],
+  "verify@company.com": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ],
+  "nitindeep65@gmail.com": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ]
+}

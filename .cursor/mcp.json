@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "querycraft-cost-guard": {
+      "command": "/Users/nitindeep/Developer/TTS/backend/.venv/bin/python",
+      "args": [
+        "-m",
+        "app.mcp_server"
+      ],
+      "cwd": "/Users/nitindeep/Developer/TTS/backend",
+      "env": {
+        "PYTHONPATH": "/Users/nitindeep/Developer/TTS/backend",
+        "READ_ONLY_ENFORCED": "true",
+        "AUTO_LIMIT": "50"
+      }
+    }
+  }
+}

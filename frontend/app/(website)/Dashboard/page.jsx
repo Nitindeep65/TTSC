@@ -417,8 +417,32 @@ export default function CompilerPage() {
           </div>
         </div>
 
-        {/* ── ZONE 1: INPUT & ACTIONS ── */}
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-xs space-y-3.5">
+        {/* ── ZONE 1: INPUT & ACTIONS (HERO QUERY COMPOSER) ── */}
+        <section className="composer-hero p-5 space-y-3.5 shadow-sm">
+          <div className="flex items-center justify-between text-xs pb-1 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-foreground text-xs">Query Composer</span>
+              <span className="text-[11px] text-muted-foreground">·</span>
+              <span className="font-mono text-[11px] text-muted-foreground">
+                {dbInfo ? `${dbInfo.db_type ? dbInfo.db_type.toUpperCase() : "POSTGRESQL"} · ${dbInfo.tables_count} tables` : "Sandbox Mode"}
+              </span>
+            </div>
+            {dbInfo ? (
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live Schema Grounded
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className="text-[10px] text-emerald-600 hover:underline font-semibold"
+              >
+                + Connect Live Database
+              </button>
+            )}
+          </div>
+
           <div className="relative">
             <textarea
               id="compiler-prompt-input"
@@ -432,7 +456,7 @@ export default function CompilerPage() {
               }}
               placeholder="Ask your database in plain English... (e.g. 'Show monthly completed order revenue for the last 6 months')"
               rows={3}
-              className="w-full resize-none rounded-xl border border-border/70 bg-[#fbfdfb] p-3.5 text-xs sm:text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 leading-relaxed font-normal"
+              className="w-full resize-none rounded-xl border border-border/60 bg-muted/20 p-3.5 text-xs sm:text-sm text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:bg-background focus:border-ring focus:ring-1 focus:ring-ring leading-relaxed font-normal"
             />
           </div>
 
@@ -441,7 +465,7 @@ export default function CompilerPage() {
             {/* Starter Pills */}
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mr-1">
-                Starters:
+                Try:
               </span>
               {COMPILER_STARTERS.map((starter, idx) => (
                 <button
@@ -449,7 +473,7 @@ export default function CompilerPage() {
                   type="button"
                   onClick={() => handleCompileAndExecute(starter, true)}
                   disabled={isProcessing}
-                  className="rounded-lg border border-border/70 bg-[#f8faf8] hover:bg-secondary hover:text-secondary-foreground px-2.5 py-1 text-[11.5px] text-muted-foreground transition font-medium cursor-pointer"
+                  className="rounded-lg border border-border bg-muted/40 hover:bg-muted hover:border-border-hover px-2.5 py-1 text-[11.5px] text-muted-foreground hover:text-foreground transition font-medium cursor-pointer"
                 >
                   {starter}
                 </button>
@@ -499,37 +523,67 @@ export default function CompilerPage() {
 
         {/* ── ZONE 2: GENERATED QUERY & ZONE 3: RESULTS ── */}
         <section aria-live="polite" className="space-y-5">
-          {/* Processing State */}
+          {/* Processing State: Multi-Agent Telemetry Pipeline */}
           {isProcessing && (
-            <div className="rounded-xl border border-border bg-card p-10 flex flex-col items-center justify-center gap-2.5 text-center shadow-2xs">
-              <Loader2 className="size-6 text-emerald-600 animate-spin" />
-              <p className="text-xs font-semibold text-foreground">
-                Grounding prompt against database schema &amp; compiling SQL...
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                Enforcing read-only safety, LIMIT 50 guards, and execution cost checks
+            <div className="rounded-xl border border-border bg-card p-8 flex flex-col items-center justify-center gap-4 text-center shadow-xs">
+              <div className="flex items-center gap-3">
+                <Loader2 className="size-5 text-emerald-600 animate-spin" />
+                <span className="text-xs font-bold text-foreground font-mono">QueryCraft Agent Orchestration</span>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-[11.5px] font-mono text-muted-foreground pt-1">
+                <span className="flex items-center gap-1.5 text-emerald-600 font-semibold">
+                  <span className="size-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  1. Schema Introspection
+                </span>
+                <span className="text-border hidden sm:inline">→</span>
+                <span className="flex items-center gap-1.5 text-emerald-600 font-semibold">
+                  <span className="size-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  2. AST Generation
+                </span>
+                <span className="text-border hidden sm:inline">→</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-muted-foreground/50" />
+                  3. Cost Guard Check
+                </span>
+                <span className="text-border hidden sm:inline">→</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-muted-foreground/50" />
+                  4. Safe Execution
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground max-w-md">
+                Grounding against {dbInfo?.tables_count || 12} live tables · Enforcing read-only sandbox &amp; LIMIT 50
               </p>
             </div>
           )}
 
           {/* Error State */}
           {!isProcessing && errorMessage && (
-            <div className="rounded-xl border border-red-200 bg-red-50/70 p-4 text-red-900 shadow-2xs">
-              <p className="text-xs font-bold">Query Compilation Notice</p>
-              <p className="text-xs mt-1 leading-relaxed">{errorMessage}</p>
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-700 dark:text-red-300 shadow-2xs space-y-1">
+              <p className="text-xs font-bold font-mono">Query Compilation Notice</p>
+              <p className="text-xs leading-relaxed">{errorMessage}</p>
             </div>
           )}
 
           {/* Empty State */}
           {!isProcessing && !hasResult && !errorMessage && (
-            <div className="rounded-xl border border-border bg-card p-10 flex flex-col items-center justify-center text-center shadow-2xs">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-muted text-muted-foreground mb-3">
-                <Database className="size-5" />
+            <div className="rounded-xl border border-border/80 bg-card p-10 flex flex-col items-center justify-center text-center shadow-xs">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground mb-3">
+                <Database className="size-5 text-emerald-600" />
               </div>
-              <h2 className="text-sm font-bold text-foreground">No Query Compiled Yet</h2>
-              <p className="text-xs text-muted-foreground max-w-sm mt-1">
-                Enter a question above or click one of the starter pills to compile and execute a schema-grounded query.
+              <h2 className="text-sm font-bold text-foreground">Workspace Ready</h2>
+              <p className="text-xs text-muted-foreground max-w-sm mt-1 leading-relaxed">
+                Enter a question in plain English or select a preset starter above to compile, inspect safety metrics, and execute live against your database.
               </p>
+              <div className="mt-4 flex items-center gap-2 text-[11px] font-mono text-muted-foreground">
+                <span className="flex items-center gap-1 text-emerald-600">
+                  <CheckCircle2 className="size-3" /> Read-Only Safe
+                </span>
+                <span>·</span>
+                <span>LIMIT 50 Guard</span>
+                <span>·</span>
+                <span>EXPLAIN Telemetry</span>
+              </div>
             </div>
           )}
 
@@ -537,39 +591,52 @@ export default function CompilerPage() {
           {!isProcessing && hasResult && apiResponse && (
             <div className="space-y-4 animate-in fade-in duration-150">
               
-              {/* Needs Clarification Prompt */}
+              {/* Needs Clarification Prompt — Diagnostic Interactive Experience */}
               {apiResponse.status === "needs_clarification" && (
-                <div className="rounded-xl border border-amber-300 bg-amber-50/70 p-4 text-amber-900 space-y-2.5 shadow-2xs">
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <HelpCircle className="size-4 text-amber-600" />
-                    <span>Clarification Needed Before Safe Compilation</span>
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-800 dark:text-amber-200 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 font-bold text-xs">
+                      <HelpCircle className="size-4 text-amber-600 dark:text-amber-400" />
+                      <span>Clarification Required Before Safe Compilation</span>
+                    </div>
+                    <span className="text-[10px] font-mono uppercase bg-amber-500/20 px-2 py-0.5 rounded font-semibold text-amber-700 dark:text-amber-300">
+                      Pausing Execution
+                    </span>
                   </div>
-                  <p className="text-xs leading-relaxed text-amber-950">{apiResponse.message}</p>
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {generateClarificationChips(apiResponse.message).map((chip, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleCompileAndExecute(`${prompt} — ${chip}`, true)}
-                        className="rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100/70 transition shadow-2xs cursor-pointer"
-                      >
-                        <span>{chip}</span>
-                        <span className="text-emerald-600 font-bold ml-1">→</span>
-                      </button>
-                    ))}
+                  <p className="text-xs leading-relaxed font-medium">{apiResponse.message}</p>
+                  <div className="space-y-1.5 pt-1">
+                    <p className="text-[10.5px] font-mono text-muted-foreground uppercase tracking-wider">
+                      Tap a resolution to proceed:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {generateClarificationChips(apiResponse.message).map((chip, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleCompileAndExecute(`${prompt} — ${chip}`, true)}
+                          className="rounded-lg border border-amber-500/30 bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:border-emerald-500 hover:text-emerald-600 transition shadow-2xs cursor-pointer flex items-center gap-1.5"
+                        >
+                          <span>{chip}</span>
+                          <ArrowRight className="size-3 text-emerald-600" />
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
 
               {/* Generated SQL Code Surface */}
               {sqlQuery && (
-                <div className="rounded-xl border border-border bg-card overflow-hidden shadow-2xs">
+                <div className="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
                   {/* SQL Toolbar */}
                   <div className="flex items-center justify-between border-b border-border bg-muted/40 px-3.5 py-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       <Code2 className="size-3.5 text-emerald-600" />
                       <span className="text-xs font-mono font-bold text-foreground">
-                        PostgreSQL (Read-Only)
+                        {dbInfo?.db_type ? dbInfo.db_type.toUpperCase() : "POSTGRESQL"} (Read-Only)
+                      </span>
+                      <span className="text-[9.5px] font-mono bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-1.5 py-0.2 rounded font-semibold">
+                        LIMIT 50 ENFORCED
                       </span>
                     </div>
 

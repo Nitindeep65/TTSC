@@ -25,6 +25,8 @@ import {
   Copy,
   FolderKanban,
   Check,
+  Zap,
+  ShieldCheck,
 } from "lucide-react"
 import { useDatabase } from "@/lib/databaseContext"
 
@@ -100,28 +102,37 @@ export function CommandPalette({
             <CommandItem onSelect={() => handleNavigate("/Dashboard/chat")}>
               <div className="flex items-center gap-2.5">
                 <MessageSquareText className="size-4 text-emerald-600" />
-                <span>Chat</span>
+                <span>Chat Studio</span>
                 <span className="text-[11px] text-muted-foreground">Conversational SQL Assistant</span>
               </div>
-              <CommandShortcut>G C</CommandShortcut>
+              <CommandShortcut>⌘1</CommandShortcut>
             </CommandItem>
 
             <CommandItem onSelect={() => handleNavigate("/Dashboard/canvas")}>
               <div className="flex items-center gap-2.5">
                 <Sparkles className="size-4 text-emerald-600" />
                 <span>Canvas</span>
-                <span className="text-[11px] text-muted-foreground">Multi-Agent Dashboard Studio</span>
+                <span className="text-[11px] text-muted-foreground">Autonomous Multi-Agent Studio</span>
               </div>
-              <CommandShortcut>G V</CommandShortcut>
+              <CommandShortcut>⌘2</CommandShortcut>
             </CommandItem>
 
             <CommandItem onSelect={() => handleNavigate("/Dashboard")}>
               <div className="flex items-center gap-2.5">
                 <Terminal className="size-4 text-emerald-600" />
-                <span>Compiler</span>
+                <span>Query Studio</span>
                 <span className="text-[11px] text-muted-foreground">Query Execution Sandbox</span>
               </div>
-              <CommandShortcut>G X</CommandShortcut>
+              <CommandShortcut>⌘3</CommandShortcut>
+            </CommandItem>
+
+            <CommandItem onSelect={() => handleNavigate("/Dashboard/guard")}>
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className="size-4 text-emerald-600" />
+                <span>Cost Guard</span>
+                <span className="text-[11px] text-muted-foreground">Pre-Flight AI Firewall</span>
+              </div>
+              <CommandShortcut>⌘4</CommandShortcut>
             </CommandItem>
 
             <CommandItem onSelect={() => handleNavigate("/")}>

@@ -3,85 +3,168 @@
 import React from "react"
 import { motion } from "framer-motion"
 import {
-  AlertCircle,
   CheckCircle2,
   Cloud,
-  Code2,
   Database,
-  Filter,
   HelpCircle,
-  Key,
   Layers,
-  Lock,
-  Play,
-  Server,
-  ShieldAlert,
   ShieldCheck,
-  TableProperties,
   Zap,
 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 
-const featureList = [
+const PRIMARY_FEATURES = [
   {
     icon: Database,
     badge: "Multi-Model Engines",
     title: "Universal SQL & NoSQL Compiler",
     description:
-      "Native support for relational SQL (PostgreSQL, MySQL, Supabase, Neon) as well as document and key-value stores (MongoDB Atlas, DynamoDB, Redis). Generates optimized queries tailored to your target engine.",
+      "Native support for relational SQL (PostgreSQL, MySQL, Supabase, Neon) and document stores (MongoDB Atlas, DynamoDB, Redis). Generates optimized queries tailored to your target engine — with zero syntax drift.",
     highlight: "Postgres · MySQL · Mongo · Redis",
-    snippet: "-- Relational SQL or MongoDB MQL:\ndb.orders.aggregate([{ $match: { status: 'completed' } }])",
+    snippet: `-- Relational SQL:
+SELECT u.id, SUM(oi.price) AS total
+FROM users u JOIN orders o ON u.id = o.uid
+JOIN order_items oi ON o.id = oi.oid
+GROUP BY u.id LIMIT 50;
+
+// MongoDB MQL:
+db.orders.aggregate([
+  { $match: { status: "completed" } },
+  { $unwind: "$items" }
+]);`,
+    spanClass: "sm:col-span-1",
+    accentColor: "text-blue-600",
+    accentBg: "bg-blue-600",
+    accentLight: "bg-blue-50 border-blue-200",
   },
   {
     icon: HelpCircle,
     badge: "Conversational AI",
     title: "Proactive Clarification Layer",
     description:
-      "When requests lack date ranges, transaction status filters, or explicit ranking parameters, the engine pauses and asks targeted clarifying questions before generating code.",
+      "When requests lack date ranges, status filters, or aggregation parameters, the engine pauses and asks targeted clarifying questions before compiling — with 1-tap interactive response chips.",
     highlight: "Zero Risky Assumptions",
-    snippet: "Clarify: \"Top customers\" by total spend or order count? Timeframe: 30 days or YTD?",
+    snippet: `Clarify: "Top customers" by:
+→ total spend (SUM of order_items)
+→ order count (COUNT DISTINCT orders)
+
+Date range:
+→ [Last 30 days] [YTD 2024] [All time]`,
+    spanClass: "sm:col-span-1",
+    accentColor: "text-violet-600",
+    accentBg: "bg-violet-600",
+    accentLight: "bg-violet-50 border-violet-200",
   },
+]
+
+const SECONDARY_FEATURES = [
   {
     icon: Cloud,
     badge: "Live Introspection",
     title: "Schema & Collection Grounding",
     description:
-      "Directly inspects live database catalogs — relational tables, UUIDs, JSONB columns, foreign keys, and MongoDB document schemas. Never hallucinates non-existent fields or invalid types.",
+      "Inspects live database catalogs — relational tables, UUIDs, JSONB columns, foreign keys, and MongoDB document schemas. Never hallucinates non-existent fields or invalid types.",
     highlight: "Zero Hallucination Guarantee",
-    snippet: "Schema: users(id, email), orders(total_amount, status)\nCollections: products, sessions",
+    snippet: `Schema: users(id UUID, email TEXT)\norders(total DECIMAL, status TEXT)\nCollections: products, sessions`,
+    accentColor: "text-teal-600",
+    accentBg: "bg-teal-600",
   },
   {
     icon: Zap,
     badge: "Self-Healing AI",
-    title: "Dual Critic Loop (SQL & MQL)",
+    title: "Critic Loop — SQL & MQL Doctor",
     description:
-      "If a query encounters a PostgreSQL syntax error or MongoDB aggregation stage failure, our LLM critic diagnoses the root cause in real-time and compiles a verified replacement automatically.",
+      "Intercepts runtime errors, parses SQLSTATE codes, uses an LLM critic to diagnose root causes, and auto-repairs queries with up to 3 self-healing retries.",
     highlight: "Automated Error Recovery",
-    snippet: "PostgreSQL 42703 / Mongo pipeline error\n→ Diagnosis → Auto-healed ✓",
+    snippet: `PostgreSQL ERROR 42703\n→ Diagnosis: column 'total_spend'\n   does not exist\n→ Auto-heal: mapped to\n   SUM(oi.quantity * oi.unit_price) ✓`,
+    accentColor: "text-amber-600",
+    accentBg: "bg-amber-500",
   },
   {
     icon: ShieldCheck,
     badge: "Universal Safety",
-    title: "Read-Only Sandboxing & Limits",
+    title: "Read-Only Sandboxing",
     description:
-      "Strictly enforces read-only access (SELECT in SQL, find/aggregate in NoSQL, GET in Redis). Intercepts INSERT, DELETE, DROP, and auto-appends LIMIT 50 safeguards.",
+      "Strictly enforces read-only access across SQL (SELECT only) and NoSQL (find/aggregate, GET). Intercepts INSERT, DELETE, DROP before they reach your database.",
     highlight: "Read-Only Enforced Everywhere",
-    snippet: "BLOCKED: INSERT / UPDATE / DROP\nALLOWED: SELECT / find() / aggregate()\nLIMIT: Auto 50",
-  },
-  {
-    icon: Layers,
-    badge: "Business Intelligence",
-    title: "Cross-Engine Semantic Layer",
-    description:
-      "Define business KPI formulas, glossary terms, and active customer rules once. QueryCraft applies them across both relational joins and nested NoSQL document pipelines effortlessly.",
-    highlight: "Unified Business Definitions",
-    snippet: "KPI Rule: net_revenue = total_amount - refund_amount\nApplied across all queries.",
+    snippet: `BLOCKED: INSERT / UPDATE / DROP\nALLOWED: SELECT / find() / aggregate()\nAuto-guard: LIMIT 50 injected`,
+    accentColor: "text-emerald-600",
+    accentBg: "bg-emerald-600",
   },
 ]
 
+const WIDE_FEATURE = {
+  icon: Layers,
+  badge: "Business Intelligence",
+  title: "Cross-Engine Semantic KPI Layer",
+  description:
+    "Define business KPI formulas and glossary terms once. QueryCraft applies them across both relational joins and nested NoSQL document pipelines. Teach the AI your custom metric definitions, upload policy documents, and let the semantic layer surface verified calculations every time.",
+  highlight: "Unified Business Definitions",
+  items: [
+    { label: "Net Revenue", formula: "total_amount - refund_amount - discount_amount" },
+    { label: "Active Churn Rate", formula: "churned_users / prev_month_active * 100" },
+    { label: "MRR Growth", formula: "current_mrr - prev_mrr / prev_mrr * 100" },
+    { label: "LTV / CAC Ratio", formula: "customer_ltv / customer_acquisition_cost" },
+  ],
+}
+
+function FeatureCard({ feature, large = false }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.4 }}
+      className={`bento-card group relative flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 overflow-hidden ${large ? "min-h-[280px]" : ""}`}
+    >
+      {/* Hover accent strip */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+      <div>
+        {/* Icon + badge */}
+        <div className="mb-4 flex items-center gap-3">
+          <div className={`flex size-10 items-center justify-center rounded-xl ${feature.accentBg || "bg-slate-900"} text-white shadow-sm transition-transform duration-200 group-hover:scale-110`}>
+            <feature.icon className="size-5" />
+          </div>
+          <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${feature.accentLight || "bg-slate-100 border-slate-200 text-slate-600"}`}>
+            {feature.badge}
+          </span>
+        </div>
+
+        {/* Title */}
+        <h3 className="text-[15px] font-bold text-[#0f172a] tracking-tight leading-snug mb-2">
+          {feature.title}
+        </h3>
+
+        {/* Description */}
+        <p className="text-[13px] text-slate-500 leading-relaxed">
+          {feature.description}
+        </p>
+      </div>
+
+      {/* Code snippet — reveals on hover */}
+      <div className="bento-snippet mt-4 rounded-lg overflow-hidden">
+        <div className="bg-[#0d1117] border border-[#21262d] rounded-lg p-3">
+          <pre className="font-mono text-[9.5px] leading-relaxed text-emerald-300/90 whitespace-pre-wrap">
+            <code>{feature.snippet}</code>
+          </pre>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center gap-1.5">
+        <CheckCircle2 className="size-3.5 text-emerald-500 shrink-0" />
+        <span className="text-xs font-semibold text-emerald-700">{feature.highlight}</span>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function Features() {
   return (
-    <section className="border-b border-border bg-[#f7f9f7] px-4 py-20 sm:px-6 lg:px-8 lg:py-24" id="features">
+    <section
+      className="bg-[#f8fafc] px-4 py-20 sm:px-6 lg:px-8 lg:py-24 border-b border-slate-100"
+      id="features"
+    >
       <div className="mx-auto max-w-7xl">
 
         {/* Header */}
@@ -90,72 +173,93 @@ export default function Features() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5 }}
-          className="mx-auto max-w-3xl text-center space-y-3 mb-16"
+          className="mx-auto max-w-3xl text-center space-y-3 mb-14"
         >
-          <Badge variant="emerald" className="gap-2 px-3.5 py-1 text-xs font-semibold">
-            <Layers className="size-3.5 text-[#3aa363]" />
-            <span>Universal Multi-Engine Intelligence</span>
-          </Badge>
-
-          <h2 className="text-3xl font-semibold tracking-tight text-[#17241c] sm:text-4xl text-balance">
+          <p className="section-kicker justify-center">
+            <Layers className="size-3.5" />
+            Universal Multi-Engine Intelligence
+          </p>
+          <h2 className="text-[#0f172a]">
             One engine for all your{" "}
-            <span className="bg-gradient-to-r from-[#1f663c] to-[#4ca873] bg-clip-text text-transparent">
-              SQL &amp; NoSQL databases.
-            </span>
+            <span className="gradient-text">SQL & NoSQL databases.</span>
           </h2>
-
-          <p className="text-base text-[#5c6e63] leading-relaxed">
+          <p className="text-base text-slate-500 leading-relaxed">
             From relational tables to nested document collections, QueryCraft clarifies intent, grounds queries in live schemas, and executes safe analytics anywhere.
           </p>
         </motion.div>
 
-        {/* Feature Cards Grid */}
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 min-w-0">
-          {featureList.map((f, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.4, delay: idx * 0.08 }}
-              whileHover={{ y: -5 }}
-              className="group relative flex flex-col justify-between rounded-2xl border border-[#e0e8e2] bg-white p-6 hover:border-[#71c897]/80 hover:shadow-lg hover:shadow-[#1f2d24]/5 transition-all duration-200 overflow-hidden cursor-default"
-            >
-              {/* Hover accent */}
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-[#3aa363] to-[#71c897] opacity-0 transition-opacity duration-200 group-hover:opacity-100 rounded-b-2xl" />
-
-              <div>
-                <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs group-hover:scale-110 transition-transform duration-200">
-                  <f.icon className="size-5.5" />
-                </div>
-
-                <Badge variant="secondary" className="mb-2.5 text-[10px] uppercase font-bold tracking-wider">
-                  {f.badge}
-                </Badge>
-
-                <h3 className="text-base font-semibold text-[#17241c] tracking-tight">
-                  {f.title}
-                </h3>
-
-                <p className="mt-2 text-xs sm:text-sm text-[#5f7065] leading-relaxed">
-                  {f.description}
-                </p>
-              </div>
-
-              {/* Code snippet on hover */}
-              <div className="mt-4 overflow-hidden rounded-lg border border-[#e4ede5] bg-[#f5fbf6] opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-32 transition-all duration-300">
-                <pre className="p-3 font-mono text-[10px] leading-relaxed text-[#2a5238] overflow-x-auto whitespace-pre-wrap">
-                  <code>{f.snippet}</code>
-                </pre>
-              </div>
-
-              <div className="mt-5 border-t border-[#eaf0eb] pt-3.5 flex items-center gap-1.5 text-xs font-semibold text-[#206642]">
-                <CheckCircle2 className="size-3.5 text-[#3ba565]" />
-                <span>{f.highlight}</span>
-              </div>
-            </motion.div>
+        {/* Primary 2-column row */}
+        <div className="grid gap-4 sm:grid-cols-2 mb-4">
+          {PRIMARY_FEATURES.map((feature, idx) => (
+            <FeatureCard key={idx} feature={feature} large />
           ))}
         </div>
+
+        {/* Secondary 3-column row */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-4">
+          {SECONDARY_FEATURES.map((feature, idx) => (
+            <FeatureCard key={idx} feature={feature} />
+          ))}
+        </div>
+
+        {/* Wide full-width Semantic Layer card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="bento-card group rounded-2xl border border-slate-200 bg-white p-6 overflow-hidden"
+        >
+          {/* Hover accent strip */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+          <div className="grid gap-8 lg:grid-cols-2 items-center">
+            {/* Left: Text */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm transition-transform duration-200 group-hover:scale-110">
+                  <WIDE_FEATURE.icon className="size-5" />
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                  {WIDE_FEATURE.badge}
+                </span>
+              </div>
+              <h3 className="text-lg font-bold text-[#0f172a] tracking-tight leading-snug">
+                {WIDE_FEATURE.title}
+              </h3>
+              <p className="text-[13px] text-slate-500 leading-relaxed">
+                {WIDE_FEATURE.description}
+              </p>
+              <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100">
+                <CheckCircle2 className="size-3.5 text-emerald-500 shrink-0" />
+                <span className="text-xs font-semibold text-emerald-700">{WIDE_FEATURE.highlight}</span>
+              </div>
+            </div>
+
+            {/* Right: KPI Glossary preview */}
+            <div className="rounded-xl border border-slate-200 bg-[#f8fafc] overflow-hidden shadow-xs">
+              <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-100 px-3 py-2">
+                <span className="font-mono text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                  KPI Semantic Glossary
+                </span>
+                <span className="ml-auto text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-mono">
+                  {WIDE_FEATURE.items.length} definitions
+                </span>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {WIDE_FEATURE.items.map((item, i) => (
+                  <div key={i} className="flex items-start gap-3 px-3 py-2.5">
+                    <span className="font-mono text-[9px] font-bold text-slate-400 mt-0.5">{String(i + 1).padStart(2, "0")}</span>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-slate-800">{item.label}</p>
+                      <p className="font-mono text-[9.5px] text-emerald-700 truncate mt-0.5">{item.formula}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
       </div>
     </section>

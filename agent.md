@@ -41,10 +41,20 @@ QueryCraft is an enterprise-grade AI database platform and natural language quer
   - Custom glossary metrics with RAG matching, conversational "Teach AI", and automated policy document extraction.
 * **Chrome Extension Spotlight Copilot (`Cmd+Shift+K`)**:
   - Manifest V3 Shadow DOM overlay with bi-directional workspace and settings synchronization.
+* **Pre-Flight Cost Guard & AI Firewall (`/Dashboard/guard` & `/api/v1/guard`)**:
+  - Stateful 3-node LangGraph workflow (`execute_explain` $\rightarrow$ `evaluate_cost` $\rightarrow$ `auto_heal_query`).
+  - AST plan evaluator flagging runaway computational costs and sequential scans.
+  - LLM auto-healer with DDL/DML separation (`rewritten` vs `blocked_needs_index`).
+* **Model Context Protocol (MCP) Server — Universal Agent & IDE Connectivity (`stdio`)**:
+  - Exposes `evaluate_and_heal_sql` tool over standard JSON-RPC 2.0 I/O for native IDE agent tool calls.
+  - Universal client compatibility: **Cursor**, **Gemini**, **Claude Desktop**, and custom **LangGraph** multi-agent architectures.
+  - Returns `is_error=False` with ANSI `JOIN` rewrites on auto-healed queries.
+  - Returns `is_error=True` blocking execution and prescribing `CREATE INDEX` on unindexed sequential scans.
+  - Configured via `.cursor/mcp.json` and documented in `docs/MCP_SERVER_GUIDE.md`.
 * **Automated Verification**:
-  - **Frontend**: 11/11 passing Jest test suites (73 tests).
-  - **Backend**: 83/83 passing Pytest test suites.
-  - **Build**: Next.js 16.3 Turbopack compiles all 19 routes cleanly with zero static errors.
+  - **Frontend**: 12/12 passing Jest test suites (76 tests).
+  - **Backend**: 96/96 passing Pytest test suites.
+  - **Build**: Next.js 16.3 Turbopack compiles all 21 routes cleanly with zero static errors.
 
 ---
 

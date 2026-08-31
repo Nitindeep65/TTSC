@@ -7,9 +7,7 @@ import {
   Ban,
   Brain,
   CheckCircle2,
-  ChevronRight,
-  Clock,
-  Code2,
+  ChevronDown,
   Database,
   HelpCircle,
   Layers,
@@ -17,47 +15,50 @@ import {
   ScrollText,
   ShieldCheck,
   ShieldOff,
-  TrendingUp,
   XCircle,
   Zap,
 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 
 const problems = [
   {
     icon: HelpCircle,
     label: "Blind Assumptions",
     pain: "AI guesses 'last month' or assumes active records without asking — returning misleading business metrics with zero warning across SQL and MongoDB.",
-    color: "text-red-500",
-    bg: "bg-red-50 border-red-200",
+    color: "text-red-400",
+    bg: "bg-red-950/40 border-red-900/50",
+    dot: "bg-red-500",
   },
   {
     icon: Brain,
     label: "Schema & Collection Hallucinations",
     pain: "LLMs invent column names like users.total_spend or hallucinate nested document paths that don't exist in your Mongo collections.",
-    color: "text-orange-500",
-    bg: "bg-orange-50 border-orange-200",
+    color: "text-orange-400",
+    bg: "bg-orange-950/40 border-orange-900/50",
+    dot: "bg-orange-500",
   },
   {
     icon: ShieldOff,
     label: "Broken Pipelines & No Recovery",
     pain: "A failing SQL join or invalid MongoDB $lookup/$unwind stage leaves you with cryptic error codes and no automated correction path.",
-    color: "text-amber-600",
-    bg: "bg-amber-50 border-amber-200",
+    color: "text-amber-400",
+    bg: "bg-amber-950/40 border-amber-900/50",
+    dot: "bg-amber-500",
   },
   {
     icon: Ban,
     label: "Runaway Queries & Unindexed Scans",
     pain: "Unconstrained SELECT * or unprojected MongoDB queries scan millions of documents, triggering cloud egress spikes and latency.",
-    color: "text-rose-500",
-    bg: "bg-rose-50 border-rose-200",
+    color: "text-rose-400",
+    bg: "bg-rose-950/40 border-rose-900/50",
+    dot: "bg-rose-500",
   },
   {
     icon: ScrollText,
     label: "No Custom Business Context",
     pain: "Generic models don't know your KPI formulas across relational joins or nested JSON arrays. 'Churn' and 'MRR' mean something unique to your business.",
-    color: "text-red-600",
-    bg: "bg-red-50 border-red-200",
+    color: "text-red-400",
+    bg: "bg-red-950/40 border-red-900/50",
+    dot: "bg-red-500",
   },
 ]
 
@@ -65,71 +66,83 @@ const solutions = [
   {
     icon: MessageSquareText,
     label: "Conversational Clarification",
-    fix: "Pauses before writing queries to clarify ambiguous date windows, status filters, aggregation methods, and target engines.",
-    color: "text-emerald-600",
-    bg: "bg-emerald-50 border-emerald-200",
+    fix: "Pauses before writing queries to clarify ambiguous date windows, status filters, and aggregation methods.",
+    dot: "bg-emerald-500",
   },
   {
     icon: Database,
     label: "Live SQL & NoSQL Introspection",
-    fix: "Introspects live PostgreSQL/MySQL schemas, UUID keys, JSONB fields, as well as MongoDB collection schemas and Redis key patterns.",
-    color: "text-green-600",
-    bg: "bg-green-50 border-green-200",
+    fix: "Introspects live PostgreSQL/MySQL schemas, UUID keys, JSONB fields, and MongoDB collection schemas.",
+    dot: "bg-emerald-500",
   },
   {
     icon: Zap,
     label: "Dual-Engine Critic Loop",
-    fix: "Intercepts runtime errors in both SQL statements and MongoDB pipelines, diagnoses root causes with an LLM critic, and regenerates verified fixes.",
-    color: "text-teal-600",
-    bg: "bg-teal-50 border-teal-200",
+    fix: "Intercepts runtime errors in both SQL and MongoDB pipelines, diagnoses root causes, and regenerates verified fixes.",
+    dot: "bg-emerald-500",
   },
   {
     icon: ShieldCheck,
     label: "Read-Only + Auto-Limit Guards",
-    fix: "Enforces pure read-only queries (SELECT in SQL, find/aggregate in MQL, GET in Redis). Blocks write commands and auto-injects limit guards.",
-    color: "text-emerald-700",
-    bg: "bg-emerald-50 border-emerald-200",
+    fix: "Enforces pure read-only queries everywhere. Blocks write commands and auto-injects LIMIT 50 safeguards.",
+    dot: "bg-emerald-500",
   },
   {
     icon: Layers,
     label: "Universal Semantic KPI Layer",
-    fix: "Define business metrics once — revenue formulas, active user thresholds — and every generated SQL or MongoDB aggregation pipeline respects them.",
-    color: "text-green-700",
-    bg: "bg-green-50 border-green-200",
+    fix: "Define business metrics once — revenue formulas, active user thresholds — and every generated query respects them.",
+    dot: "bg-emerald-500",
   },
 ]
 
-const brokenSql = `-- What generic AI generates (Broken SQL & NoSQL):
--- 1. SQL (Missing joins, hallucinated columns):
-SELECT * FROM customers WHERE status = 'active' ORDER BY total_spend DESC;
--- 2. MongoDB MQL (Invalid pipeline syntax, missing $unwind):
-db.orders.aggregate([{ $group: { _id: "$user", spend: { $sum: "$items.price" } } }]);`
+const brokenSql = `-- What generic AI generates:
+SELECT * FROM customers
+WHERE status = 'active'
+ORDER BY total_spend DESC;
+-- ↑ 'total_spend' column doesn't exist!
+-- ↑ Missing JOIN on order_items
+-- ↑ No LIMIT — full table scan`
 
-const healedSql = `-- What QueryCraft generates after schema verification:
--- 1. PostgreSQL (Grounds in real schema & foreign keys):
-SELECT u.id, u.name, SUM(oi.quantity * oi.unit_price) AS spend
-FROM users u JOIN orders o ON u.id = o.user_id
-JOIN order_items oi ON o.id = oi.order_id
-WHERE o.status = 'completed' GROUP BY u.id, u.name LIMIT 50;
-
--- 2. MongoDB MQL (Validated aggregation pipeline):
-db.orders.aggregate([
-  { $match: { status: "completed" } },
-  { $unwind: "$items" },
-  { $group: { _id: "$user_id", spend: { $sum: { $multiply: ["$items.qty", "$items.price"] } } } },
-  { $limit: 50 }
-]);`
+const healedSql = `-- QueryCraft after live schema verification:
+SELECT u.id, u.name,
+  SUM(oi.quantity * oi.unit_price) AS spend
+FROM users u
+  JOIN orders o ON u.id = o.user_id
+  JOIN order_items oi ON o.id = oi.order_id
+WHERE o.status = 'completed'
+GROUP BY u.id, u.name
+ORDER BY spend DESC
+LIMIT 50; -- auto-added`
 
 export default function ProblemSection() {
   const [activeIndex, setActiveIndex] = useState(null)
 
   return (
     <section
-      className="relative overflow-hidden border-b border-border bg-[#fafbf9] px-4 py-20 sm:px-6 lg:px-8 lg:py-28"
+      className="relative overflow-hidden bg-[#0f172a] px-4 py-20 sm:px-6 lg:px-8 lg:py-28"
       id="problem"
     >
-      {/* Background texture */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(220,38,38,0.04),transparent_45%),radial-gradient(circle_at_75%_80%,rgba(34,197,94,0.06),transparent_45%)]" />
+      {/* Subtle grid overlay on dark */}
+      <div
+        className="pointer-events-none absolute inset-0 grid-overlay-dark opacity-100"
+        aria-hidden="true"
+      />
+
+      {/* Ambient glow */}
+      <div
+        className="pointer-events-none absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-30"
+        style={{
+          background: "radial-gradient(circle, rgba(220,38,38,0.12) 0%, transparent 70%)",
+        }}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full opacity-40"
+        style={{
+          background: "radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 70%)",
+        }}
+        aria-hidden="true"
+      />
 
       <div className="relative mx-auto max-w-7xl">
 
@@ -141,52 +154,46 @@ export default function ProblemSection() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-3xl text-center space-y-4 mb-16 lg:mb-20"
         >
-          <Badge
-            variant="secondary"
-            className="gap-2 px-3.5 py-1 text-xs font-semibold border-red-200 bg-red-50 text-red-700"
-          >
-            <AlertTriangle className="size-3.5 text-red-500" />
-            <span>Universal AI Database Pitfalls</span>
-          </Badge>
+          <p className="section-kicker text-emerald-500 justify-center">
+            <AlertTriangle className="size-3.5" />
+            The Universal AI Database Problem
+          </p>
 
-          <h2 className="text-3xl font-semibold tracking-tight text-[#17241c] sm:text-4xl lg:text-5xl text-balance">
-            Generic AI{" "}
-            <span className="relative">
-              <span className="relative text-red-500">guesses schemas.</span>
-            </span>{" "}
+          <h2 className="text-white">
+            Generic AI guesses schemas.{" "}
             <br className="hidden sm:block" />
-            <span className="bg-gradient-to-r from-[#1f663c] via-[#2d8e57] to-[#4ca873] bg-clip-text text-transparent">
-              QueryCraft verifies SQL &amp; NoSQL.
-            </span>
+            <span className="gradient-text-light">QueryCraft verifies.</span>
           </h2>
 
-          <p className="text-base leading-relaxed text-[#56675d] max-w-2xl mx-auto">
-            Whether your data lives in relational PostgreSQL tables, MySQL, or MongoDB document collections, standard LLMs hallucinate fields and assume silent defaults. QueryCraft brings live schema grounding to all your data engines.
+          <p className="text-base leading-relaxed text-slate-400 max-w-2xl mx-auto">
+            Whether your data lives in relational PostgreSQL tables or MongoDB document collections,
+            standard LLMs hallucinate fields and assume silent defaults. QueryCraft brings live schema
+            grounding to all your data engines.
           </p>
         </motion.div>
 
         {/* Before / After grid */}
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-6 xl:gap-10 mb-16">
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-6 xl:gap-10 mb-14">
 
-          {/* BEFORE — Problems column */}
+          {/* BEFORE column */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: 0.5 }}
-            className="space-y-4"
+            className="space-y-3"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex size-8 items-center justify-center rounded-xl bg-red-100 border border-red-200">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-red-950/60 border border-red-900/50">
                 <XCircle className="size-4 text-red-500" />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-red-500">Without QueryCraft</p>
-                <p className="text-sm font-semibold text-[#17241c]">What goes wrong in SQL &amp; NoSQL</p>
+                <p className="text-[10.5px] font-bold uppercase tracking-widest text-red-500">Without QueryCraft</p>
+                <p className="text-sm font-semibold text-slate-200">What goes wrong in SQL & NoSQL</p>
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {problems.map((p, idx) => (
                 <motion.button
                   key={idx}
@@ -194,27 +201,27 @@ export default function ProblemSection() {
                   whileHover={{ scale: 1.01 }}
                   transition={{ duration: 0.15 }}
                   onClick={() => setActiveIndex(activeIndex === idx ? null : idx)}
-                  className={`w-full text-left group flex items-start gap-3.5 rounded-xl border p-4 transition-all duration-200 hover:shadow-sm cursor-pointer ${
+                  className={`w-full text-left group flex items-start gap-3.5 rounded-xl border p-4 transition-all duration-200 cursor-pointer ${
                     activeIndex === idx
-                      ? "border-red-300 bg-red-50 shadow-sm"
-                      : "border-[#e8edea] bg-white hover:border-red-200"
+                      ? "border-red-700/60 bg-red-950/40 shadow-lg shadow-red-950/20"
+                      : "border-white/8 bg-white/4 hover:border-red-800/40 hover:bg-red-950/20"
                   }`}
                 >
-                  <div className={`flex size-9 shrink-0 items-center justify-center rounded-lg border ${p.bg} transition-transform duration-200 group-hover:scale-105`}>
-                    <p.icon className={`size-4.5 ${p.color}`} />
+                  <div className={`flex size-8 shrink-0 items-center justify-center rounded-lg border ${p.bg}`}>
+                    <p.icon className={`size-4 ${p.color}`} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-[#17241c]">{p.label}</p>
-                      <ChevronRight
-                        className={`size-4 shrink-0 text-[#9cb0a4] transition-transform duration-200 ${
-                          activeIndex === idx ? "rotate-90" : ""
+                      <p className="text-sm font-semibold text-slate-200">{p.label}</p>
+                      <ChevronDown
+                        className={`size-4 shrink-0 text-slate-600 transition-transform duration-200 ${
+                          activeIndex === idx ? "rotate-180" : ""
                         }`}
                       />
                     </div>
                     <p
-                      className={`text-xs text-[#6b7f74] leading-relaxed overflow-hidden transition-all duration-300 ${
-                        activeIndex === idx ? "mt-1.5 max-h-20" : "max-h-0"
+                      className={`text-xs text-slate-400 leading-relaxed overflow-hidden transition-all duration-300 ${
+                        activeIndex === idx ? "mt-1.5 max-h-24 opacity-100" : "max-h-0 opacity-0"
                       }`}
                     >
                       {p.pain}
@@ -224,97 +231,98 @@ export default function ProblemSection() {
               ))}
             </div>
 
-            {/* Broken SQL & MQL example */}
-            <div className="rounded-xl border border-red-200 bg-[#1a0808] overflow-hidden mt-2">
-              <div className="flex items-center gap-2 border-b border-red-900/40 bg-[#140404] px-4 py-2">
-                <div className="flex gap-1.5">
-                  <span className="size-2.5 rounded-full bg-[#ff5f57]" />
-                  <span className="size-2.5 rounded-full bg-[#febc2e]" />
-                  <span className="size-2.5 rounded-full bg-[#28c840]" />
-                </div>
-                <span className="font-mono text-[10px] text-red-400/80 ml-2">Unverified AI Output — Broken in Production</span>
+            {/* Broken SQL example */}
+            <div className="code-window mt-3">
+              <div className="code-window-header">
+                <span className="code-window-dot bg-[#ff5f57]" />
+                <span className="code-window-dot bg-[#febc2e]" />
+                <span className="code-window-dot bg-[#28c840]" />
+                <span className="ml-2 font-mono text-[10px] text-red-400/80">
+                  Unverified AI Output — Breaks in Production
+                </span>
               </div>
-              <pre className="p-4 font-mono text-[10.5px] leading-relaxed text-red-300/80 overflow-x-auto whitespace-pre-wrap">
+              <pre className="code-window-body text-[11px] text-red-300/80">
                 <code>{brokenSql}</code>
               </pre>
             </div>
           </motion.div>
 
-          {/* AFTER — Solutions column */}
+          {/* AFTER column */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="space-y-4"
+            className="space-y-3"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex size-8 items-center justify-center rounded-xl bg-emerald-100 border border-emerald-200">
-                <CheckCircle2 className="size-4 text-emerald-600" />
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-emerald-950/60 border border-emerald-900/50">
+                <CheckCircle2 className="size-4 text-emerald-400" />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">With QueryCraft</p>
-                <p className="text-sm font-semibold text-[#17241c]">Universal Multi-Engine Verification</p>
+                <p className="text-[10.5px] font-bold uppercase tracking-widest text-emerald-500">With QueryCraft</p>
+                <p className="text-sm font-semibold text-slate-200">Universal Multi-Engine Verification</p>
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {solutions.map((s, idx) => (
                 <motion.div
                   key={idx}
                   whileHover={{ scale: 1.01 }}
                   transition={{ duration: 0.15 }}
-                  className="flex items-start gap-3.5 rounded-xl border border-[#e8edea] bg-white p-4 hover:border-emerald-200 hover:shadow-sm transition-all duration-200"
+                  className="flex items-start gap-3.5 rounded-xl border border-white/8 bg-emerald-950/20 p-4 hover:border-emerald-800/40 hover:bg-emerald-950/30 transition-all duration-200"
                 >
-                  <div className={`flex size-9 shrink-0 items-center justify-center rounded-lg border ${s.bg} transition-transform duration-200 hover:scale-105`}>
-                    <s.icon className={`size-4.5 ${s.color}`} />
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-emerald-900/60 bg-emerald-950/60">
+                    <s.icon className="size-4 text-emerald-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-[#17241c]">{s.label}</p>
-                    <p className="mt-0.5 text-xs text-[#6b7f74] leading-relaxed">{s.fix}</p>
+                    <p className="text-sm font-semibold text-slate-200">{s.label}</p>
+                    <p className="mt-0.5 text-xs text-slate-400 leading-relaxed">{s.fix}</p>
                   </div>
                 </motion.div>
               ))}
             </div>
 
-            {/* Healed SQL & MQL example */}
-            <div className="rounded-xl border border-[#27382d] bg-[#141f18] overflow-hidden mt-2">
-              <div className="flex items-center gap-2 border-b border-white/10 bg-[#0f1712] px-4 py-2">
-                <div className="flex gap-1.5">
-                  <span className="size-2.5 rounded-full bg-[#ff5f57]" />
-                  <span className="size-2.5 rounded-full bg-[#febc2e]" />
-                  <span className="size-2.5 rounded-full bg-[#28c840]" />
-                </div>
-                <span className="font-mono text-[10px] text-[#71c897]/70 ml-2">QueryCraft — Grounded SQL &amp; MongoDB MQL</span>
-                <span className="ml-auto flex items-center gap-1 rounded bg-[#1f3a28] px-1.5 py-0.5 font-mono text-[9px] text-[#71c897] font-bold">
+            {/* Healed SQL example */}
+            <div className="code-window mt-3">
+              <div className="code-window-header">
+                <span className="code-window-dot bg-[#ff5f57]" />
+                <span className="code-window-dot bg-[#febc2e]" />
+                <span className="code-window-dot bg-[#28c840]" />
+                <span className="ml-2 font-mono text-[10px] text-emerald-400/70">
+                  QueryCraft — Grounded & Verified SQL
+                </span>
+                <span className="ml-auto flex items-center gap-1 rounded bg-emerald-950/80 px-1.5 py-0.5 font-mono text-[9px] text-emerald-400 font-bold border border-emerald-900/50">
                   <CheckCircle2 className="size-2.5" />
                   VERIFIED
                 </span>
               </div>
-              <pre className="p-4 font-mono text-[10.5px] leading-relaxed text-[#c4e6d2] overflow-x-auto whitespace-pre-wrap">
+              <pre className="code-window-body text-[11px] text-emerald-300/90">
                 <code>{healedSql}</code>
               </pre>
             </div>
           </motion.div>
         </div>
 
-        {/* Bottom strip */}
+        {/* Bottom call-out bar */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
-          className="rounded-2xl border border-[#d5e7d9] bg-[#edf8f1] px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+          className="rounded-2xl border border-emerald-900/50 bg-emerald-950/30 px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
         >
-          <div className="flex items-start sm:items-center gap-3">
-            <ShieldCheck className="size-5 text-[#3aa363] shrink-0 mt-0.5 sm:mt-0" />
-            <p className="text-sm font-medium text-[#1e4d35]">
-              QueryCraft bridges <strong>Relational SQL and NoSQL Document databases</strong> with a single conversational clarification interface that guarantees zero hallucination.
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="size-5 text-emerald-400 shrink-0" />
+            <p className="text-sm font-medium text-slate-300">
+              QueryCraft bridges <strong className="font-semibold text-white">Relational SQL and NoSQL Document databases</strong> with a single conversational clarification interface that guarantees zero hallucination.
             </p>
           </div>
-          <Badge variant="emerald" className="shrink-0 self-start sm:self-auto text-xs font-semibold px-3 py-1">
-            Universal SQL &amp; NoSQL Support
-          </Badge>
+          <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-xs font-semibold text-emerald-400">
+            <span className="size-1.5 rounded-full bg-emerald-500" />
+            Universal SQL & NoSQL Support
+          </span>
         </motion.div>
 
       </div>

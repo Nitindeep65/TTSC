@@ -1,7 +1,8 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from "react"
-import { databaseApi } from "@/lib/api"
+import { databaseApi, workspaceApi } from "@/lib/api"
+import { useAuth } from "@/lib/authContext"
 
 const defaultInitialWorkspace = {
   id: "ws-default",
@@ -38,6 +39,16 @@ const STORAGE_KEY_WORKSPACES = "tts_cloud_workspaces_v2"
 const STORAGE_KEY_ACTIVE_WS = "tts_active_workspace_id_v2"
 
 export function DatabaseProvider({ children }) {
+  let userEmail = "default_user"
+  let userId = null
+  try {
+    const authContext = useAuth()
+    userEmail = authContext?.user?.email || "default_user"
+    userId = authContext?.user?.uid || null
+  } catch {
+    // Optional / standalone test fallback
+  }
+
   const [workspaces, setWorkspaces] = useState([defaultInitialWorkspace])
   const [activeWorkspaceId, setActiveWorkspaceId] = useState("ws-default")
   const [isConnecting, setIsConnecting] = useState(false)
@@ -46,18 +57,18 @@ export function DatabaseProvider({ children }) {
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
 
-  // 1. Restore Workspaces & Active Workspace on Mount (client-only)
+  // 1. Restore Workspaces on Mount
   useEffect(() => {
     try {
-      const savedWorkspaces = localStorage.getItem(STORAGE_KEY_WORKSPACES)
-      const savedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE_WS)
+      const stored = localStorage.getItem(STORAGE_KEY_WORKSPACES)
+      const storedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE_WS)
 
-      if (savedWorkspaces) {
-        const parsed = JSON.parse(savedWorkspaces)
+      if (stored) {
+        const parsed = JSON.parse(stored)
         if (Array.isArray(parsed) && parsed.length > 0) {
           setWorkspaces(parsed)
-          if (savedActiveId && parsed.some((w) => w.id === savedActiveId)) {
-            setActiveWorkspaceId(savedActiveId)
+          if (storedActiveId && parsed.some((w) => w.id === storedActiveId)) {
+            setActiveWorkspaceId(storedActiveId)
           } else {
             setActiveWorkspaceId(parsed[0].id)
           }
@@ -79,7 +90,7 @@ export function DatabaseProvider({ children }) {
   const connectionUri = activeWorkspace.connectionUri || ""
   const dbInfo = activeWorkspace.dbInfo || null
 
-  // 3. Helper to Persist Workspaces
+  // 3. Helper to Persist & Cloud Sync Workspaces
   const persistWorkspaces = (newWorkspaces, newActiveId = activeWorkspaceId) => {
     setWorkspaces(newWorkspaces)
     if (newActiveId) setActiveWorkspaceId(newActiveId)
@@ -87,6 +98,16 @@ export function DatabaseProvider({ children }) {
       localStorage.setItem(STORAGE_KEY_WORKSPACES, JSON.stringify(newWorkspaces))
       if (newActiveId) localStorage.setItem(STORAGE_KEY_ACTIVE_WS, newActiveId)
     } catch (e) {}
+
+    // Synchronize to backend user account for MCP and Multi-Tenant routing
+    workspaceApi.sync({
+      email: userEmail,
+      user_id: userId,
+      workspaces: newWorkspaces.map((w) => ({
+        ...w,
+        is_active: w.id === (newActiveId || activeWorkspaceId),
+      })),
+    }).catch(() => {})
   }
 
   // 4. Create New Workspace

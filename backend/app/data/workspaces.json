@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ws-default",
+    "name": "Production",
+    "environment": "Production",
+    "engine": "postgres",
+    "connectionUri": "",
+    "color": "#3aa363"
+  },
+  {
+    "id": "ws-staging",
+    "name": "Staging",
+    "environment": "Staging",
+    "engine": "postgres",
+    "connectionUri": "",
+    "color": "#eab308"
+  },
+  {
+    "id": "ws-analytics",
+    "name": "Analytics",
+    "environment": "Analytics",
+    "engine": "mongodb",
+    "connectionUri": "",
+    "color": "#3b82f6"
+  }
+]
