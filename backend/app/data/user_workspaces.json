@@ -1,11 +1,141 @@
 {
+  "nitindeep65@gmail.com": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "postgresql://neondb_owner:npg_l2kFAm7DQWhp@ep-small-feather-akg0z40c-pooler.c-3.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ],
+  "nitindeep@test.com": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "postgresql://neondb_owner:npg_l2kFAm7DQWhp@ep-small-feather-akg0z40c-pooler.c-3.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ],
+  "state@test.com": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "postgresql://neondb_owner:npg_l2kFAm7DQWhp@ep-small-feather-akg0z40c-pooler.c-3.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ],
+  "newuser@company.com": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "postgresql://neondb_owner:npg_l2kFAm7DQWhp@ep-small-feather-akg0z40c-pooler.c-3.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ],
+  "verify@company.com": [
+    {
+      "id": "ws-default",
+      "name": "Production",
+      "environment": "Production",
+      "engine": "postgres",
+      "connectionUri": "postgresql://neondb_owner:npg_l2kFAm7DQWhp@ep-small-feather-akg0z40c-pooler.c-3.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+      "color": "#3aa363"
+    },
+    {
+      "id": "ws-staging",
+      "name": "Staging",
+      "environment": "Staging",
+      "engine": "postgres",
+      "connectionUri": "",
+      "color": "#eab308"
+    },
+    {
+      "id": "ws-analytics",
+      "name": "Analytics",
+      "environment": "Analytics",
+      "engine": "mongodb",
+      "connectionUri": "",
+      "color": "#3b82f6"
+    }
+  ],
   "default_user": [
     {
       "id": "ws-default",
       "name": "Production",
       "environment": "Production",
       "engine": "postgres",
-      "connectionUri": "",
+      "connectionUri": "postgresql://neondb_owner:npg_l2kFAm7DQWhp@ep-small-feather-akg0z40c-pooler.c-3.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
       "color": "#3aa363"
     },
     {
@@ -71,192 +201,7 @@
       "name": "Production",
       "environment": "Production",
       "engine": "postgres",
-      "connectionUri": "",
-      "color": "#3aa363"
-    },
-    {
-      "id": "ws-staging",
-      "name": "Staging",
-      "environment": "Staging",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#eab308"
-    },
-    {
-      "id": "ws-analytics",
-      "name": "Analytics",
-      "environment": "Analytics",
-      "engine": "mongodb",
-      "connectionUri": "",
-      "color": "#3b82f6"
-    }
-  ],
-  "nitindeep@company.com": [
-    {
-      "id": "ws-default",
-      "name": "Production",
-      "environment": "Production",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#3aa363",
-      "is_active": true
-    },
-    {
-      "id": "ws-staging",
-      "name": "Staging",
-      "environment": "Staging",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#eab308",
-      "is_active": false
-    },
-    {
-      "id": "ws-analytics",
-      "name": "Analytics",
-      "environment": "Analytics",
-      "engine": "mongodb",
-      "connectionUri": "",
-      "color": "#3b82f6",
-      "is_active": false
-    }
-  ],
-  "nitindeep@enterprise.com": [
-    {
-      "id": "ws-default",
-      "name": "Production",
-      "environment": "Production",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#3aa363"
-    },
-    {
-      "id": "ws-staging",
-      "name": "Staging",
-      "environment": "Staging",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#eab308"
-    },
-    {
-      "id": "ws-analytics",
-      "name": "Analytics",
-      "environment": "Analytics",
-      "engine": "mongodb",
-      "connectionUri": "",
-      "color": "#3b82f6"
-    }
-  ],
-  "nitindeep@test.com": [
-    {
-      "id": "ws-default",
-      "name": "Production",
-      "environment": "Production",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#3aa363"
-    },
-    {
-      "id": "ws-staging",
-      "name": "Staging",
-      "environment": "Staging",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#eab308"
-    },
-    {
-      "id": "ws-analytics",
-      "name": "Analytics",
-      "environment": "Analytics",
-      "engine": "mongodb",
-      "connectionUri": "",
-      "color": "#3b82f6"
-    }
-  ],
-  "state@test.com": [
-    {
-      "id": "ws-default",
-      "name": "Production",
-      "environment": "Production",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#3aa363"
-    },
-    {
-      "id": "ws-staging",
-      "name": "Staging",
-      "environment": "Staging",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#eab308"
-    },
-    {
-      "id": "ws-analytics",
-      "name": "Analytics",
-      "environment": "Analytics",
-      "engine": "mongodb",
-      "connectionUri": "",
-      "color": "#3b82f6"
-    }
-  ],
-  "newuser@company.com": [
-    {
-      "id": "ws-default",
-      "name": "Production",
-      "environment": "Production",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#3aa363"
-    },
-    {
-      "id": "ws-staging",
-      "name": "Staging",
-      "environment": "Staging",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#eab308"
-    },
-    {
-      "id": "ws-analytics",
-      "name": "Analytics",
-      "environment": "Analytics",
-      "engine": "mongodb",
-      "connectionUri": "",
-      "color": "#3b82f6"
-    }
-  ],
-  "verify@company.com": [
-    {
-      "id": "ws-default",
-      "name": "Production",
-      "environment": "Production",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#3aa363"
-    },
-    {
-      "id": "ws-staging",
-      "name": "Staging",
-      "environment": "Staging",
-      "engine": "postgres",
-      "connectionUri": "",
-      "color": "#eab308"
-    },
-    {
-      "id": "ws-analytics",
-      "name": "Analytics",
-      "environment": "Analytics",
-      "engine": "mongodb",
-      "connectionUri": "",
-      "color": "#3b82f6"
-    }
-  ],
-  "nitindeep65@gmail.com": [
-    {
-      "id": "ws-default",
-      "name": "Production",
-      "environment": "Production",
-      "engine": "postgres",
-      "connectionUri": "",
+      "connectionUri": "postgresql://neondb_owner:npg_l2kFAm7DQWhp@ep-small-feather-akg0z40c-pooler.c-3.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
       "color": "#3aa363"
     },
     {

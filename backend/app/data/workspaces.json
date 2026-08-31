@@ -4,7 +4,7 @@
     "name": "Production",
     "environment": "Production",
     "engine": "postgres",
-    "connectionUri": "",
+    "connectionUri": "postgresql://neondb_owner:npg_l2kFAm7DQWhp@ep-small-feather-akg0z40c-pooler.c-3.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
     "color": "#3aa363"
   },
   {

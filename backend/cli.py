@@ -577,6 +577,190 @@ def cmd_ai_setup(args):
     print(f"  {DIM}Restart Claude, Cursor, or your editor to start querying databases naturally.{RESET}\n")
 
 
+def render_ascii_table(columns: list, rows: list, max_rows: int = 25):
+    """Renders a beautiful, aligned ASCII table in the terminal."""
+    if not columns and rows and isinstance(rows[0], dict):
+        columns = list(rows[0].keys())
+
+    if not columns:
+        print(f"  {DIM}(No columns or empty result set){RESET}\n")
+        return
+
+    # Calculate column widths
+    col_widths = {c: min(max(len(str(c)), 6), 32) for c in columns}
+    for r in rows[:max_rows]:
+        if isinstance(r, dict):
+            for c in columns:
+                val_str = str(r.get(c, "") if r.get(c) is not None else "NULL")
+                col_widths[c] = min(max(col_widths[c], len(val_str)), 32)
+
+    # Format header
+    header_line = " │ ".join(f"{str(c):<{col_widths[c]}}" for c in columns)
+    sep_top     = "─┬─".join("─" * col_widths[c] for c in columns)
+    sep_mid     = "─┼─".join("─" * col_widths[c] for c in columns)
+    sep_bot     = "─┴─".join("─" * col_widths[c] for c in columns)
+
+    print(f"  ┌─{sep_top}─┐")
+    print(f"  │ {BOLD}{header_line}{RESET} │")
+    print(f"  ├─{sep_mid}─┤")
+
+    # Format rows
+    for r in rows[:max_rows]:
+        if isinstance(r, dict):
+            row_cells = []
+            for c in columns:
+                v = r.get(c)
+                val_str = "NULL" if v is None else str(v)
+                if len(val_str) > col_widths[c]:
+                    val_str = val_str[:col_widths[c] - 2] + ".."
+                row_cells.append(f"{val_str:<{col_widths[c]}}")
+            print(f"  │ {' │ '.join(row_cells)} │")
+
+    print(f"  └─{sep_bot}─┘")
+    if len(rows) > max_rows:
+        print(f"  {DIM}... showing {max_rows} of {len(rows)} total rows{RESET}")
+
+
+def _execute_sql_via_api(sql: str, email: str, token: str = "") -> dict:
+    """Executes a SQL query against the backend / Next.js API."""
+    import urllib.request
+
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    payload = json.dumps({
+        "sql_query": sql,
+        "email": email,
+        "limit": 50,
+    }).encode("utf-8")
+
+    # Try FastAPI backend first
+    for endpoint in [f"{BACKEND_BASE}/api/database/execute", f"{FRONTEND_BASE}/api/database/execute"]:
+        try:
+            req = urllib.request.Request(endpoint, data=payload, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status == 200:
+                    return json.loads(resp.read().decode())
+        except Exception:
+            continue
+
+    return {"columns": [], "rows": [], "row_count": 0, "error": "Could not connect to database API."}
+
+
+def cmd_connect(args):
+    """Connects and saves a database connection URI to the user's workspace."""
+    uri = args.uri.strip() if hasattr(args, "uri") and args.uri else ""
+    if not uri:
+        print(f"\n  {YELLOW}Please provide a database connection URI.{RESET}")
+        print(f"  {DIM}Example: querycraft connect postgresql://user:pass@db.supabase.co:5432/postgres{RESET}\n")
+        return
+
+    workspace = getattr(args, "workspace", "Production") or "Production"
+    creds = load_credentials()
+    email = creds.get("email") if creds else "default_user"
+    token = creds.get("cli_token") if creds else ""
+
+    print(f"\n  {CYAN}🔌 Connecting Database...{RESET}")
+    print(f"  {DIM}Target Workspace:{RESET} {BOLD}{workspace}{RESET}")
+    print(f"  {DIM}Testing connection and introspecting schema...{RESET}\n")
+
+    try:
+        import urllib.request
+        headers = {"Content-Type": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
+        payload = json.dumps({
+            "connection_uri": uri,
+            "workspace_id": "ws-default" if workspace == "Production" else workspace,
+            "email": email,
+        }).encode("utf-8")
+
+        req = urllib.request.Request(f"{BACKEND_BASE}/api/workspaces/connect", data=payload, headers=headers)
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            data = json.loads(resp.read().decode())
+
+        tables_count = data.get("tables_count", 0)
+        host = data.get("host", "connected")
+        db_name = data.get("database", "database")
+
+        print(f"  {GREEN}{BOLD}✓ Database Connected Successfully!{RESET}")
+        print(f"  {DIM}Host:{RESET} {host}  │  {DIM}Database:{RESET} {db_name}")
+        print(f"  {DIM}Introspected:{RESET} {BOLD}{tables_count} tables{RESET}\n")
+        print(f"  {DIM}You can now query with:{RESET}")
+        print(f"    {CYAN}querycraft ask \"show all records\"{RESET}")
+        print(f"    {CYAN}querycraft query \"SELECT * FROM users LIMIT 10;\"{RESET}\n")
+
+    except Exception as e:
+        print(f"  {RED}✖ Connection failed:{RESET} {e}")
+        print(f"  {DIM}Verify your connection string, credentials, and network access.{RESET}\n")
+
+
+def cmd_query(args):
+    """Executes a direct read-only SQL query against the connected workspace."""
+    sql = " ".join(args.sql) if isinstance(args.sql, list) else args.sql
+    if not sql:
+        print(f"\n  {YELLOW}Please provide a SQL query to execute.{RESET}")
+        print(f"  {DIM}Example: querycraft query \"SELECT * FROM users LIMIT 10;\"{RESET}\n")
+        return
+
+    creds = load_credentials()
+    email = creds.get("email") if creds else "default_user"
+    token = creds.get("cli_token") if creds else ""
+
+    print(f"\n  {CYAN}⚡ QueryCraft SQL Execution{RESET}  {DIM}[Workspace: Production]{RESET}")
+    print(f"  {DIM}Executing:{RESET} {CYAN}{sql.strip()}{RESET}\n")
+
+    res = _execute_sql_via_api(sql, email, token)
+    rows = res.get("rows", [])
+    columns = res.get("columns", [])
+    elapsed = res.get("execution_time_ms", 0.0)
+
+    if res.get("error"):
+        print(f"  {RED}Execution Error:{RESET} {res['error']}\n")
+        return
+
+    print(f"  {GREEN}{BOLD}Results ({len(rows)} rows in {elapsed}ms):{RESET}\n")
+    render_ascii_table(columns, rows)
+    print()
+
+
+def cmd_schema(args):
+    """Inspects and lists all tables and schemas for the active workspace."""
+    creds = load_credentials()
+    email = creds.get("email") if creds else "default_user"
+
+    print(f"\n  {CYAN}📋 Introspecting Database Schema...{RESET}  {DIM}[User: {email}]{RESET}\n")
+
+    try:
+        import urllib.request
+        req = urllib.request.Request(f"{BACKEND_BASE}/api/clarification/schema", headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+
+        tables = data.get("tables", [])
+        db_type = data.get("database_type", "PostgreSQL")
+        print(f"  {BOLD}Database Type:{RESET} {db_type}")
+        print(f"  {BOLD}Total Tables:{RESET} {len(tables)}\n")
+
+        for t in tables:
+            t_name = t.get("table_name", "")
+            t_desc = t.get("description", "")
+            cols = t.get("columns", [])
+            print(f"  {CYAN}{BOLD}• {t_name}{RESET}  {DIM}({len(cols)} columns){RESET} — {t_desc}")
+            for c in cols[:6]:
+                pk = f" {YELLOW}[PK]{RESET}" if c.get("is_primary_key") else ""
+                fk = f" {GREEN}[FK]{RESET}" if c.get("is_foreign_key") else ""
+                print(f"    {DIM}└─{RESET} {c.get('name')}: {CYAN}{c.get('type')}{RESET}{pk}{fk}")
+            if len(cols) > 6:
+                print(f"    {DIM}└─ ... {len(cols) - 6} more columns{RESET}")
+            print()
+
+    except Exception as e:
+        print(f"  {YELLOW}⚠ Could not fetch schema: {e}{RESET}\n")
+
+
 def cmd_ask(args):
     """Translates natural language to SQL, checks cost, and queries the database directly in terminal."""
     prompt = " ".join(args.prompt) if isinstance(args.prompt, list) else args.prompt
@@ -587,8 +771,9 @@ def cmd_ask(args):
 
     creds = load_credentials()
     email = creds.get("email") if creds else "default_user"
+    token = creds.get("cli_token") if creds else ""
 
-    print(f"\n  {CYAN}🧠 QueryCraft AI{RESET}  {DIM}[Workspace: Production]{RESET}")
+    print(f"\n  {CYAN}🧠 QueryCraft AI{RESET}  {DIM}[Workspace: Production | User: {email}]{RESET}")
     print(f"  {BOLD}Question:{RESET} {prompt}")
     print(f"  {DIM}Thinking, grounding schema, evaluating safety...{RESET}\n")
 
@@ -600,44 +785,51 @@ def cmd_ask(args):
             "live_schema": None,
         }).encode("utf-8")
 
+        headers = {"Content-Type": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
         req = urllib.request.Request(
             f"{BACKEND_BASE}/api/clarification/",
             data=req_data,
-            headers={"Content-Type": "application/json"}
+            headers=headers
         )
         with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.loads(resp.read().decode())
 
-        sql = data.get("generated_query") or data.get("sql")
-        clarification = data.get("clarification_message")
+        # Extract SQL
+        extracted = data.get("extracted_data") or {}
+        sql = extracted.get("sql_query") or data.get("generated_query") or data.get("sql") or ""
+        clarification = data.get("clarification_message") or data.get("message")
+        explanation = extracted.get("explanation") or ""
 
-        if clarification and not sql:
+        if not sql and clarification and "complete" not in str(data.get("status", "")).lower():
             print(f"  {YELLOW}{BOLD}Clarification Needed:{RESET}\n")
             print(f"  {clarification}\n")
             return
 
         if sql:
-            print(f"  {GREEN}{BOLD}Generated Query:{RESET}")
-            print(f"  {CYAN}{sql}{RESET}\n")
+            print(f"  {GREEN}{BOLD}Generated SQL Query:{RESET}")
+            print(f"  {CYAN}{sql.strip()}{RESET}\n")
+            if explanation:
+                print(f"  {DIM}ℹ {explanation}{RESET}\n")
 
-        results = data.get("query_results") or data.get("results")
-        if results and isinstance(results, list):
-            print(f"  {BOLD}Results ({len(results)} rows):{RESET}\n")
-            if len(results) > 0 and isinstance(results[0], dict):
-                headers = list(results[0].keys())
-                header_str = " | ".join(f"{h:^15}" for h in headers)
-                divider = "-+-".join("-" * 15 for _ in headers)
-                print(f"  {header_str}")
-                print(f"  {divider}")
-                for row in results[:20]:
-                    row_str = " | ".join(f"{str(row.get(h, ''))[:15]:<15}" for h in headers)
-                    print(f"  {row_str}")
-            print()
-        else:
-            print(f"  {DIM}Query verified safe. Dry-run / Simulation complete.{RESET}\n")
+            # Execute query and print table
+            print(f"  {DIM}Executing query on database...{RESET}\n")
+            exec_res = _execute_sql_via_api(sql, email, token)
+            rows = exec_res.get("rows", [])
+            columns = exec_res.get("columns", [])
+            elapsed = exec_res.get("execution_time_ms", 0.0)
+
+            if rows:
+                print(f"  {GREEN}{BOLD}Results ({len(rows)} rows in {elapsed}ms):{RESET}\n")
+                render_ascii_table(columns, rows)
+                print()
+            else:
+                print(f"  {DIM}Query returned 0 rows.{RESET}\n")
 
     except Exception as e:
-        print(f"  {YELLOW}⚠ Could not connect to backend engine at {BACKEND_BASE}.{RESET}")
+        print(f"  {YELLOW}⚠ Error processing query: {e}{RESET}")
         print(f"  {DIM}Ensure backend is running: cd backend && uv run uvicorn app.main:app{RESET}\n")
 
 
@@ -653,10 +845,12 @@ def main():
         epilog="""
 Examples:
   querycraft ask "show top customers by revenue"   # Query database in natural language
+  querycraft query "SELECT * FROM users;"          # Execute raw SQL directly
+  querycraft connect postgresql://user:pass@db:5432 # Connect database to workspace
+  querycraft schema                                # Inspect tables and columns
   querycraft setup                                 # 1-click connect to Claude, Cursor, Antigravity
   querycraft auth login                            # 1-click browser login
   querycraft workspaces list                       # List all database workspaces
-  querycraft ai list                               # Check status of AI assistants
         """
     )
 
@@ -666,6 +860,21 @@ Examples:
     ask_p = subparsers.add_parser("ask", help="Ask a question about your database in plain English")
     ask_p.add_argument("prompt", nargs="+", help="Natural language query or question")
     ask_p.set_defaults(func=cmd_ask)
+
+    # query command (direct SQL execution)
+    query_p = subparsers.add_parser("query", help="Execute a raw SQL query against your active database")
+    query_p.add_argument("sql", nargs="+", help="SQL query to execute")
+    query_p.set_defaults(func=cmd_query)
+
+    # connect command
+    conn_p = subparsers.add_parser("connect", help="Connect a live database URI to your workspace")
+    conn_p.add_argument("uri", help="Database connection string (postgresql://...)")
+    conn_p.add_argument("--workspace", default="Production", help="Workspace name (default: Production)")
+    conn_p.set_defaults(func=cmd_connect)
+
+    # schema command
+    schema_p = subparsers.add_parser("schema", help="Inspect tables and columns in active workspace")
+    schema_p.set_defaults(func=cmd_schema)
 
     # setup command (1-click AI configuration)
     setup_p = subparsers.add_parser("setup", help="1-Click auto-configure Claude Desktop, Cursor, Antigravity")
@@ -711,16 +920,19 @@ Examples:
     if hasattr(args, "func"):
         args.func(args)
     else:
-        # No subcommand given
         print(LOGO)
         print(f"  {BOLD}QueryCraft CLI{RESET} — The AI-powered SQL & NoSQL query engine\n")
         print(f"  {DIM}Quick start:{RESET}")
-        print(f"    {CYAN}querycraft setup{RESET}                                # 1-click connect to all AI tools")
-        print(f"    {CYAN}querycraft ask \"show total orders by month\"{RESET}     # Query database right here\n")
+        print(f"    {CYAN}querycraft connect postgresql://user:pass@host/db{RESET}  # Connect database")
+        print(f"    {CYAN}querycraft ask \"show total orders by month\"{RESET}        # Ask in English")
+        print(f"    {CYAN}querycraft query \"SELECT * FROM users LIMIT 10;\"{RESET}   # Run raw SQL")
+        print(f"    {CYAN}querycraft schema{RESET}                                    # Inspect tables")
+        print(f"    {CYAN}querycraft setup{RESET}                                     # Connect to AI tools\n")
         parser.print_help()
         print()
 
 
 if __name__ == "__main__":
     main()
+
 
