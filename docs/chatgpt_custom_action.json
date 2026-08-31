@@ -2,20 +2,20 @@
   "openapi": "3.1.0",
   "info": {
     "title": "QueryCraft Database AI Action",
-    "description": "Safe read-only SQL and NoSQL query engine with live schema grounding and cost protection.",
+    "description": "Safe read-only SQL and NoSQL query engine with live schema grounding and user-authenticated cost protection.",
     "version": "1.5.0"
   },
   "servers": [
     {
-      "url": "https://api.querycraft.ai",
-      "description": "Production or Local Tunnel URL (e.g. ngrok or deployed server)"
+      "url": "https://ttsc-jet.vercel.app",
+      "description": "Live QueryCraft Production Server"
     }
   ],
   "paths": {
-    "/api/workspaces/": {
+    "/api/workspaces": {
       "get": {
         "summary": "List Available Workspaces",
-        "description": "Returns list of database workspaces (Production, Staging, Analytics) for the user.",
+        "description": "Returns list of database workspaces (Production, Staging, Analytics) belonging to the authenticated user.",
         "operationId": "listWorkspaces",
         "parameters": [
           {
@@ -25,7 +25,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "User email identifier"
+            "description": "User email identifier (optional when authenticated via OAuth/Bearer token)"
           }
         ],
         "responses": {
@@ -36,14 +36,8 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "count": {
-                      "type": "integer",
-                      "example": 3
-                    },
+                    "status": { "type": "string" },
+                    "count": { "type": "integer" },
                     "workspaces": {
                       "type": "array",
                       "items": {
@@ -107,70 +101,11 @@
                   "type": "object",
                   "properties": {
                     "status": { "type": "string" },
-                    "sql": { "type": "string" },
-                    "safety_grade": { "type": "string" },
-                    "cost_estimate": { "type": "number" },
-                    "explanation": { "type": "string" },
-                    "rows_count": { "type": "integer" },
-                    "results": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "additionalProperties": true
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/database/connect": {
-      "post": {
-        "summary": "Introspect Live Schema",
-        "description": "Introspects tables, columns, data types, and foreign keys from the configured database.",
-        "operationId": "introspectSchema",
-        "requestBody": {
-          "required": false,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "connection_string": {
-                    "type": "string",
-                    "description": "Optional custom database URI"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Live Introspected Schema",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": { "type": "string" },
-                    "database_type": { "type": "string" },
-                    "tables": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "table_name": { "type": "string" },
-                          "columns": {
-                            "type": "array",
-                            "items": { "type": "string" }
-                          }
-                        }
-                      }
-                    }
+                    "original_query": { "type": "string" },
+                    "optimized_query": { "type": "string" },
+                    "action_type": { "type": "string" },
+                    "is_safe": { "type": "boolean" },
+                    "explanation": { "type": "string" }
                   }
                 }
               }

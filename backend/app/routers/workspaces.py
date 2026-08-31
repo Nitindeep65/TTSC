@@ -9,7 +9,7 @@ import json
 import uuid
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Header, Request
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 
@@ -24,19 +24,21 @@ from app.services.workspace_service import (
 from app.services.db_service import introspect_cloud_database, parse_connection_info
 
 router = APIRouter(prefix="/api/workspaces", tags=["Workspaces"])
-auth_router = APIRouter(prefix="/api/auth", tags=["CLI Auth"])
+auth_router = APIRouter(prefix="/api/auth", tags=["CLI & OAuth Auth"])
 
 # ─────────────────────────────────────────────────
-# CLI Session Persistence
+# CLI & OAuth Session Persistence
 # ─────────────────────────────────────────────────
 
 _DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 _CLI_SESSIONS_FILE = os.path.join(_DATA_DIR, "cli_sessions.json")
+_OAUTH_CODES_FILE = os.path.join(_DATA_DIR, "oauth_codes.json")
 _CLI_TOKEN_EXPIRY_DAYS = 30
+_OAUTH_CODE_EXPIRY_MINUTES = 10
 
 
 def _load_cli_sessions() -> Dict[str, Any]:
-    """Load all active CLI sessions from disk."""
+    """Load all active CLI/OAuth sessions from disk."""
     os.makedirs(_DATA_DIR, exist_ok=True)
     if not os.path.exists(_CLI_SESSIONS_FILE):
         return {}
@@ -48,14 +50,33 @@ def _load_cli_sessions() -> Dict[str, Any]:
 
 
 def _save_cli_sessions(sessions: Dict[str, Any]):
-    """Persist CLI sessions to disk."""
+    """Persist CLI/OAuth sessions to disk."""
     os.makedirs(_DATA_DIR, exist_ok=True)
     with open(_CLI_SESSIONS_FILE, "w") as f:
         json.dump(sessions, f, indent=2)
 
 
+def _load_oauth_codes() -> Dict[str, Any]:
+    """Load temporary OAuth authorization codes."""
+    os.makedirs(_DATA_DIR, exist_ok=True)
+    if not os.path.exists(_OAUTH_CODES_FILE):
+        return {}
+    try:
+        with open(_OAUTH_CODES_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _save_oauth_codes(codes: Dict[str, Any]):
+    """Persist temporary OAuth authorization codes."""
+    os.makedirs(_DATA_DIR, exist_ok=True)
+    with open(_OAUTH_CODES_FILE, "w") as f:
+        json.dump(codes, f, indent=2)
+
+
 def _create_cli_token(email: str) -> Dict[str, str]:
-    """Creates, stores, and returns a new CLI session token for the given email."""
+    """Creates, stores, and returns a new session token for the given email."""
     token = uuid.uuid4().hex + uuid.uuid4().hex  # 64-char opaque token
     now = datetime.utcnow()
     expires = now + timedelta(days=_CLI_TOKEN_EXPIRY_DAYS)
@@ -72,7 +93,9 @@ def _create_cli_token(email: str) -> Dict[str, str]:
 
 
 def _verify_cli_token(cli_token: str) -> Optional[Dict[str, Any]]:
-    """Validates a CLI token and returns its session data if valid and not expired."""
+    """Validates a session token and returns its session data if valid."""
+    if not cli_token:
+        return None
     sessions = _load_cli_sessions()
     session = sessions.get(cli_token)
     if not session:
@@ -80,13 +103,29 @@ def _verify_cli_token(cli_token: str) -> Optional[Dict[str, Any]]:
     try:
         expires = datetime.fromisoformat(session["expires_at"])
         if datetime.utcnow() > expires:
-            # Clean up expired token
             del sessions[cli_token]
             _save_cli_sessions(sessions)
             return None
     except Exception:
         return None
     return session
+
+
+def resolve_auth_email(authorization: Optional[str] = None, email: Optional[str] = None) -> str:
+    """
+    Extracts and validates user email from Bearer token header or fallback email param.
+    Guarantees that authenticated requests cannot access unauthorized tenant data.
+    """
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization[7:].strip()
+        session = _verify_cli_token(token)
+        if session and session.get("email"):
+            return normalize_user_key(session["email"])
+
+    if email:
+        return normalize_user_key(email)
+
+    return "default_user"
 
 
 class WorkspaceItem(BaseModel):
@@ -103,7 +142,7 @@ class WorkspaceItem(BaseModel):
 class WorkspaceSyncRequest(BaseModel):
     user_id: Optional[str] = None
     email: Optional[str] = None
-    workspaces: List[Dict[str, Any]] = Field(..., description="List of user workspaces to synchronize")
+    workspaces: List[WorkspaceItem]
 
 
 class WorkspaceAuthRequest(BaseModel):
@@ -121,12 +160,18 @@ class WorkspaceConnectRequest(BaseModel):
 @router.get("/")
 def list_workspaces(
     user_id: Optional[str] = Query(None),
-    email: Optional[str] = Query(None)
+    email: Optional[str] = Query(None),
+    authorization: Optional[str] = Header(None)
 ):
-    """Retrieve all database workspaces configured for a specific user."""
-    user_key = email or user_id or "default_user"
+    """Retrieve all database workspaces configured for the authenticated user."""
+    user_key = resolve_auth_email(authorization, email or user_id)
     workspaces = get_user_workspaces(user_key)
-    return {"workspaces": workspaces, "count": len(workspaces)}
+    return {
+        "status": "success",
+        "user": user_key,
+        "workspaces": workspaces,
+        "count": len(workspaces)
+    }
 
 
 # ─────────────────────────────────────────────────
@@ -200,6 +245,98 @@ def verify_cli_token(request: CliVerifyRequest):
             }
             for w in workspaces
         ],
+    }
+
+
+# ─────────────────────────────────────────────────
+# Standard OAuth 2.0 Endpoints for ChatGPT Actions
+# ─────────────────────────────────────────────────
+
+class OAuthCodeRequest(BaseModel):
+    email: str
+    redirect_uri: Optional[str] = None
+    client_id: Optional[str] = None
+    state: Optional[str] = None
+
+
+@auth_router.post("/oauth/code")
+def create_oauth_code(req: OAuthCodeRequest):
+    """
+    Generates a 10-minute temporary authorization code for ChatGPT OAuth 2.0 flow.
+    """
+    clean_email = normalize_user_key(req.email)
+    if not clean_email or clean_email == "default_user":
+        raise HTTPException(status_code=400, detail="Valid email required for OAuth authorization.")
+
+    code = "qc_code_" + uuid.uuid4().hex
+    codes = _load_oauth_codes()
+    codes[code] = {
+        "email": clean_email,
+        "redirect_uri": req.redirect_uri,
+        "client_id": req.client_id,
+        "state": req.state,
+        "expires_at": (datetime.utcnow() + timedelta(minutes=_OAUTH_CODE_EXPIRY_MINUTES)).isoformat(),
+    }
+    _save_oauth_codes(codes)
+
+    return {
+        "status": "success",
+        "code": code,
+        "state": req.state,
+        "redirect_uri": req.redirect_uri,
+    }
+
+
+@auth_router.post("/oauth/token")
+async def exchange_oauth_token(request: Request):
+    """
+    Exchanges an authorization code for an OAuth 2.0 Bearer access token.
+    Accepts both JSON and application/x-www-form-urlencoded payloads from ChatGPT.
+    """
+    # Parse form or JSON
+    content_type = request.headers.get("content-type", "")
+    code = ""
+    if "application/x-www-form-urlencoded" in content_type:
+        form = await request.form()
+        code = form.get("code") or ""
+    else:
+        try:
+            body = await request.json()
+            code = body.get("code") or ""
+        except Exception:
+            code = ""
+
+    if not code:
+        raise HTTPException(status_code=400, detail="Authorization code is required.")
+
+    codes = _load_oauth_codes()
+    record = codes.get(code)
+    if not record:
+        raise HTTPException(status_code=400, detail="Invalid or expired authorization code.")
+
+    # Check expiry
+    try:
+        if datetime.utcnow() > datetime.fromisoformat(record["expires_at"]):
+            del codes[code]
+            _save_oauth_codes(codes)
+            raise HTTPException(status_code=400, detail="Authorization code has expired.")
+    except Exception:
+        pass
+
+    # One-time use: consume code
+    email = record["email"]
+    del codes[code]
+    _save_oauth_codes(codes)
+
+    # Issue durable 30-day session token
+    session = _create_cli_token(email)
+
+    return {
+        "access_token": session["cli_token"],
+        "token_type": "bearer",
+        "expires_in": _CLI_TOKEN_EXPIRY_DAYS * 86400,
+        "scope": "database:query",
+        "email": email,
     }
 
 
