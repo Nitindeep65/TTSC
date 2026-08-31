@@ -117,6 +117,7 @@ const SECTIONS = [
   { id: "whoami",        label: "auth whoami",      icon: User },
   { id: "workspaces",    label: "workspaces list",  icon: Database },
   { id: "mcp",           label: "MCP Integration",  icon: Zap },
+  { id: "ai",            label: "AI & ChatGPT",     icon: Terminal },
   { id: "reference",     label: "Command Reference",icon: BookOpen },
   { id: "env",           label: "Environment Vars", icon: Key },
 ]
@@ -377,7 +378,7 @@ usage: querycraft [-h] <command> ...
             <p style={{ color: "#64748b", fontSize: 14, lineHeight: 1.8, marginBottom: 16 }}>
               After running <IC>querycraft auth login</IC>, the MCP server reads <IC>~/.querycraft/auth.json</IC> on every startup. Your AI assistant is automatically authenticated.
             </p>
-            <Code title="Ask your AI assistant (Antigravity / Cursor)">{`"List my available QueryCraft workspaces"
+            <Code title="Ask your AI assistant (Antigravity / Cursor / Claude)">{`"List my available QueryCraft workspaces"
 → Shows Production, Staging, Analytics with status
 
 "Switch to my Analytics workspace"
@@ -386,18 +387,38 @@ usage: querycraft [-h] <command> ...
 "Check cost and run: SELECT * FROM users LIMIT 10;"
 → Evaluates EXPLAIN, heals if risky, runs query,
   returns data as a Markdown table`}</Code>
-            <Code title="Permanent auto-login via mcp_config.json">{`{
-  "mcpServers": {
-    "querycraft-cost-guard": {
-      "command": "/path/to/.venv/bin/python",
-      "args": ["-m", "app.mcp_server"],
-      "cwd": "/path/to/querycraft/backend",
-      "env": {
-        "QUERYCRAFT_USER_EMAIL": "you@company.com"
-      }
-    }
-  }
-}`}</Code>
+          </section>
+
+          <Divider />
+
+          {/* ── AI & CHATGPT ── */}
+          <section id="ai" style={{ marginBottom: 56, scrollMarginTop: 76 }}>
+            <SectionHead icon={Terminal} label="AI Assistants & ChatGPT Setup" />
+            <p style={{ color: "#64748b", fontSize: 14, lineHeight: 1.8, marginBottom: 16 }}>
+              QueryCraft works universally across <strong>Claude Desktop</strong>, <strong>ChatGPT</strong>, <strong>Cursor IDE</strong>, and <strong>Antigravity</strong>.
+            </p>
+            <Code title="Inspect all AI integrations">{`$ querycraft ai list`}</Code>
+            <Code title="Output">{`  Claude Desktop App  [MCP (Model Context Protocol)]
+    Status: ✅ Configured & Active
+    Path:   ~/Library/Application Support/Claude/claude_desktop_config.json
+
+  Cursor IDE  [MCP (Model Context Protocol)]
+    Status: ✅ Configured & Active
+    Path:   ~/.cursor/mcp.json
+
+  ChatGPT (Custom GPT Actions & Web Plugins)
+    Status: ✅ Ready via OpenAPI 3.1 & Plugin Manifest
+    Action Schema: http://localhost:8000/api/gpt-action/openapi.json`}</Code>
+
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", marginTop: 24, marginBottom: 8 }}>
+              Connecting to ChatGPT Custom GPT
+            </h3>
+            <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.7, marginBottom: 12 }}>
+              1. Open <strong>chatgpt.com/create</strong> → go to <strong>Configure</strong> tab.<br/>
+              2. Click <strong>Create new action</strong> → <strong>Import from URL</strong>.<br/>
+              3. Paste: <IC>http://localhost:8000/api/gpt-action/openapi.json</IC> (or paste the JSON from <IC>docs/chatgpt_custom_action.json</IC>).
+            </p>
+            <Code title="Quick help command in CLI">{`$ querycraft ai chatgpt`}</Code>
           </section>
 
           <Divider />
@@ -419,9 +440,12 @@ usage: querycraft [-h] <command> ...
                   ["querycraft auth logout",          "Clear credentials and end session."],
                   ["querycraft auth whoami",          "Show current user, session dates, and backend URL."],
                   ["querycraft workspaces list",      "List all workspaces with engine and connection status."],
+                  ["querycraft ai list",              "Check connection status of Claude, Cursor, ChatGPT, Antigravity."],
+                  ["querycraft ai chatgpt",           "Display ChatGPT Custom Action setup instructions & schema URL."],
                   ["querycraft --help",               "Show global help."],
                   ["querycraft auth --help",          "Show auth subcommand help."],
                   ["querycraft workspaces --help",    "Show workspaces subcommand help."],
+                  ["querycraft ai --help",            "Show AI integrations subcommand help."],
                 ].map(([cmd, desc], i) => (
                   <tr key={i} style={{ borderBottom: "1px solid #f8fafc" }}
                     onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}

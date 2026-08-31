@@ -6,7 +6,8 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
 export async function POST(req) {
   try {
     const body = await req.json()
-    const { sql_query, connection_uri, cost_threshold = 150.0 } = body
+    const sql_query = body.sql_query || body.query || ""
+    const { connection_uri, cost_threshold = 150.0 } = body
 
     if (!sql_query || typeof sql_query !== "string") {
       return NextResponse.json(
@@ -32,7 +33,6 @@ export async function POST(req) {
       const lower = sql_query.toLowerCase()
       const hasLimit = lower.includes("limit")
       const hasWhere = lower.includes("where")
-      const fromClause = lower.split("from")[-1]?.split("where")[0] || ""
       const isCartesian = lower.includes("users") && lower.includes("audit_logs") && !lower.includes("join") && !lower.includes("=")
       const isAuditScan = lower.includes("audit_logs") && lower.includes("action")
 
@@ -45,6 +45,8 @@ export async function POST(req) {
       let finalRows = 50
       let actionType = "verified"
       let suggestedIndex = null
+      let hasSeqScan = false
+      let isExpensive = false
 
       if (isCartesian) {
         actionType = "rewritten"
@@ -54,6 +56,7 @@ export async function POST(req) {
         initialRows = 500000
         finalRows = 1
         hasSeqScan = true
+        isExpensive = true
         optimizedQuery = "SELECT u.email, a.action\nFROM users u\nJOIN audit_logs a ON u.id = a.user_id\nWHERE u.email = 'user_5@example.com'\nLIMIT 50;"
         explanation = "Detected accidental Cartesian product (users × audit_logs). Rewrote query with explicit JOIN audit_logs a ON u.id = a.user_id and applied safety LIMIT 50, preventing an unbounded cross-product scan over 500,000 rows."
       } else if (isAuditScan) {
@@ -65,6 +68,7 @@ export async function POST(req) {
         initialRows = 500000
         finalRows = 500000
         hasSeqScan = true
+        isExpensive = true
         optimizedQuery = sql_query // Keep user SELECT query unchanged
         explanation = "Warning: This query will execute a full table scan on 500,000 rows. Missing index detected. To run this efficiently in production, please execute: CREATE INDEX idx_audit_logs_action ON audit_logs(action);"
       } else if (!hasLimit || !hasWhere || lower.includes("orders")) {
@@ -75,6 +79,7 @@ export async function POST(req) {
         initialRows = 15200
         finalRows = 50
         hasSeqScan = true
+        isExpensive = true
         optimizedQuery = sql_query.trim().replace(/\s*;?$/, "") + " LIMIT 50;"
         explanation = "Unbounded sequential scan detected on target table. Added explicit LIMIT 50 clamp and restructured predicates."
       }

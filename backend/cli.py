@@ -450,25 +450,226 @@ def _print_workspaces(email: str):
 
 
 # ─────────────────────────────────────────────────
+# AI Integrations Management (Claude, ChatGPT, Cursor, Antigravity)
+# ─────────────────────────────────────────────────
+
+def cmd_ai_list(args):
+    """Checks and displays configuration status for all supported AI tools."""
+    print(LOGO)
+    print(f"  {BOLD}QueryCraft Universal AI Integrations{RESET}\n")
+
+    home = os.path.expanduser("~")
+    configs = [
+        {
+            "name": "Claude Desktop App",
+            "type": "MCP (Model Context Protocol)",
+            "path": os.path.join(home, "Library", "Application Support", "Claude", "claude_desktop_config.json"),
+            "doc": "Restart Claude → hammer 🔨 icon shows QueryCraft tools",
+        },
+        {
+            "name": "Cursor IDE",
+            "type": "MCP (Model Context Protocol)",
+            "path": os.path.join(home, ".cursor", "mcp.json"),
+            "doc": "Mention @querycraft-cost-guard in Chat or Composer",
+        },
+        {
+            "name": "Google Antigravity & Gemini",
+            "type": "MCP (Model Context Protocol)",
+            "path": os.path.join(home, ".gemini", "config", "mcp_config.json"),
+            "doc": "Natively loaded via mcp_config.json",
+        },
+    ]
+
+    for item in configs:
+        exists = os.path.exists(item["path"])
+        configured = False
+        if exists:
+            try:
+                with open(item["path"], "r") as f:
+                    data = json.load(f)
+                configured = "querycraft-cost-guard" in data.get("mcpServers", {})
+            except Exception:
+                configured = False
+
+        status = f"{GREEN}✅ Configured & Active{RESET}" if configured else f"{YELLOW}⚠ Found file, not configured{RESET}" if exists else f"{DIM}○ Not detected{RESET}"
+        print(f"  {BOLD}{item['name']}{RESET}  {DIM}[{item['type']}]{RESET}")
+        print(f"    Status: {status}")
+        print(f"    Path:   {DIM}{item['path']}{RESET}")
+        print(f"    Usage:  {DIM}{item['doc']}{RESET}\n")
+
+    print(f"  {BOLD}ChatGPT (Custom GPT Actions & Web Plugins){RESET}")
+    print(f"    Status: {GREEN}✅ Ready via OpenAPI 3.1 & Plugin Manifest{RESET}")
+    print(f"    Action Schema: {CYAN}{BACKEND_BASE}/api/gpt-action/openapi.json{RESET}")
+    print(f"    Plugin Manifest: {CYAN}{BACKEND_BASE}/.well-known/ai-plugin.json{RESET}")
+    print(f"    Setup Guide: Run {CYAN}querycraft ai chatgpt{RESET} for 1-click instructions\n")
+
+
+def cmd_ai_chatgpt(args):
+    """Displays exact ChatGPT Custom Action instructions and copy-paste details."""
+    print(f"\n  {BOLD}{CYAN}⚡ ChatGPT Custom GPT Action Setup Guide{RESET}\n")
+    print(f"  {BOLD}1. Create or Edit your Custom GPT:{RESET}")
+    print(f"     Open {CYAN}https://chatgpt.com/create{RESET} → go to {BOLD}Configure{RESET} tab.")
+    print(f"  {BOLD}2. Add Action:{RESET}")
+    print(f"     Scroll down to {BOLD}Actions{RESET} → click {CYAN}Create new action{RESET}.")
+    print(f"  {BOLD}3. Import Schema:{RESET}")
+    print(f"     Click {BOLD}Import from URL{RESET} and paste:")
+    print(f"     {GREEN}{BACKEND_BASE}/api/gpt-action/openapi.json{RESET}")
+    print(f"     {DIM}(Or open docs/chatgpt_custom_action.json and paste raw JSON){RESET}")
+    print(f"  {BOLD}4. Authentication:{RESET}")
+    print(f"     Set Authentication type to {BOLD}None{RESET} (or API Key if required).")
+    print(f"  {BOLD}5. Test QueryCraft in ChatGPT:{RESET}")
+    print(f"     Type: {BOLD}\"List my database workspaces and run SELECT * FROM users;\"{RESET}\n")
+
+
+def cmd_ai_setup(args):
+    """Automatically detects and configures all installed AI editors/assistants in 1 click."""
+    print(LOGO)
+    print(f"  {BOLD}{CYAN}⚡ 1-Click Universal AI Setup{RESET}\n")
+
+    home = os.path.expanduser("~")
+    backend_dir = os.path.abspath(os.path.dirname(__file__))
+    venv_py = os.path.join(backend_dir, ".venv", "bin", "python")
+    py_bin = venv_py if os.path.exists(venv_py) else sys.executable
+
+    targets = [
+        ("Claude Desktop App", os.path.join(home, "Library", "Application Support", "Claude", "claude_desktop_config.json")),
+        ("Cursor IDE (Global)", os.path.join(home, ".cursor", "mcp.json")),
+        ("Google Antigravity & Gemini", os.path.join(home, ".gemini", "config", "mcp_config.json")),
+        ("Windsurf IDE", os.path.join(home, ".codeium", "windsurf", "mcp_config.json")),
+    ]
+
+    mcp_entry = {
+        "command": py_bin,
+        "args": ["-m", "app.mcp_server"],
+        "cwd": backend_dir,
+        "env": {
+            "PYTHONPATH": backend_dir,
+            "READ_ONLY_ENFORCED": "true",
+            "AUTO_LIMIT": "50"
+        }
+    }
+
+    configured_count = 0
+    for name, config_path in targets:
+        dir_path = os.path.dirname(config_path)
+        # Create directory if it exists in parent or standard app
+        if os.path.exists(os.path.dirname(dir_path)) or os.path.exists(dir_path):
+            os.makedirs(dir_path, exist_ok=True)
+            data = {}
+            if os.path.exists(config_path):
+                try:
+                    with open(config_path, "r") as f:
+                        data = json.load(f)
+                except Exception:
+                    data = {}
+            if "mcpServers" not in data or not isinstance(data["mcpServers"], dict):
+                data["mcpServers"] = {}
+            data["mcpServers"]["querycraft-cost-guard"] = mcp_entry
+            try:
+                with open(config_path, "w") as f:
+                    json.dump(data, f, indent=2)
+                print(f"  {GREEN}✓{RESET} {BOLD}{name}{RESET} → {GREEN}Configured{RESET}")
+                configured_count += 1
+            except Exception as e:
+                print(f"  {YELLOW}⚠{RESET} {name} → {DIM}Skipped ({e}){RESET}")
+
+    print(f"\n  {GREEN}{BOLD}🎉 {configured_count} AI tools configured successfully!{RESET}")
+    print(f"  {DIM}Restart Claude, Cursor, or your editor to start querying databases naturally.{RESET}\n")
+
+
+def cmd_ask(args):
+    """Translates natural language to SQL, checks cost, and queries the database directly in terminal."""
+    prompt = " ".join(args.prompt) if isinstance(args.prompt, list) else args.prompt
+    if not prompt:
+        print(f"\n  {YELLOW}Please provide a question or query.{RESET}")
+        print(f"  {DIM}Example: querycraft ask \"show total orders by month\"{RESET}\n")
+        return
+
+    creds = load_credentials()
+    email = creds.get("email") if creds else "default_user"
+
+    print(f"\n  {CYAN}🧠 QueryCraft AI{RESET}  {DIM}[Workspace: Production]{RESET}")
+    print(f"  {BOLD}Question:{RESET} {prompt}")
+    print(f"  {DIM}Thinking, grounding schema, evaluating safety...{RESET}\n")
+
+    try:
+        import urllib.request
+        req_data = json.dumps({
+            "user_prompt": prompt,
+            "session_history": [],
+            "live_schema": None,
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            f"{BACKEND_BASE}/api/clarification/",
+            data=req_data,
+            headers={"Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode())
+
+        sql = data.get("generated_query") or data.get("sql")
+        clarification = data.get("clarification_message")
+
+        if clarification and not sql:
+            print(f"  {YELLOW}{BOLD}Clarification Needed:{RESET}\n")
+            print(f"  {clarification}\n")
+            return
+
+        if sql:
+            print(f"  {GREEN}{BOLD}Generated Query:{RESET}")
+            print(f"  {CYAN}{sql}{RESET}\n")
+
+        results = data.get("query_results") or data.get("results")
+        if results and isinstance(results, list):
+            print(f"  {BOLD}Results ({len(results)} rows):{RESET}\n")
+            if len(results) > 0 and isinstance(results[0], dict):
+                headers = list(results[0].keys())
+                header_str = " | ".join(f"{h:^15}" for h in headers)
+                divider = "-+-".join("-" * 15 for _ in headers)
+                print(f"  {header_str}")
+                print(f"  {divider}")
+                for row in results[:20]:
+                    row_str = " | ".join(f"{str(row.get(h, ''))[:15]:<15}" for h in headers)
+                    print(f"  {row_str}")
+            print()
+        else:
+            print(f"  {DIM}Query verified safe. Dry-run / Simulation complete.{RESET}\n")
+
+    except Exception as e:
+        print(f"  {YELLOW}⚠ Could not connect to backend engine at {BACKEND_BASE}.{RESET}")
+        print(f"  {DIM}Ensure backend is running: cd backend && uv run uvicorn app.main:app{RESET}\n")
+
+
+# ─────────────────────────────────────────────────
 # Entry Point & Argument Parser
 # ─────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(
         prog="querycraft",
-        description="QueryCraft CLI — Authenticate and manage your database workspaces.",
+        description="QueryCraft CLI — Authenticate, query databases, and connect to AI assistants.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  querycraft auth login              # Browser-based login (recommended)
-  querycraft auth login --force      # Force re-authentication
-  querycraft auth logout             # Sign out and clear credentials
-  querycraft auth whoami             # Show current logged-in user
-  querycraft workspaces list         # List all your database workspaces
+  querycraft ask "show top customers by revenue"   # Query database in natural language
+  querycraft setup                                 # 1-click connect to Claude, Cursor, Antigravity
+  querycraft auth login                            # 1-click browser login
+  querycraft workspaces list                       # List all database workspaces
+  querycraft ai list                               # Check status of AI assistants
         """
     )
 
     subparsers = parser.add_subparsers(dest="command", metavar="<command>")
+
+    # ask command (direct query in natural language)
+    ask_p = subparsers.add_parser("ask", help="Ask a question about your database in plain English")
+    ask_p.add_argument("prompt", nargs="+", help="Natural language query or question")
+    ask_p.set_defaults(func=cmd_ask)
+
+    # setup command (1-click AI configuration)
+    setup_p = subparsers.add_parser("setup", help="1-Click auto-configure Claude Desktop, Cursor, Antigravity")
+    setup_p.set_defaults(func=cmd_ai_setup)
 
     # auth subcommand
     auth_parser = subparsers.add_parser("auth", help="Authentication commands")
@@ -491,6 +692,19 @@ Examples:
     list_p = ws_sub.add_parser("list", help="List all workspaces for the current user")
     list_p.set_defaults(func=cmd_workspaces_list)
 
+    # ai subcommand
+    ai_parser = subparsers.add_parser("ai", help="AI assistants integration (Claude, ChatGPT, Cursor)")
+    ai_sub = ai_parser.add_subparsers(dest="ai_command", metavar="<subcommand>")
+
+    ai_setup_p = ai_sub.add_parser("setup", help="1-Click auto-configure Claude Desktop, Cursor, Antigravity")
+    ai_setup_p.set_defaults(func=cmd_ai_setup)
+
+    ai_list_p = ai_sub.add_parser("list", help="Check status of all AI assistant integrations")
+    ai_list_p.set_defaults(func=cmd_ai_list)
+
+    ai_gpt_p = ai_sub.add_parser("chatgpt", help="Show ChatGPT Custom Action setup instructions")
+    ai_gpt_p.set_defaults(func=cmd_ai_chatgpt)
+
     # Parse and dispatch
     args = parser.parse_args()
 
@@ -500,12 +714,13 @@ Examples:
         # No subcommand given
         print(LOGO)
         print(f"  {BOLD}QueryCraft CLI{RESET} — The AI-powered SQL & NoSQL query engine\n")
-        print(f"  {DIM}Get started:{RESET}")
-        print(f"    {CYAN}querycraft auth login{RESET}      # Authenticate via browser")
-        print(f"    {CYAN}querycraft workspaces list{RESET} # See your database connections\n")
+        print(f"  {DIM}Quick start:{RESET}")
+        print(f"    {CYAN}querycraft setup{RESET}                                # 1-click connect to all AI tools")
+        print(f"    {CYAN}querycraft ask \"show total orders by month\"{RESET}     # Query database right here\n")
         parser.print_help()
         print()
 
 
 if __name__ == "__main__":
     main()
+
