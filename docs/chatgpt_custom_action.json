@@ -1,36 +1,57 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "QueryCraft Database AI Action",
-    "description": "Safe read-only SQL and NoSQL query engine with live schema grounding and user-authenticated cost protection.",
+    "title": "QueryCraft Universal Database AI Engine",
+    "description": "Agentic database connection, schema introspection, natural language SQL generation, and live query execution.",
     "version": "1.5.0"
   },
   "servers": [
     {
       "url": "https://ttsc-jet.vercel.app",
-      "description": "Live QueryCraft Production Server"
+      "description": "QueryCraft Live Production Engine"
     }
   ],
   "paths": {
-    "/api/auth/whoami": {
-      "get": {
-        "summary": "Check User Session Identity",
-        "description": "Returns the authenticated user's email address, session type, and active database workspace.",
-        "operationId": "getAccountIdentity",
+    "/api/workspaces/connect": {
+      "post": {
+        "summary": "Connect Database to Workspace",
+        "description": "Links and introspects a live PostgreSQL, Supabase, Neon, RDS, or MongoDB Atlas database directly into the user's workspace.",
+        "operationId": "connectDatabase",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["connection_uri"],
+                "properties": {
+                  "connection_uri": {
+                    "type": "string",
+                    "description": "The database connection string (e.g. postgresql://user:password@db.supabase.co:5432/postgres)"
+                  },
+                  "workspace_name": {
+                    "type": "string",
+                    "default": "Production",
+                    "description": "Target workspace (Production, Staging, Analytics)"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "User identity and session verification",
+            "description": "Connection status and introspected tables",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "status": { "type": "string" },
-                    "email": { "type": "string" },
-                    "active_workspace": { "type": "string" },
-                    "workspaces_count": { "type": "integer" },
-                    "session_type": { "type": "string" },
-                    "message": { "type": "string" }
+                    "message": { "type": "string" },
+                    "host": { "type": "string" },
+                    "database": { "type": "string" },
+                    "tables_count": { "type": "integer" }
                   }
                 }
               }
@@ -39,43 +60,27 @@
         }
       }
     },
-    "/api/workspaces": {
+    "/api/clarification/schema": {
       "get": {
-        "summary": "List Available Workspaces",
-        "description": "Returns list of database workspaces (Production, Staging, Analytics) belonging to the authenticated user.",
-        "operationId": "listWorkspaces",
-        "parameters": [
-          {
-            "name": "email",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "User email identifier (optional when authenticated via OAuth)"
-          }
-        ],
+        "summary": "Inspect Database Tables & Schema",
+        "description": "Returns the database tables, column data types, foreign keys, and relations.",
+        "operationId": "getDatabaseSchema",
         "responses": {
           "200": {
-            "description": "List of database workspaces",
+            "description": "Database schema and table structures",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": { "type": "string" },
-                    "count": { "type": "integer" },
-                    "workspaces": {
+                    "database_type": { "type": "string" },
+                    "tables": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "id": { "type": "string" },
-                          "name": { "type": "string" },
-                          "engine": { "type": "string" },
-                          "environment": { "type": "string" },
-                          "is_active": { "type": "boolean" },
-                          "has_connection": { "type": "boolean" }
+                          "table_name": { "type": "string" },
+                          "description": { "type": "string" }
                         }
                       }
                     }
@@ -87,32 +92,22 @@
         }
       }
     },
-    "/api/v1/guard": {
+    "/api/clarification": {
       "post": {
-        "summary": "Pre-Flight Cost Guard and Query Execution",
-        "description": "Analyzes query syntax, runs EXPLAIN cost estimation, heals potential runtime errors, and executes safely.",
-        "operationId": "evaluateAndHealQuery",
+        "summary": "Ask Database Question in Plain English",
+        "description": "Translates any natural language prompt into safe, grounded SQL queries.",
+        "operationId": "generateSqlQuery",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["query"],
+                "required": ["user_prompt"],
                 "properties": {
-                  "query": {
+                  "user_prompt": {
                     "type": "string",
-                    "description": "The SQL or MongoDB query to inspect and execute"
-                  },
-                  "workspace": {
-                    "type": "string",
-                    "default": "Production",
-                    "description": "Target workspace name"
-                  },
-                  "dry_run": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "If true, only evaluates EXPLAIN cost without executing against database"
+                    "description": "Natural language question or request"
                   }
                 }
               }
@@ -121,24 +116,78 @@
         },
         "responses": {
           "200": {
-            "description": "Evaluation & Execution Results",
+            "description": "Generated SQL query and explanation",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "status": { "type": "string" },
-                    "original_query": { "type": "string" },
-                    "optimized_query": { "type": "string" },
-                    "action_type": { "type": "string" },
-                    "is_safe": { "type": "boolean" },
-                    "explanation": { "type": "string" },
-                    "rows_count": { "type": "integer" },
-                    "columns": { "type": "array", "items": { "type": "string" } },
-                    "results": {
-                      "type": "array",
-                      "items": { "type": "object", "additionalProperties": true }
+                    "message": { "type": "string" },
+                    "extracted_data": {
+                      "type": "object",
+                      "properties": {
+                        "sql_query": { "type": "string" },
+                        "dialect": { "type": "string" },
+                        "explanation": { "type": "string" }
+                      }
                     }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/database/execute": {
+      "post": {
+        "summary": "Execute SQL Query and Return Result Rows",
+        "description": "Executes a read-only SQL query against the database and returns the actual data rows, column names, and row count.",
+        "operationId": "executeDatabaseQuery",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sql_query"],
+                "properties": {
+                  "sql_query": {
+                    "type": "string",
+                    "description": "The read-only SQL query to execute"
+                  },
+                  "connection_uri": {
+                    "type": "string",
+                    "description": "Optional direct database connection URI"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Executed query data rows and columns",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "columns": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    },
+                    "row_count": { "type": "integer" },
+                    "execution_time_ms": { "type": "number" },
+                    "was_healed": { "type": "boolean" }
                   }
                 }
               }
