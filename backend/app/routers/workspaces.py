@@ -213,6 +213,10 @@ def exchange_cli_token(request: CliTokenRequest):
     }
 
 
+class CliVerifyRequest(BaseModel):
+    cli_token: str = Field(..., description="Stored CLI session token to verify")
+
+
 @auth_router.post("/cli-verify")
 def verify_cli_token(request: CliVerifyRequest):
     """
@@ -245,6 +249,39 @@ def verify_cli_token(request: CliVerifyRequest):
             }
             for w in workspaces
         ],
+    }
+
+
+@auth_router.get("/whoami")
+def get_auth_whoami(
+    authorization: Optional[str] = Header(None),
+    email: Optional[str] = Query(None)
+):
+    """
+    Returns the currently authenticated user session identity and connected workspaces.
+    Used by ChatGPT and external AI assistants to verify user identity explicitly.
+    """
+    resolved_email = resolve_auth_email(authorization, email)
+    workspaces = get_user_workspaces(resolved_email)
+    active_ws = next((w.get("name") for w in workspaces if w.get("is_active")), "Production")
+
+    return {
+        "status": "authenticated",
+        "email": resolved_email,
+        "active_workspace": active_ws,
+        "workspaces_count": len(workspaces),
+        "workspaces": [
+            {
+                "name": w.get("name"),
+                "engine": w.get("engine", "postgres"),
+                "environment": w.get("environment", "Production"),
+                "is_active": w.get("is_active", False),
+                "has_connection": bool(w.get("connectionUri")),
+            }
+            for w in workspaces
+        ],
+        "session_type": "OAuth 2.0 / User-Scoped",
+        "message": f"You are currently authenticated as {resolved_email} with access to {len(workspaces)} workspaces."
     }
 
 

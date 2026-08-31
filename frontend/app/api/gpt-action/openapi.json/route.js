@@ -112,7 +112,13 @@ export async function GET(req) {
                     "optimized_query": { "type": "string" },
                     "action_type": { "type": "string" },
                     "is_safe": { "type": "boolean" },
-                    "explanation": { "type": "string" }
+                    "explanation": { "type": "string" },
+                    "rows_count": { "type": "integer" },
+                    "columns": { "type": "array", "items": { "type": "string" } },
+                    "results": {
+                      "type": "array",
+                      "items": { "type": "object", "additionalProperties": true }
+                    }
                   }
                 }
               }

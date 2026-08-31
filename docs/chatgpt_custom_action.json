@@ -12,6 +12,33 @@
     }
   ],
   "paths": {
+    "/api/auth/whoami": {
+      "get": {
+        "summary": "Check User Session Identity",
+        "description": "Returns the authenticated user's email address, session type, and active database workspace.",
+        "operationId": "getAccountIdentity",
+        "responses": {
+          "200": {
+            "description": "User identity and session verification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "email": { "type": "string" },
+                    "active_workspace": { "type": "string" },
+                    "workspaces_count": { "type": "integer" },
+                    "session_type": { "type": "string" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/workspaces": {
       "get": {
         "summary": "List Available Workspaces",
@@ -25,7 +52,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "User email identifier (optional when authenticated via OAuth/Bearer token)"
+            "description": "User email identifier (optional when authenticated via OAuth)"
           }
         ],
         "responses": {
@@ -105,7 +132,13 @@
                     "optimized_query": { "type": "string" },
                     "action_type": { "type": "string" },
                     "is_safe": { "type": "boolean" },
-                    "explanation": { "type": "string" }
+                    "explanation": { "type": "string" },
+                    "rows_count": { "type": "integer" },
+                    "columns": { "type": "array", "items": { "type": "string" } },
+                    "results": {
+                      "type": "array",
+                      "items": { "type": "object", "additionalProperties": true }
+                    }
                   }
                 }
               }

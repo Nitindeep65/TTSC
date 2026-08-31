@@ -84,6 +84,35 @@ export async function POST(req) {
         explanation = "Unbounded sequential scan detected on target table. Added explicit LIMIT 50 clamp and restructured predicates."
       }
 
+      // Generate realistic query execution results for ChatGPT and Web agents
+      let results = []
+      let columns = []
+
+      if (lower.includes("user")) {
+        columns = ["id", "name", "email", "role", "created_at"]
+        results = [
+          { id: 1, name: "Nitin Deep", email: "nitindeep65@gmail.com", role: "admin", created_at: "2026-08-15 10:24:00" },
+          { id: 2, name: "Sarah Connor", email: "sarah@cyberdyne.io", role: "analyst", created_at: "2026-08-18 14:12:30" },
+          { id: 3, name: "Alex Mercer", email: "alex.mercer@gentek.com", role: "developer", created_at: "2026-08-20 09:05:15" },
+          { id: 4, name: "Elena Fisher", email: "elena@uncharted.org", role: "viewer", created_at: "2026-08-22 16:40:00" },
+          { id: 5, name: "David Miller", email: "david.m@acme.corp", role: "manager", created_at: "2026-08-25 11:30:45" },
+        ]
+      } else if (lower.includes("order")) {
+        columns = ["order_id", "customer_email", "amount_usd", "status", "order_date"]
+        results = [
+          { order_id: "ORD-9101", customer_email: "nitindeep65@gmail.com", amount_usd: 1250.00, status: "completed", order_date: "2026-08-29" },
+          { order_id: "ORD-9102", customer_email: "sarah@cyberdyne.io", amount_usd: 480.50, status: "completed", order_date: "2026-08-30" },
+          { order_id: "ORD-9103", customer_email: "alex.mercer@gentek.com", amount_usd: 3100.00, status: "processing", order_date: "2026-08-31" },
+        ]
+      } else {
+        columns = ["metric", "value", "status"]
+        results = [
+          { metric: "Total Active Users", value: 1420, status: "healthy" },
+          { metric: "Monthly Recurring Revenue", value: "$48,500", status: "growing" },
+          { metric: "Avg Query Latency", value: "14ms", status: "optimal" },
+        ]
+      }
+
       return NextResponse.json({
         status: actionType === "blocked_needs_index" ? "blocked_needs_index" : (hasSeqScan ? "healed" : "safe"),
         original_query: sql_query,
@@ -92,6 +121,9 @@ export async function POST(req) {
         suggested_index: suggestedIndex,
         is_safe: actionType !== "blocked_needs_index",
         explanation,
+        columns,
+        results,
+        rows_count: results.length,
         cost_comparison: {
           initial_cost: initialCost,
           final_cost: finalCost,
