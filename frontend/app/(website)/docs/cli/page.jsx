@@ -9,6 +9,7 @@ import {
   CheckCircle2, ArrowRight, ExternalLink, Hash,
   ChevronRight, Layers, Table, Play, Compass
 } from "lucide-react"
+import DocsAiCopilot from "@/components/docs/DocsAiCopilot"
 
 // ─── Precision Copy Button ──────────────────────────────────────────────────
 function CopyButton({ text }) {
@@ -973,6 +974,9 @@ pip install -e ./backend`}
 
         </main>
       </div>
+
+      {/* Floating QueryCraft Docs AI Copilot */}
+      <DocsAiCopilot />
 
       <style jsx global>{`
         @media (max-width: 768px) {

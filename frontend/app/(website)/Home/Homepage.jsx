@@ -12,6 +12,7 @@ import MCPSection from "./MCPSection"
 import Testimonial from "./Testimonial"
 import CTA from "./CTA"
 import Footer from "@/components/resuable/Footer"
+import DocsAiCopilot from "@/components/docs/DocsAiCopilot"
 
 /**
  * Section rhythm (light → dark → light → slate → light → slate → light → dark):
@@ -44,6 +45,9 @@ export default function Homepage() {
       </main>
 
       <Footer />
+
+      {/* Floating QueryCraft Docs AI Copilot */}
+      <DocsAiCopilot />
     </div>
   )
 }
