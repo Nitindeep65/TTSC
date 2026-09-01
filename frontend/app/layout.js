@@ -20,6 +20,14 @@ import AuthProviderWrapper from "@/components/providers/AuthProviderWrapper";
 export const metadata = {
   title: "QueryCraft — Universal Text-to-SQL & NoSQL Database Engine",
   description: "Transform natural language into safe, production-ready PostgreSQL, MySQL, MongoDB MQL, DynamoDB, and Redis queries with live schema grounding and conversational clarification.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({ children }) {
