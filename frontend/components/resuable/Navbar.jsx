@@ -70,13 +70,13 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="group flex items-center gap-2.5 shrink-0">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-[#0f172a] text-emerald-400 shadow-sm transition-transform duration-200 group-hover:scale-105">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-[#0f172a] text-emerald-400 shadow-sm transition-transform duration-200 group-hover:scale-105 border border-emerald-500/20">
               <Database className="size-4" />
             </span>
             <div className="flex flex-col leading-none">
               <span className="text-sm font-bold text-[#0f172a] tracking-tight">QueryCraft</span>
               <span className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-emerald-600 mt-0.5">
-                AI Database Engine
+                PostgreSQL Safety Layer
               </span>
             </div>
           </Link>

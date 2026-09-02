@@ -37,10 +37,10 @@ const STEPS = [
 ]
 
 const TRUST_ITEMS = [
-  { icon: ShieldCheck, label: "Safe read-only sandboxing" },
-  { icon: Layers, label: "SQL, MQL & Key-Value engines" },
-  { icon: Zap, label: "Self-healing critic loop" },
-  { icon: Database, label: "Live schema grounding" },
+  { icon: ShieldCheck, label: "Pre-Flight Cost Guard & 3-Tier Risk" },
+  { icon: Layers, label: "Live PostgreSQL Schema Grounding" },
+  { icon: Zap, label: "SQL Doctor Self-Healing Critic" },
+  { icon: Database, label: "6 Native MCP Tools & Standalone CLI" },
 ]
 
 export default function CTA() {

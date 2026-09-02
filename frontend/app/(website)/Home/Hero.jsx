@@ -206,6 +206,36 @@ export default function Hero() {
                   <span>Query Compiler Sandbox</span>
                 </Button>
               </Link>
+
+              <Link href="/docs/cli">
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  className="w-full sm:w-auto gap-1.5 font-semibold text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all"
+                >
+                  <Zap className="size-4 text-emerald-600" />
+                  <span>CLI &amp; MCP Docs</span>
+                </Button>
+              </Link>
+            </div>
+
+            {/* Quick Terminal Command Snippet */}
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-slate-900 px-3.5 py-2.5 shadow-sm text-xs font-mono">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-emerald-400 font-bold select-none">$</span>
+                <span className="text-slate-200 truncate">querycraft ask &quot;show active users by spend&quot;</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText('querycraft ask "show active users by spend"')
+                }}
+                className="shrink-0 text-[11px] text-slate-400 hover:text-emerald-400 transition flex items-center gap-1 font-sans font-semibold cursor-pointer"
+                title="Copy terminal command"
+              >
+                <Terminal className="size-3 text-emerald-400" />
+                <span>Copy</span>
+              </button>
             </div>
 
             {/* Trust metrics row */}
@@ -221,7 +251,7 @@ export default function Hero() {
             {/* Engine logos strip */}
             <div className="space-y-2">
               <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400">
-                Connect any database in 30 seconds
+                Live Schemas &amp; Cost Guard Ready For
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 {ENGINES.map((e) => (

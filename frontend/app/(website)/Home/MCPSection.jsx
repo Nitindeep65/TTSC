@@ -20,37 +20,46 @@ const MCP_HIGHLIGHTS = [
     icon: Network,
     badge: "Protocol Standard",
     title: "Dynamic Schema Streaming",
-    desc: "Uses Model Context Protocol to stream live database catalogs — PostgreSQL tables, MongoDB collections, Redis key schemas — directly into LLM context on every query.",
+    desc: "Uses Model Context Protocol to stream live PostgreSQL catalogs (tables, UUIDs, foreign keys, JSONB types) directly into LLM context on every prompt via inspect_schema.",
   },
   {
     icon: ShieldCheck,
-    badge: "Universal Sandboxing",
-    title: "Cross-Engine Read-Only Safety",
-    desc: "MCP tool definitions strictly enforce read-only execution (SELECT, find(), aggregate(), GET), preventing data mutations across all SQL and NoSQL databases.",
+    badge: "Pre-Flight Cost Guard",
+    title: "3-Tier Risk & Join Auto-Healing",
+    desc: "Every query requested by Cursor or Claude Desktop is evaluated against live EXPLAIN cost models. Re-writes Cartesian products, scores LOW/MED/HIGH risk, and suggests index DDL.",
   },
   {
     icon: Workflow,
-    badge: "Open Ecosystem",
-    title: "Universal Agent Compatibility",
-    desc: "Connect your cloud database in this web studio, or plug the same MCP server into Claude Desktop, Cursor IDE, and any enterprise AI agent pipeline.",
+    badge: "1-Click Auto Config",
+    title: "Zero Manual JSON Setup",
+    desc: "Run 'querycraft setup' to auto-detect installed IDEs (Claude Desktop, Cursor, Antigravity, Windsurf) and write their MCP configuration in 1 millisecond.",
   },
 ]
 
 const CODE_TABS = [
+  {
+    id: "setup",
+    label: "querycraft setup (1-Click)",
+    code: `$ querycraft setup
+
+🔍 Detecting installed AI assistants & IDEs...
+✓ Claude Desktop: Configured (~/Library/Application Support/Claude/claude_desktop_config.json)
+✓ Cursor IDE: Configured (~/.cursor/mcp.json)
+✓ Antigravity: Configured (~/.gemini/config/mcp_config.json)
+
+🎉 3 AI tools configured with 6 QueryCraft MCP tools!
+Restart your editor or Claude to start querying databases safely.`,
+  },
   {
     id: "cursor",
     label: ".cursor/mcp.json",
     code: `{
   "mcpServers": {
     "querycraft-cost-guard": {
-      "command": "/path/to/.venv/bin/python",
-      "args": ["-m", "app.mcp_server"],
-      "cwd": "/path/to/TTS/backend",
+      "command": "querycraft",
+      "args": ["ai", "mcp-stdio"],
       "env": {
-        "PYTHONPATH": "/path/to/TTS/backend",
-        "POSTGRES_URL": "postgresql://***",
-        "READ_ONLY_ENFORCED": "true",
-        "AUTO_LIMIT": "50"
+        "QUERYCRAFT_BACKEND_URL": "http://localhost:8000"
       }
     }
   }
@@ -61,51 +70,48 @@ const CODE_TABS = [
     label: "claude_desktop_config.json",
     code: `{
   "mcpServers": {
-    "universal-database-clarifier": {
-      "command": "python",
-      "args": ["-m", "app.mcp_server"],
+    "querycraft": {
+      "command": "querycraft",
+      "args": ["ai", "mcp-stdio"],
       "env": {
-        "POSTGRES_URL": "postgresql://user:***@db.neon.tech:5432/app",
-        "MONGODB_URI": "mongodb+srv://user:***@cluster.mongodb.net",
-        "REDIS_URL": "redis://default:***@redis.upstash.io:6379",
-        "READ_ONLY_ENFORCED": "true",
-        "AUTO_LIMIT": "50"
+        "QUERYCRAFT_BACKEND_URL": "http://localhost:8000"
       }
     }
   }
 }`,
   },
   {
-    id: "tool",
-    label: "MCP Tool Request",
-    code: `{
-  "tool": "evaluate_and_heal_sql",
-  "parameters": {
-    "sql_query": "SELECT * FROM users u, audit_logs a",
-    "cost_threshold": 150.0
-  }
-}
+    id: "tools",
+    label: "6 Native MCP Tools",
+    code: `// Available in Cursor, Claude Desktop, Antigravity:
 
-// Response (auto-healed):
-{
-  "is_error": false,
-  "action_type": "rewritten",
-  "optimized_sql": "SELECT u.email, a.action\\nFROM users u\\nJOIN audit_logs a ON u.id = a.user_id\\nLIMIT 50;",
-  "original_cost": 385000.0,
-  "optimized_cost": 14.8,
-  "reduction_pct": 99.9,
-  "explanation": "Detected Cartesian product — added FK join"
-}`,
+1. login_querycraft(email, api_key)
+   → Binds active user session & workspaces
+
+2. list_workspaces()
+   → Returns workspaces, engines & live connection status
+
+3. switch_workspace(workspace_name)
+   → Switches active database context
+
+4. evaluate_and_heal_sql(sql_query, cost_threshold)
+   → EXPLAIN pre-flight check + auto-heal execution
+
+5. inspect_schema([workspace])
+   → Returns tables, columns, types & FKs in Markdown
+
+6. generate_safe_sql(prompt, [workspace])
+   → Compiles English to safe SQL with 3-tier risk badge`,
   },
 ]
 
 const TERMINAL_LINES = [
-  { text: "$ querycraft mcp start", color: "text-slate-400" },
-  { text: "[MCP] Server initializing — QueryCraft-CostGuard v1.0", color: "text-slate-300" },
-  { text: "[MCP] Transport: stdio | Protocol: JSON-RPC 2.0", color: "text-slate-400" },
-  { text: "[MCP] Tool registered: evaluate_and_heal_sql ✓", color: "text-emerald-400" },
-  { text: "[MCP] Connected to PostgreSQL: 12 tables introspected ✓", color: "text-emerald-400" },
-  { text: "[MCP] Ready — awaiting tool invocations from IDE agent", color: "text-emerald-300 font-semibold" },
+  { text: "$ querycraft ai mcp-stdio", color: "text-slate-400" },
+  { text: "[QueryCraft-MCP] Server initialized — QueryCraft v2.0-mvp", color: "text-slate-300" },
+  { text: "[QueryCraft-MCP] Transport: stdio | Protocol: JSON-RPC 2.0", color: "text-slate-400" },
+  { text: "[QueryCraft-MCP] Registered tools: [inspect_schema, generate_safe_sql, evaluate_and_heal_sql, ...]", color: "text-emerald-400" },
+  { text: "[QueryCraft-MCP] Connected to PostgreSQL: 5 tables grounded ✓", color: "text-emerald-400" },
+  { text: "[QueryCraft-MCP] Ready — awaiting tool calls from Claude / Cursor", color: "text-emerald-300 font-semibold" },
 ]
 
 export default function MCPSection() {

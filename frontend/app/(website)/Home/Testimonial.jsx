@@ -18,7 +18,7 @@ const TESTIMONIALS = [
     quote: "I used to wait 2 days for the data team to write a query. Now I describe what I need in plain English and get verified SQL in seconds. Our analytics velocity is 10x.",
     name: "Priya Sharma",
     role: "Head of Product Analytics",
-    company: "B2B SaaS · Neon + MongoDB Atlas",
+    company: "B2B SaaS · Neon Serverless + AWS RDS",
     initials: "PS",
     color: "bg-violet-600",
     stars: 5,
