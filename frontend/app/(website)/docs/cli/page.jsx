@@ -6,9 +6,9 @@ import {
   Terminal, LogIn, LogOut, User, Database,
   Copy, Check, Download, Zap, Shield, Key,
   BookOpen, Menu, X, Search, Sparkles, Cpu,
-  CheckCircle2, ArrowRight, ExternalLink, Hash,
+  CheckCircle2, ArrowRight, ArrowLeft, ExternalLink, Hash,
   ChevronRight, Layers, Table, Play, Compass,
-  Sliders, FileCode, CheckCheck, RefreshCw
+  Sliders, FileCode, CheckCheck, RefreshCw, AlertTriangle
 } from "lucide-react"
 import DocsAiCopilot from "@/components/docs/DocsAiCopilot"
 
@@ -69,27 +69,27 @@ function CodeBlock({ children, title = "terminal", shell = "zsh" }) {
   const lines = raw.split("\n")
 
   return (
-    <div style={{ margin: "16px 0 24px", position: "relative" }}>
+    <div style={{ margin: "16px 0 20px", position: "relative" }}>
       <div style={{
-        background: "#060913",
-        borderRadius: 12,
+        background: "#080d1a",
+        borderRadius: 10,
         border: "1px solid rgba(255, 255, 255, 0.08)",
         overflow: "hidden",
-        boxShadow: "0 12px 30px rgba(0, 0, 0, 0.4)",
+        boxShadow: "0 10px 24px rgba(0, 0, 0, 0.35)",
       }}>
         {/* Titlebar */}
         <div style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "9px 14px",
+          padding: "8px 14px",
           background: "rgba(255, 255, 255, 0.02)",
           borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#ef4444", opacity: 0.6 }} />
-            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#eab308", opacity: 0.6 }} />
-            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#10b981", opacity: 0.6 }} />
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444", opacity: 0.6 }} />
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#eab308", opacity: 0.6 }} />
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", opacity: 0.6 }} />
             <span style={{
               marginLeft: 8,
               fontSize: 11,
@@ -115,15 +115,15 @@ function CodeBlock({ children, title = "terminal", shell = "zsh" }) {
             color: "#cbd5e1",
           }}>
             {lines.map((line, i) => {
-              const isComment = line.trim().startsWith("#")
+              const isComment = line.trim().startsWith("#") || line.trim().startsWith("//") || line.trim().startsWith("--")
               const isPrompt  = line.trim().startsWith("$")
-              const isSuccess = line.trim().startsWith("✅") || line.trim().startsWith("✓")
-              const isOutput  = line.trim().startsWith("→") || line.trim().startsWith("│") || line.trim().startsWith("┌") || line.trim().startsWith("└") || line.trim().startsWith("├")
+              const isSuccess = line.trim().startsWith("✅") || line.trim().startsWith("✓") || line.trim().startsWith("•")
+              const isAlert   = line.trim().startsWith("⚠") || line.trim().startsWith("Risk Level") || line.trim().startsWith("SQLSTATE")
 
               let color = "#e2e8f0"
               if (isComment) color = "#64748b"
               else if (isSuccess) color = "#34d399"
-              else if (isOutput) color = "#94a3b8"
+              else if (isAlert) color = "#f59e0b"
 
               return (
                 <div key={i} style={{ color }}>
@@ -167,36 +167,34 @@ function InlineCode({ children }) {
 function ParamTable({ rows }) {
   return (
     <div style={{
-      margin: "16px 0 24px",
-      border: "1px solid rgba(255, 255, 255, 0.07)",
+      margin: "16px 0 20px",
       borderRadius: 10,
-      overflow: "hidden",
+      border: "1px solid rgba(255, 255, 255, 0.08)",
       background: "rgba(255, 255, 255, 0.015)",
+      overflow: "hidden",
     }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, textAlign: "left" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
         <thead>
-          <tr style={{ background: "rgba(255, 255, 255, 0.03)", borderBottom: "1px solid rgba(255, 255, 255, 0.07)" }}>
-            <th style={{ padding: "10px 14px", color: "#94a3b8", fontWeight: 600 }}>Parameter / Flag</th>
-            <th style={{ padding: "10px 14px", color: "#94a3b8", fontWeight: 600 }}>Type</th>
-            <th style={{ padding: "10px 14px", color: "#94a3b8", fontWeight: 600 }}>Default</th>
-            <th style={{ padding: "10px 14px", color: "#94a3b8", fontWeight: 600 }}>Description</th>
+          <tr style={{ background: "rgba(255, 255, 255, 0.03)", borderBottom: "1px solid rgba(255, 255, 255, 0.06)" }}>
+            <th style={{ padding: "9px 14px", textAlign: "left", color: "#94a3b8", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Argument / Flag</th>
+            <th style={{ padding: "9px 14px", textAlign: "left", color: "#94a3b8", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Type</th>
+            <th style={{ padding: "9px 14px", textAlign: "left", color: "#94a3b8", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Default</th>
+            <th style={{ padding: "9px 14px", textAlign: "left", color: "#94a3b8", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>Description</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
             <tr key={i} style={{ borderBottom: i < rows.length - 1 ? "1px solid rgba(255, 255, 255, 0.04)" : "none" }}>
-              <td style={{ padding: "10px 14px", fontFamily: "'JetBrains Mono', monospace", color: "#34d399", fontWeight: 600 }}>
+              <td style={{ padding: "10px 14px", fontFamily: "'JetBrains Mono', monospace", color: "#34d399", fontWeight: 600, fontSize: 12 }}>
                 {r.name}
               </td>
-              <td style={{ padding: "10px 14px", color: "#94a3b8" }}>
-                <span style={{ fontSize: 11, background: "rgba(255,255,255,0.05)", padding: "2px 6px", borderRadius: 4 }}>
-                  {r.type}
-                </span>
+              <td style={{ padding: "10px 14px", fontFamily: "'JetBrains Mono', monospace", color: "#a5b4fc", fontSize: 11.5 }}>
+                {r.type}
               </td>
-              <td style={{ padding: "10px 14px", color: "#cbd5e1", fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>
+              <td style={{ padding: "10px 14px", fontFamily: "'JetBrains Mono', monospace", color: "#64748b", fontSize: 11.5 }}>
                 {r.default || "—"}
               </td>
-              <td style={{ padding: "10px 14px", color: "#94a3b8", lineHeight: 1.5 }}>
+              <td style={{ padding: "10px 14px", color: "#cbd5e1", fontSize: 12.5, lineHeight: 1.5 }}>
                 {r.desc}
               </td>
             </tr>
@@ -210,22 +208,22 @@ function ParamTable({ rows }) {
 // ─── Organized Navigation Hierarchy ─────────────────────────────────────────
 const DOCS_NAV = [
   {
-    category: "1. Getting Started",
+    category: "Getting Started",
     items: [
-      { id: "overview",     label: "Overview & Architecture",  icon: Compass },
+      { id: "overview",     label: "Overview & Architecture",  icon: Compass, badge: "Core" },
       { id: "installation", label: "Installation Options",     icon: Download },
       { id: "quickstart",   label: "3-Step Quickstart",        icon: CheckCheck },
     ],
   },
   {
-    category: "2. Universal AI Integration",
+    category: "Universal AI Integration",
     items: [
       { id: "setup",        label: "querycraft setup",          icon: Zap, badge: "1-Click" },
       { id: "mcp-server",   label: "Claude & Cursor MCP",      icon: Cpu, badge: "6 Tools" },
     ],
   },
   {
-    category: "3. Query, Safety & Self-Healing",
+    category: "Query, Safety & Self-Healing",
     items: [
       { id: "ask",          label: "querycraft ask",            icon: Sparkles, isCommand: true },
       { id: "check",        label: "querycraft check",          icon: Shield, isCommand: true, badge: "Cost Guard" },
@@ -236,7 +234,7 @@ const DOCS_NAV = [
     ],
   },
   {
-    category: "4. Authentication & Security",
+    category: "Authentication & Security",
     items: [
       { id: "auth-login",   label: "querycraft auth login",     icon: LogIn, isCommand: true },
       { id: "auth-whoami",  label: "querycraft auth whoami",    icon: User, isCommand: true },
@@ -244,70 +242,85 @@ const DOCS_NAV = [
     ],
   },
   {
-    category: "5. Workspaces & Environments",
+    category: "Workspaces & Environments",
     items: [
       { id: "workspaces",   label: "workspaces list",           icon: Layers, isCommand: true },
     ],
   },
   {
-    category: "6. Reference & Config",
+    category: "Reference & Config",
     items: [
+      { id: "cheatsheet",   label: "Command Cheat Sheet",       icon: FileCode, badge: "Summary" },
       { id: "env-vars",     label: "Environment Variables",     icon: Key },
-      { id: "cheatsheet",   label: "Command Cheat Sheet",       icon: FileCode },
     ],
   },
 ]
 
+// Flat list for sequential pagination
+const ALL_PAGES = DOCS_NAV.flatMap(group =>
+  group.items.map(item => ({
+    ...item,
+    category: group.category,
+  }))
+)
+
+// Quick jumper shortcuts for popular pages
+const QUICK_JUMP_CHIPS = [
+  { label: "🧭 Overview", id: "overview" },
+  { label: "📦 Install", id: "installation" },
+  { label: "⚡ 1-Click Setup", id: "setup" },
+  { label: "🧠 ask", id: "ask" },
+  { label: "🛡️ check (Cost Guard)", id: "check" },
+  { label: "🩺 doctor (Self-Heal)", id: "doctor" },
+  { label: "💻 query", id: "query" },
+  { label: "🔌 connect", id: "connect" },
+  { label: "📋 Cheatsheet", id: "cheatsheet" },
+]
+
 function CLIReferenceInner() {
-  const [activeSection, setActiveSection] = useState("overview")
+  const [activePageId, setActivePageId] = useState("overview")
   const [searchQuery, setSearchQuery] = useState("")
   const [installTab, setInstallTab] = useState("curl")
   const [mobileMenu, setMobileMenu] = useState(false)
 
-  // Intersection observer
+  // Listen to hash changes for direct linking (e.g. /docs/cli#check)
   useEffect(() => {
-    const allIds = DOCS_NAV.flatMap(g => g.items.map(i => i.id))
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) setActiveSection(e.target.id)
-        })
-      },
-      { rootMargin: "-20% 0px -70% 0px" }
-    )
-
-    allIds.forEach((id) => {
-      const el = document.getElementById(id)
-      if (el) observer.observe(el)
-    })
-
-    return () => observer.disconnect()
+    const handleHash = () => {
+      const hash = window.location.hash.replace("#", "")
+      if (hash && ALL_PAGES.some(p => p.id === hash)) {
+        setActivePageId(hash)
+      }
+    }
+    handleHash()
+    window.addEventListener("hashchange", handleHash)
+    return () => window.removeEventListener("hashchange", handleHash)
   }, [])
 
-  const scrollTo = (id) => {
-    const el = document.getElementById(id)
-    if (el) {
-      const offset = 80
-      const bodyRect = document.body.getBoundingClientRect().top
-      const elementRect = el.getBoundingClientRect().top
-      const elementPosition = elementRect - bodyRect
-      const offsetPosition = elementPosition - offset
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth"
-      })
-    }
+  // Switch active page
+  const navigateToPage = (id) => {
+    setActivePageId(id)
+    window.history.replaceState(null, "", `#${id}`)
     setMobileMenu(false)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
-  // Filtered nav
+  // Calculate current page and pagination
+  const currentIndex = ALL_PAGES.findIndex(p => p.id === activePageId)
+  const currentPage = ALL_PAGES[currentIndex] || ALL_PAGES[0]
+  const prevPage = currentIndex > 0 ? ALL_PAGES[currentIndex - 1] : null
+  const nextPage = currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] : null
+
+  // Filtered navigation list
   const filteredNav = useMemo(() => {
     if (!searchQuery.trim()) return DOCS_NAV
     const q = searchQuery.toLowerCase()
     return DOCS_NAV.map(g => ({
       ...g,
-      items: g.items.filter(item => item.label.toLowerCase().includes(q) || item.id.toLowerCase().includes(q)),
+      items: g.items.filter(item =>
+        item.label.toLowerCase().includes(q) ||
+        item.id.toLowerCase().includes(q) ||
+        g.category.toLowerCase().includes(q)
+      ),
     })).filter(g => g.items.length > 0)
   }, [searchQuery])
 
@@ -318,46 +331,48 @@ function CLIReferenceInner() {
       color: "#e2e8f0",
       fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
     }}>
-      {/* ── Top Header Bar ──────────────────────────────────────────── */}
+
+      {/* ── Top Fixed Navigation Bar ───────────────────────────────── */}
       <header style={{
-        position: "sticky", top: 0, zIndex: 40,
-        background: "rgba(4, 7, 17, 0.9)",
-        backdropFilter: "blur(14px)",
-        borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+        position: "sticky",
+        top: 0,
+        zIndex: 40,
         height: 60,
+        background: "rgba(4, 7, 17, 0.88)",
+        backdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "0 28px",
+        padding: "0 24px",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
             <div style={{
-              width: 32, height: 32,
-              borderRadius: 8,
-              background: "linear-gradient(135deg, #059669, #10b981)",
+              width: 32, height: 32, borderRadius: 8,
+              background: "linear-gradient(135deg, #10b981, #047857)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 0 16px rgba(16, 185, 129, 0.4)",
+              boxShadow: "0 0 16px rgba(16, 185, 129, 0.35)",
             }}>
-              <Database size={16} color="#ffffff" />
+              <Terminal size={17} color="#fff" />
             </div>
-            <span style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.3px" }}>
+            <span style={{ fontSize: 16, fontWeight: 800, color: "#fff", letterSpacing: "-0.4px" }}>
               QueryCraft
             </span>
           </Link>
 
-          <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 16 }}>/</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#94a3b8" }}>CLI & MCP Documentation</span>
+          <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 14 }}>/</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#94a3b8" }}>CLI &amp; MCP Documentation</span>
 
           <span style={{
-            fontSize: 11, fontWeight: 700,
+            fontSize: 10.5, fontWeight: 700,
             background: "rgba(16, 185, 129, 0.12)",
             border: "1px solid rgba(16, 185, 129, 0.3)",
             color: "#34d399",
             padding: "2px 8px", borderRadius: 20,
             marginLeft: 4,
           }}>
-            v1.5.0
+            v2.0-mvp
           </span>
         </div>
 
@@ -369,6 +384,14 @@ function CLIReferenceInner() {
             onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}
           >
             Homepage
+          </Link>
+          <Link
+            href="/Dashboard/chat"
+            style={{ fontSize: 13, color: "#94a3b8", textDecoration: "none" }}
+            onMouseEnter={e => e.currentTarget.style.color = "#fff"}
+            onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}
+          >
+            SQL Doctor &amp; Chat
           </Link>
           <Link
             href="/Dashboard"
@@ -399,10 +422,10 @@ function CLIReferenceInner() {
 
       {/* ── Main Layout Grid ────────────────────────────────────────── */}
       <div style={{
-        maxWidth: 1360,
+        maxWidth: 1380,
         margin: "0 auto",
         display: "grid",
-        gridTemplateColumns: "270px 1fr",
+        gridTemplateColumns: "280px 1fr",
         minHeight: "calc(100vh - 60px)",
       }} className="docs-layout-grid">
 
@@ -413,16 +436,16 @@ function CLIReferenceInner() {
           top: 60,
           height: "calc(100vh - 60px)",
           overflowY: "auto",
-          padding: "24px 16px 40px",
+          padding: "20px 16px 40px",
           background: "#040711",
         }} className={`docs-sidebar-nav ${mobileMenu ? "open" : ""}`}>
 
           {/* Search Filter */}
-          <div style={{ position: "relative", marginBottom: 20 }}>
-            <Search size={13} color="#64748b" style={{ position: "absolute", left: 10, top: 10 }} />
+          <div style={{ position: "relative", marginBottom: 18 }}>
+            <Search size={13} color="#64748b" style={{ position: "absolute", left: 10, top: 9 }} />
             <input
               type="text"
-              placeholder="Search commands & docs..."
+              placeholder="Search documentation..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -438,12 +461,12 @@ function CLIReferenceInner() {
             />
           </div>
 
-          {/* Navigation Items */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          {/* Navigation Category Groups */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {filteredNav.map((group, idx) => (
               <div key={idx}>
                 <div style={{
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
@@ -456,11 +479,12 @@ function CLIReferenceInner() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   {group.items.map((item) => {
                     const Icon = item.icon
-                    const isSelected = activeSection === item.id
+                    const isSelected = activePageId === item.id
                     return (
                       <button
                         key={item.id}
-                        onClick={() => scrollTo(item.id)}
+                        type="button"
+                        onClick={() => navigateToPage(item.id)}
                         style={{
                           width: "100%",
                           textAlign: "left",
@@ -470,10 +494,10 @@ function CLIReferenceInner() {
                           padding: "7px 10px",
                           borderRadius: 7,
                           cursor: "pointer",
-                          background: isSelected ? "rgba(16, 185, 129, 0.1)" : "transparent",
-                          border: isSelected ? "1px solid rgba(16, 185, 129, 0.25)" : "1px solid transparent",
+                          background: isSelected ? "rgba(16, 185, 129, 0.12)" : "transparent",
+                          border: isSelected ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid transparent",
                           color: isSelected ? "#34d399" : "#94a3b8",
-                          fontSize: 13,
+                          fontSize: 12.5,
                           fontWeight: isSelected ? 600 : 400,
                           transition: "all 0.12s ease",
                           fontFamily: item.isCommand ? "'JetBrains Mono', monospace" : "inherit",
@@ -500,8 +524,8 @@ function CLIReferenceInner() {
                         {item.badge && (
                           <span style={{
                             fontSize: 9, fontWeight: 700,
-                            background: "rgba(16, 185, 129, 0.15)",
-                            color: "#34d399",
+                            background: isSelected ? "rgba(16, 185, 129, 0.25)" : "rgba(255, 255, 255, 0.06)",
+                            color: isSelected ? "#34d399" : "#64748b",
                             padding: "1px 5px",
                             borderRadius: 4,
                           }}>
@@ -517,206 +541,274 @@ function CLIReferenceInner() {
           </div>
         </aside>
 
-        {/* ── Main Content Area ────────────────────────────────────── */}
+        {/* ── Main Content Area (PAGE-WISE VIEW) ────────────────────── */}
         <main style={{
-          padding: "48px 64px 120px",
+          padding: "36px 48px 80px",
           maxWidth: 960,
           minWidth: 0,
         }} className="docs-main-content">
 
-          {/* Hero Intro */}
-          <div style={{ marginBottom: 54 }}>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              fontSize: 12, fontWeight: 600, color: "#34d399",
-              background: "rgba(16, 185, 129, 0.08)",
-              border: "1px solid rgba(16, 185, 129, 0.2)",
-              borderRadius: 20, padding: "3px 10px", marginBottom: 16,
-            }}>
-              <Terminal size={12} />
-              <span>Official CLI Reference</span>
-            </div>
-
-            <h1 style={{
-              fontSize: 36,
-              fontWeight: 800,
-              letterSpacing: "-0.8px",
-              color: "#fff",
-              marginBottom: 14,
-              lineHeight: 1.2,
-            }}>
-              QueryCraft CLI & MCP Documentation
-            </h1>
-            <p style={{
-              fontSize: 16,
-              color: "#94a3b8",
-              lineHeight: 1.7,
-              maxWidth: 720,
-            }}>
-              Authenticate, introspect schemas, run natural language queries with Llama 3.1 70B, and hook directly into Claude Desktop, Cursor IDE, Antigravity, and ChatGPT.
-            </p>
-
-            {/* Quick Jumper Chips */}
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 20 }}>
-              {[
-                { label: "📦 Install", id: "installation" },
-                { label: "⚡ 1-Click AI Hook", id: "setup" },
-                { label: "🧠 Plain English (ask)", id: "ask" },
-                { label: "🛡️ Cost Guard (check)", id: "check" },
-                { label: "🩺 SQL Doctor (doctor)", id: "doctor" },
-                { label: "⚡ Raw SQL (query)", id: "query" },
-                { label: "🔌 Link Database (connect)", id: "connect" },
-                { label: "🔑 OAuth Login", id: "auth-login" },
-              ].map((chip, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => scrollTo(chip.id)}
-                  style={{
-                    background: "rgba(255, 255, 255, 0.03)",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                    borderRadius: 20, padding: "5px 12px",
-                    fontSize: 12, color: "#cbd5e1",
-                    cursor: "pointer",
-                    transition: "all 0.12s",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(16,185,129,0.1)"; e.currentTarget.style.color = "#34d399" }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "#cbd5e1" }}
-                >
-                  {chip.label}
-                </button>
-              ))}
-            </div>
+          {/* Quick Jumper Pills Bar */}
+          <div style={{
+            display: "flex",
+            gap: 6,
+            overflowX: "auto",
+            paddingBottom: 14,
+            marginBottom: 28,
+            borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+          }}>
+            {QUICK_JUMP_CHIPS.map(chip => (
+              <button
+                key={chip.id}
+                type="button"
+                onClick={() => navigateToPage(chip.id)}
+                style={{
+                  background: activePageId === chip.id ? "rgba(16, 185, 129, 0.15)" : "rgba(255, 255, 255, 0.03)",
+                  border: activePageId === chip.id ? "1px solid rgba(16, 185, 129, 0.35)" : "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: 20,
+                  padding: "4px 12px",
+                  fontSize: 11.5,
+                  fontWeight: activePageId === chip.id ? 600 : 500,
+                  color: activePageId === chip.id ? "#34d399" : "#94a3b8",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.12s",
+                }}
+                onMouseEnter={e => {
+                  if (activePageId !== chip.id) {
+                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.06)"
+                    e.currentTarget.style.color = "#fff"
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (activePageId !== chip.id) {
+                    e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)"
+                    e.currentTarget.style.color = "#94a3b8"
+                  }
+                }}
+              >
+                {chip.label}
+              </button>
+            ))}
           </div>
 
-          {/* ═════════════════════════════════════════════════════════ */}
-          {/* CHAPTER 1: GETTING STARTED */}
-          {/* ═════════════════════════════════════════════════════════ */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 40, marginBottom: 60 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#10b981", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
-              Chapter 1
-            </div>
-            <h2 id="overview" style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 16 }}>
-              Overview & Architecture
-            </h2>
-            <p style={{ fontSize: 14.5, color: "#94a3b8", lineHeight: 1.7 }}>
-              The QueryCraft CLI (`querycraft`) bridges your local development environment directly to your live database clusters and AI coding agents via the Model Context Protocol (MCP).
-            </p>
+          {/* Breadcrumb Bar */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 12,
+            color: "#64748b",
+            marginBottom: 16,
+          }}>
+            <span>Docs</span>
+            <ChevronRight size={12} />
+            <span style={{ color: "#94a3b8" }}>{currentPage.category}</span>
+            <ChevronRight size={12} />
+            <span style={{ color: "#34d399", fontWeight: 600 }}>{currentPage.label}</span>
+          </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, margin: "24px 0" }}>
-              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "16px" }}>
-                <div style={{ color: "#34d399", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>🧠 Zero-Hallucination</div>
-                <div style={{ color: "#94a3b8", fontSize: 12.5, lineHeight: 1.6 }}>Grounds prompts strictly in live introspected database schemas and types.</div>
+          {/* ═══════════════════════════════════════════════════════════ */}
+          {/* PAGE ROUTER                                                 */}
+          {/* ═══════════════════════════════════════════════════════════ */}
+
+          {/* PAGE: OVERVIEW */}
+          {activePageId === "overview" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  Overview &amp; Architecture
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  PostgreSQL Safety Layer
+                </span>
               </div>
-              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "16px" }}>
-                <div style={{ color: "#60a5fa", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>🛡️ Pre-Flight Cost Guard</div>
-                <div style={{ color: "#94a3b8", fontSize: 12.5, lineHeight: 1.6 }}>Dry-runs PostgreSQL EXPLAIN to detect expensive scans before execution.</div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 24 }}>
+                The QueryCraft CLI (<InlineCode>querycraft</InlineCode>) is a terminal-native PostgreSQL safety firewall, query runner, and Model Context Protocol (MCP) server. It prevents hallucinations, intercepts expensive full table scans before execution, and auto-heals SQLSTATE errors.
+              </p>
+
+              {/* 3 Core Pillars */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, margin: "24px 0" }}>
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "16px" }}>
+                  <div style={{ color: "#34d399", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>🧠 Zero-Hallucination</div>
+                  <div style={{ color: "#94a3b8", fontSize: 12.5, lineHeight: 1.6 }}>Grounds prompts strictly in live introspected PostgreSQL schemas, UUID types, and foreign keys.</div>
+                </div>
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "16px" }}>
+                  <div style={{ color: "#60a5fa", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>🛡️ Pre-Flight Cost Guard</div>
+                  <div style={{ color: "#94a3b8", fontSize: 12.5, lineHeight: 1.6 }}>Dry-runs PostgreSQL EXPLAIN (FORMAT JSON, COSTS TRUE) to score 3-tier risk (LOW/MED/HIGH).</div>
+                </div>
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "16px" }}>
+                  <div style={{ color: "#fbbf24", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>🩺 SQL Doctor Critic</div>
+                  <div style={{ color: "#94a3b8", fontSize: 12.5, lineHeight: 1.6 }}>Diagnoses runtime SQLSTATE errors (42703, 42803, 42P01) and self-heals queries automatically.</div>
+                </div>
               </div>
-              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "16px" }}>
-                <div style={{ color: "#fbbf24", fontWeight: 700, fontSize: 14, marginBottom: 4 }}>🔒 Tenant-Isolated</div>
-                <div style={{ color: "#94a3b8", fontSize: 12.5, lineHeight: 1.6 }}>OAuth tokens stored locally in `~/.querycraft/auth.json` with 600 permissions.</div>
+
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginTop: 32, marginBottom: 12 }}>
+                Quick Terminal Example
+              </h2>
+              <CodeBlock title="querycraft ask demo" shell="zsh">
+{`$ querycraft ask "show active users by spend"
+
+  🧠 QueryCraft AI  [Workspace: Production | User: nitindeep65@gmail.com]
+  Grounding live schema... Evaluating safety with Cost Guard...
+
+  Generated SQL:
+  SELECT u.id, u.name, SUM(o.total_amount) AS total_spent
+  FROM users u
+  JOIN orders o ON u.id = o.user_id
+  WHERE u.is_active = TRUE
+  GROUP BY u.id, u.name
+  ORDER BY total_spent DESC
+  LIMIT 50;
+
+  Pre-Flight Risk: [LOW RISK] (Cost: 14.2 | Index Scan)
+  Results (5 rows in 11.2ms)`}
+              </CodeBlock>
+            </div>
+          )}
+
+          {/* PAGE: INSTALLATION */}
+          {activePageId === "installation" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  Installation Options
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Universal Installer
+                </span>
               </div>
-            </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                QueryCraft CLI is distributed as a standalone binary or Python tool. Choose your preferred installation method:
+              </p>
 
-            {/* Installation Section */}
-            <h3 id="installation" style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginTop: 40, marginBottom: 12 }}>
-              Installation Options
-            </h3>
+              {/* Tabbed installer selector */}
+              <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+                {[
+                  { id: "curl", label: "cURL 1-Liner (Recommended)" },
+                  { id: "uv", label: "Python (UV / Pip)" },
+                  { id: "git", label: "Source / Local Git" },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setInstallTab(tab.id)}
+                    style={{
+                      padding: "6px 14px", borderRadius: 8,
+                      background: installTab === tab.id ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.03)",
+                      border: installTab === tab.id ? "1px solid rgba(16,185,129,0.3)" : "1px solid rgba(255,255,255,0.08)",
+                      color: installTab === tab.id ? "#34d399" : "#94a3b8",
+                      fontSize: 12, fontWeight: 600, cursor: "pointer",
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
-            {/* Tabbed installer selector */}
-            <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-              {[
-                { id: "curl", label: "cURL 1-Liner (macOS/Linux)" },
-                { id: "uv", label: "Python (UV / Pip)" },
-                { id: "git", label: "Source / Local" },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setInstallTab(tab.id)}
-                  style={{
-                    padding: "6px 12px", borderRadius: 8,
-                    background: installTab === tab.id ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.03)",
-                    border: installTab === tab.id ? "1px solid rgba(16,185,129,0.3)" : "1px solid rgba(255,255,255,0.08)",
-                    color: installTab === tab.id ? "#34d399" : "#94a3b8",
-                    fontSize: 12, fontWeight: 600, cursor: "pointer",
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {installTab === "curl" && (
-              <CodeBlock title="Universal Shell Installer" shell="bash">
+              {installTab === "curl" && (
+                <CodeBlock title="Universal Shell Installer" shell="bash">
 {`# Downloads, builds, and symlinks /usr/local/bin/querycraft
 curl -fsSL https://raw.githubusercontent.com/Nitindeep65/TTSC/main/setup-mcp.sh | bash`}
-              </CodeBlock>
-            )}
+                </CodeBlock>
+              )}
 
-            {installTab === "uv" && (
-              <CodeBlock title="Python Package Manager" shell="bash">
-{`# Install via UV (Recommended)
+              {installTab === "uv" && (
+                <CodeBlock title="Python Package Manager" shell="bash">
+{`# Install via UV (Fastest)
 uv tool install --editable ./backend
 
-# Install via Pip
+# Or install via Pip
 pip install -e ./backend`}
-              </CodeBlock>
-            )}
+                </CodeBlock>
+              )}
 
-            {installTab === "git" && (
-              <CodeBlock title="Local Git Clone" shell="bash">
+              {installTab === "git" && (
+                <CodeBlock title="Local Git Clone" shell="bash">
 {`git clone https://github.com/Nitindeep65/TTSC.git
 cd TTSC/backend
 uv run querycraft --help`}
+                </CodeBlock>
+              )}
+
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginTop: 28, marginBottom: 12 }}>
+                Verify Installation
+              </h2>
+              <CodeBlock title="Check Version" shell="zsh">
+{`$ querycraft --version
+querycraft v2.0-mvp
+
+$ querycraft --help
+QueryCraft — AI-Powered PostgreSQL Safety & Intelligence Engine`}
               </CodeBlock>
-            )}
+            </div>
+          )}
 
-            {/* Quick 3-Step Walkthrough */}
-            <h3 id="quickstart" style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginTop: 36, marginBottom: 14 }}>
-              3-Step Quickstart
-            </h3>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "14px 16px", display: "flex", gap: 14 }}>
-                <span style={{ fontSize: 16, fontWeight: 800, color: "#10b981" }}>01</span>
-                <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: "#fff", marginBottom: 2 }}>Log in via Browser OAuth</div>
-                  <div style={{ fontSize: 12.5, color: "#94a3b8" }}>Run <InlineCode>querycraft auth login</InlineCode> to link your QueryCraft account in 1 tap.</div>
-                </div>
+          {/* PAGE: QUICKSTART */}
+          {activePageId === "quickstart" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  3-Step Quickstart
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Under 2 Minutes
+                </span>
               </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 24 }}>
+                Get up and running with QueryCraft CLI and hook it into your development workflow in three quick steps.
+              </p>
 
-              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "14px 16px", display: "flex", gap: 14 }}>
-                <span style={{ fontSize: 16, fontWeight: 800, color: "#10b981" }}>02</span>
-                <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: "#fff", marginBottom: 2 }}>Connect your Database (or use sandbox)</div>
-                  <div style={{ fontSize: 12.5, color: "#94a3b8" }}>Run <InlineCode>querycraft connect postgresql://user:pass@host/db</InlineCode> to link your live database.</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "16px 18px", display: "flex", gap: 16 }}>
+                  <span style={{ fontSize: 18, fontWeight: 800, color: "#10b981" }}>01</span>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 3 }}>Log in via Browser OAuth</div>
+                    <div style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.6 }}>
+                      Run <InlineCode>querycraft auth login</InlineCode> to link your QueryCraft account in 1 tap via your browser.
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "14px 16px", display: "flex", gap: 14 }}>
-                <span style={{ fontSize: 16, fontWeight: 800, color: "#10b981" }}>03</span>
-                <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: "#fff", marginBottom: 2 }}>Ask Questions in Plain English</div>
-                  <div style={{ fontSize: 12.5, color: "#94a3b8" }}>Run <InlineCode>querycraft ask &quot;show active users&quot;</InlineCode> to get instant SQL + table data.</div>
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "16px 18px", display: "flex", gap: 16 }}>
+                  <span style={{ fontSize: 18, fontWeight: 800, color: "#10b981" }}>02</span>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 3 }}>Connect your Database (or use Demo Sandbox)</div>
+                    <div style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.6 }}>
+                      Run <InlineCode>querycraft connect postgresql://user:pass@host/db</InlineCode> to introspect live tables and constraints.
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: "16px 18px", display: "flex", gap: 16 }}>
+                  <span style={{ fontSize: 18, fontWeight: 800, color: "#10b981" }}>03</span>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 3 }}>Ask Questions or 1-Click Configure Cursor / Claude</div>
+                    <div style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.6 }}>
+                      Run <InlineCode>querycraft setup</InlineCode> to connect AI coding editors, or run <InlineCode>querycraft ask &quot;show top customers&quot;</InlineCode>.
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* ═════════════════════════════════════════════════════════ */}
-          {/* CHAPTER 2: UNIVERSAL AI ASSISTANTS */}
-          {/* ═════════════════════════════════════════════════════════ */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 40, marginBottom: 60 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#10b981", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
-              Chapter 2
-            </div>
-            <h2 id="setup" style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 12 }}>
-              1-Click Universal AI Setup (<InlineCode>querycraft setup</InlineCode>)
-            </h2>
-            <p style={{ fontSize: 14.5, color: "#94a3b8", lineHeight: 1.7 }}>
-              Automatically detects installed AI tools on your system (Claude Desktop, Cursor IDE, Antigravity, Windsurf) and configures their Model Context Protocol (MCP) configuration in 1 millisecond.
-            </p>
+          {/* PAGE: SETUP */}
+          {activePageId === "setup" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  querycraft setup
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  1-Click Auto Config
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                Automatically detects installed AI tools on your system (<strong style={{ color: "#fff" }}>Claude Desktop</strong>, <strong style={{ color: "#fff" }}>Cursor IDE</strong>, <strong style={{ color: "#fff" }}>Antigravity</strong>, and <strong style={{ color: "#fff" }}>Windsurf</strong>) and configures their Model Context Protocol (MCP) server configuration in 1 millisecond.
+              </p>
 
-            <CodeBlock title="Run 1-Click AI Configuration" shell="zsh">
+              <CodeBlock title="Run 1-Click AI Configuration" shell="zsh">
 {`$ querycraft setup
 
   🔍 Detecting installed AI assistants & IDEs...
@@ -726,37 +818,58 @@ uv run querycraft --help`}
 
   🎉 3 AI tools configured successfully!
   Restart your editor or Claude to start querying databases naturally.`}
-            </CodeBlock>
+              </CodeBlock>
 
-            <h3 id="mcp-server" style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginTop: 32, marginBottom: 10 }}>
-              Model Context Protocol (MCP) Server Reference (v2.0-mvp)
-            </h3>
-            <p style={{ fontSize: 14, color: "#94a3b8", marginBottom: 12 }}>
-              QueryCraft exposes **6 native MCP tools** for LLMs (Claude, Cursor, Antigravity, Windsurf):
-            </p>
-
-            <div style={{
-              background: "rgba(255, 255, 255, 0.02)",
-              border: "1px solid rgba(255, 255, 255, 0.07)",
-              borderRadius: 12, overflow: "hidden", marginBottom: 20
-            }}>
-              {[
-                { tool: "login_querycraft(email, api_key)", desc: "Authenticates user session and binds real database workspaces" },
-                { tool: "list_workspaces()", desc: "Lists all database workspaces with environment tags and live connection status" },
-                { tool: "switch_workspace(workspace_name)", desc: "Switches active database workspace for the current session" },
-                { tool: "evaluate_and_heal_sql(sql_query, ...)", desc: "Pre-Flight Cost Guard analysis, auto-heals joins, executes read-only query safely" },
-                { tool: "inspect_schema([workspace])", desc: "Returns live PostgreSQL tables, columns, data types, PKs and FKs in Markdown table" },
-                { tool: "generate_safe_sql(prompt, ...)", desc: "Converts natural language to safe PostgreSQL SQL with 3-tier risk badge (LOW/MED/HIGH)" },
-              ].map((row, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                  <code style={{ fontFamily: "'JetBrains Mono', monospace", color: "#34d399", fontSize: 12, fontWeight: 600 }}>{row.tool}</code>
-                  <span style={{ fontSize: 12, color: "#94a3b8", maxWidth: "55%" }}>{row.desc}</span>
-                </div>
-              ))}
+              <ParamTable rows={[
+                { name: "--force", type: "flag", default: "false", desc: "Overwrite existing configurations without confirmation" },
+                { name: "--target", type: "string", default: "all", desc: "Target specific tool: claude, cursor, antigravity, windsurf" },
+              ]} />
             </div>
+          )}
 
-            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 8 }}>Manual Configuration JSON:</p>
-            <CodeBlock title="claude_desktop_config.json / mcp.json" shell="json">
+          {/* PAGE: MCP-SERVER */}
+          {activePageId === "mcp-server" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  Claude &amp; Cursor MCP Server
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  6 Native Tools · JSON-RPC 2.0
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                QueryCraft acts as a universal Model Context Protocol (MCP) server over <InlineCode>stdio</InlineCode>, giving coding agents safe, grounded access to PostgreSQL databases.
+              </p>
+
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginTop: 24, marginBottom: 12 }}>
+                6 Standardized MCP Tools
+              </h2>
+
+              <div style={{
+                background: "rgba(255, 255, 255, 0.02)",
+                border: "1px solid rgba(255, 255, 255, 0.07)",
+                borderRadius: 10, overflow: "hidden", marginBottom: 24
+              }}>
+                {[
+                  { tool: "login_querycraft(email, api_key)", desc: "Authenticates user session and binds real database workspaces" },
+                  { tool: "list_workspaces()", desc: "Lists all database workspaces with environment tags and live connection status" },
+                  { tool: "switch_workspace(workspace_name)", desc: "Switches active database workspace for the current session" },
+                  { tool: "evaluate_and_heal_sql(sql_query, ...)", desc: "Pre-Flight Cost Guard analysis, auto-heals joins, executes read-only query safely" },
+                  { tool: "inspect_schema([workspace])", desc: "Returns live PostgreSQL tables, columns, data types, PKs and FKs in Markdown table" },
+                  { tool: "generate_safe_sql(prompt, ...)", desc: "Converts natural language to safe PostgreSQL SQL with 3-tier risk badge (LOW/MED/HIGH)" },
+                ].map((row, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                    <code style={{ fontFamily: "'JetBrains Mono', monospace", color: "#34d399", fontSize: 12, fontWeight: 600 }}>{row.tool}</code>
+                    <span style={{ fontSize: 12, color: "#94a3b8", maxWidth: "55%" }}>{row.desc}</span>
+                  </div>
+                ))}
+              </div>
+
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginTop: 24, marginBottom: 8 }}>
+                Manual Configuration JSON
+              </h2>
+              <CodeBlock title="claude_desktop_config.json / .cursor/mcp.json" shell="json">
 {`{
   "mcpServers": {
     "querycraft": {
@@ -768,62 +881,93 @@ uv run querycraft --help`}
     }
   }
 }`}
-            </CodeBlock>
-          </div>
-
-          {/* ═════════════════════════════════════════════════════════ */}
-          {/* CHAPTER 3: QUERY & INSPECTION COMMANDS */}
-          {/* ═════════════════════════════════════════════════════════ */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 40, marginBottom: 60 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#10b981", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
-              Chapter 3
+              </CodeBlock>
             </div>
-            <h2 id="ask" style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 12 }}>
-              Query & Inspection Commands
-            </h2>
+          )}
 
-            {/* querycraft ask */}
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: "#34d399", marginTop: 24, marginBottom: 8 }}>
-              querycraft ask &quot;&lt;prompt&gt;&quot;
-            </h3>
-            <p style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.6 }}>
-              Translates any natural language question to SQL using Llama 3.1 70B, evaluates safety with Pre-Flight Cost Guard, executes against your database workspace, and prints an aligned ASCII table.
-            </p>
+          {/* PAGE: ASK */}
+          {activePageId === "ask" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  querycraft ask &quot;&lt;prompt&gt;&quot;
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Natural Language to SQL
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                Translates any plain English question to safe SQL using Llama 3.1 70B, evaluates compute cost with Pre-Flight Cost Guard, executes safely with LIMIT 50 injection, and displays an aligned ASCII results table.
+              </p>
 
-            <CodeBlock title="Natural Language Query" shell="zsh">
-{`$ querycraft ask "show all active users"
+              <CodeBlock title="Natural Language Query" shell="zsh">
+{`$ querycraft ask "show top 3 customers by completed order value"
 
   🧠 QueryCraft AI  [Workspace: Production | User: nitindeep65@gmail.com]
-  Question: show all active users
+  Question: show top 3 customers by completed order value
   Thinking, grounding schema, evaluating safety...
 
   Generated SQL Query:
-  SELECT * FROM users WHERE is_active = TRUE LIMIT 50;
+  SELECT u.name, SUM(o.total_amount) AS total_spent
+  FROM users u
+  JOIN orders o ON u.id = o.user_id
+  WHERE o.status = 'completed'
+  GROUP BY u.name
+  ORDER BY total_spent DESC
+  LIMIT 3;
 
   Executing query on database...
 
-  Results (5 rows in 12.4ms):
+  Results (3 rows in 14.8ms):
 
-  ┌──────────────────────────────────┬───────────────┬─────────────────────────────┬──────────┬───────────┐
-  │ id                               │ name          │ email                       │ role     │ is_active │
-  ├──────────────────────────────────┼───────────────┼─────────────────────────────┼──────────┼───────────┤
-  │ e1a9b2c3-4d5e-6f7a-8b9c-0d1e2f.. │ Alex Rivera   │ alex.rivera@enterprise.com  │ customer │ True      │
-  │ f2b0c3d4-5e6f-7a8b-9c0d-1e2f3a.. │ Sofia Davis   │ sofia.davis@cloudscale.io   │ customer │ True      │
-  │ a3c1d4e5-6f7a-8b9c-0d1e-2f3a4b.. │ Marcus Vance  │ marcus.vance@fintech.co     │ admin    │ True      │
-  │ b4d2e5f6-7a8b-9c0d-1e2f-3a4b5c.. │ Elena Rostova │ elena.rostova@datadrive.net │ customer │ True      │
-  │ c5e3f6a7-8b9c-0d1e-2f3a-4b5c6d.. │ Liam Chen     │ liam.chen@techcorp.io       │ merchant │ True      │
-  └──────────────────────────────────┴───────────────┴─────────────────────────────┴──────────┴───────────┘`}
-            </CodeBlock>
+  ┌─────────────────────────────┬───────────────┐
+  │ name                        │ total_spent   │
+  ├─────────────────────────────┼───────────────┤
+  │ Alex Rivera                 │ $48,200.00    │
+  │ Sofia Davis                 │ $31,500.00    │
+  │ Marcus Vance                │ $19,450.00    │
+  └─────────────────────────────┴───────────────┘`}
+              </CodeBlock>
 
-            {/* querycraft check */}
-            <h3 id="check" style={{ fontSize: 18, fontWeight: 700, color: "#34d399", marginTop: 36, marginBottom: 8 }}>
-              querycraft check &quot;&lt;SQL&gt;&quot; [--threshold &lt;cost&gt;]
-            </h3>
-            <p style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.6 }}>
-              Runs Pre-Flight Cost Guard &amp; risk classification on any SQL query via PostgreSQL EXPLAIN. Detects full sequential scans on high-row tables and suggests <InlineCode>CREATE INDEX CONCURRENTLY</InlineCode> DDL.
-            </p>
+              <ParamTable rows={[
+                { name: "prompt", type: "string", default: "required", desc: "Natural language question in plain English" },
+                { name: "--workspace", type: "string", default: "active", desc: "Specify target workspace tier (e.g. Production, Staging)" },
+                { name: "--json", type: "flag", default: "false", desc: "Output raw JSON payload instead of formatted table" },
+              ]} />
+            </div>
+          )}
 
-            <CodeBlock title="Pre-Flight Cost Guard Check" shell="zsh">
+          {/* PAGE: CHECK (COST GUARD) */}
+          {activePageId === "check" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  querycraft check &quot;&lt;SQL&gt;&quot;
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Pre-Flight Cost Guard
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                Runs Pre-Flight Cost Guard &amp; risk classification on any SQL query using PostgreSQL EXPLAIN. Classifies risk into 3 tiers (<InlineCode>LOW</InlineCode>, <InlineCode>MEDIUM</InlineCode>, <InlineCode>HIGH</InlineCode>), detects sequential table scans, and suggests index DDL.
+              </p>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10, margin: "18px 0" }}>
+                <div style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: 8, padding: "12px" }}>
+                  <div style={{ color: "#34d399", fontWeight: 700, fontSize: 13 }}>[LOW RISK]</div>
+                  <div style={{ color: "#94a3b8", fontSize: 11.5, marginTop: 4 }}>Cost &lt; 60. Safe index scans, bounded rows.</div>
+                </div>
+                <div style={{ background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.25)", borderRadius: 8, padding: "12px" }}>
+                  <div style={{ color: "#fbbf24", fontWeight: 700, fontSize: 13 }}>[MEDIUM RISK]</div>
+                  <div style={{ color: "#94a3b8", fontSize: 11.5, marginTop: 4 }}>Cost 60-300 or Seq Scan on moderate table.</div>
+                </div>
+                <div style={{ background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: 8, padding: "12px" }}>
+                  <div style={{ color: "#f87171", fontWeight: 700, fontSize: 13 }}>[HIGH RISK]</div>
+                  <div style={{ color: "#94a3b8", fontSize: 11.5, marginTop: 4 }}>Cost &gt; 300, large Seq Scan, or cartesian join.</div>
+                </div>
+              </div>
+
+              <CodeBlock title="Pre-Flight Cost Guard Check" shell="zsh">
 {`$ querycraft check "SELECT * FROM orders WHERE total_amount > 100;"
 
   🛡️ QueryCraft Cost Guard  [User: nitindeep65@gmail.com]
@@ -838,17 +982,32 @@ uv run querycraft --help`}
 
   Suggested Index DDL:
   CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_total_amount ON orders(total_amount);`}
-            </CodeBlock>
+              </CodeBlock>
 
-            {/* querycraft doctor */}
-            <h3 id="doctor" style={{ fontSize: 18, fontWeight: 700, color: "#34d399", marginTop: 36, marginBottom: 8 }}>
-              querycraft doctor &quot;&lt;SQL or Error Message&gt;&quot;
-            </h3>
-            <p style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.6 }}>
-              PostgreSQL SQL Doctor &amp; Self-Healing Agent. Evaluates PostgreSQL runtime SQLSTATE error codes (<InlineCode>42703</InlineCode>, <InlineCode>42P01</InlineCode>, <InlineCode>22P02</InlineCode>, <InlineCode>42803</InlineCode>), maps schema definitions, and outputs a verified healed query.
-            </p>
+              <ParamTable rows={[
+                { name: "sql_query", type: "string", default: "required", desc: "Raw SQL query string to evaluate with EXPLAIN" },
+                { name: "--threshold", type: "float", default: "60.0", desc: "Custom maximum compute cost threshold" },
+                { name: "--workspace", type: "string", default: "active", desc: "Target database workspace" },
+              ]} />
+            </div>
+          )}
 
-            <CodeBlock title="SQL Doctor Auto-Healing" shell="zsh">
+          {/* PAGE: DOCTOR (SQL DOCTOR) */}
+          {activePageId === "doctor" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  querycraft doctor &quot;&lt;error/SQL&gt;&quot;
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  SQL Doctor Self-Healing
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                PostgreSQL SQL Doctor &amp; Self-Healing Critic Agent. Evaluates PostgreSQL runtime SQLSTATE error codes (<InlineCode>42703</InlineCode>, <InlineCode>42P01</InlineCode>, <InlineCode>22P02</InlineCode>, <InlineCode>42803</InlineCode>), maps schema definitions, and outputs a verified repaired query.
+              </p>
+
+              <CodeBlock title="SQL Doctor Auto-Healing" shell="zsh">
 {`$ querycraft doctor "column users.full_name does not exist"
 
   🩺 QueryCraft SQL Doctor
@@ -861,20 +1020,34 @@ uv run querycraft --help`}
   Affected Entities: users, full_name
 
   Healed SQL Query:
-  SELECT id, name, email FROM users WHERE is_active = TRUE;
+  SELECT id, name, email FROM users WHERE is_active = TRUE LIMIT 50;
 
   ℹ The query was diagnosed and repaired to match the live schema.`}
-            </CodeBlock>
+              </CodeBlock>
 
-            {/* querycraft query */}
-            <h3 id="query" style={{ fontSize: 18, fontWeight: 700, color: "#34d399", marginTop: 36, marginBottom: 8 }}>
-              querycraft query &quot;&lt;SQL&gt;&quot;
-            </h3>
-            <p style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.6 }}>
-              Executes raw read-only SQL queries directly against your connected database with execution latency measurement.
-            </p>
+              <ParamTable rows={[
+                { name: "error_or_sql", type: "string", default: "required", desc: "PostgreSQL error message, SQLSTATE code, or failing SQL query" },
+                { name: "--workspace", type: "string", default: "active", desc: "Database workspace to introspect schema for healing" },
+              ]} />
+            </div>
+          )}
 
-            <CodeBlock title="Raw SQL Query" shell="zsh">
+          {/* PAGE: QUERY */}
+          {activePageId === "query" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  querycraft query &quot;&lt;SQL&gt;&quot;
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Raw SQL Execution
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                Executes raw read-only SQL queries directly against your connected database with latency measurement and clean ASCII table rendering.
+              </p>
+
+              <CodeBlock title="Raw SQL Query" shell="zsh">
 {`$ querycraft query "SELECT id, name, email FROM users LIMIT 3;"
 
   ⚡ QueryCraft SQL Execution  [Workspace: Production]
@@ -889,17 +1062,32 @@ uv run querycraft --help`}
   │ f2b0c3d4-5e6f-7a8b-9c0d-1e2f3a.. │ Sofia Davis   │ sofia.davis@cloudscale.io   │
   │ a3c1d4e5-6f7a-8b9c-0d1e-2f3a4b.. │ Marcus Vance  │ marcus.vance@fintech.co     │
   └──────────────────────────────────┴───────────────┴─────────────────────────────┘`}
-            </CodeBlock>
+              </CodeBlock>
 
-            {/* querycraft schema */}
-            <h3 id="schema" style={{ fontSize: 18, fontWeight: 700, color: "#34d399", marginTop: 36, marginBottom: 8 }}>
-              querycraft schema
-            </h3>
-            <p style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.6 }}>
-              Introspects tables, column data types, Primary Keys <InlineCode>[PK]</InlineCode>, and Foreign Key relations <InlineCode>[FK]</InlineCode>.
-            </p>
+              <ParamTable rows={[
+                { name: "sql", type: "string", default: "required", desc: "Read-only SQL query (SELECT, WITH only)" },
+                { name: "--workspace", type: "string", default: "active", desc: "Workspace to execute query on" },
+                { name: "--json", type: "flag", default: "false", desc: "Return results formatted as raw JSON array" },
+              ]} />
+            </div>
+          )}
 
-            <CodeBlock title="Introspect Schema" shell="zsh">
+          {/* PAGE: SCHEMA */}
+          {activePageId === "schema" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  querycraft schema
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Live Schema Introspection
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                Introspects tables, column data types, Primary Keys <InlineCode>[PK]</InlineCode>, and Foreign Key relations <InlineCode>[FK]</InlineCode> directly from the database information schema.
+              </p>
+
+              <CodeBlock title="Introspect Schema" shell="zsh">
 {`$ querycraft schema
 
   📋 Introspecting Database Schema...  [User: nitindeep65@gmail.com]
@@ -919,17 +1107,31 @@ uv run querycraft --help`}
     └─ user_id: UUID [FK]
     └─ total_amount: NUMERIC(12,2)
     └─ status: VARCHAR(50)`}
-            </CodeBlock>
+              </CodeBlock>
 
-            {/* querycraft connect */}
-            <h3 id="connect" style={{ fontSize: 18, fontWeight: 700, color: "#34d399", marginTop: 36, marginBottom: 8 }}>
-              querycraft connect &lt;URI&gt; [--workspace &lt;name&gt;]
-            </h3>
-            <p style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.6 }}>
-              Links a live PostgreSQL, Supabase, Neon, RDS, or MongoDB Atlas cluster connection string to your workspace.
-            </p>
+              <ParamTable rows={[
+                { name: "--table", type: "string", default: "all", desc: "Inspect specific table only" },
+                { name: "--workspace", type: "string", default: "active", desc: "Target database workspace" },
+              ]} />
+            </div>
+          )}
 
-            <CodeBlock title="Connect Live Database" shell="zsh">
+          {/* PAGE: CONNECT */}
+          {activePageId === "connect" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  querycraft connect &lt;URI&gt;
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Link Cloud Database
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                Links a live PostgreSQL, Supabase, Neon, RDS, or CockroachDB database connection string to your active workspace.
+              </p>
+
+              <CodeBlock title="Connect Live Database" shell="zsh">
 {`$ querycraft connect postgresql://postgres:pass@db.supabase.co:5432/postgres --workspace Production
 
   🔌 Connecting Database...
@@ -939,29 +1141,31 @@ uv run querycraft --help`}
   ✓ Database Connected Successfully!
   Host: db.supabase.co  │  Database: postgres
   Introspected: 12 tables`}
-            </CodeBlock>
+              </CodeBlock>
 
-            <ParamTable rows={[
-              { name: "uri", type: "string", default: "required", desc: "Full database connection string (postgresql://... or mongodb+srv://...)" },
-              { name: "--workspace", type: "string", default: "Production", desc: "Target workspace tier (Production, Staging, Analytics)" },
-            ]} />
-          </div>
-
-          {/* ═════════════════════════════════════════════════════════ */}
-          {/* CHAPTER 4: AUTHENTICATION & SECURITY */}
-          {/* ═════════════════════════════════════════════════════════ */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 40, marginBottom: 60 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#10b981", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
-              Chapter 4
+              <ParamTable rows={[
+                { name: "uri", type: "string", default: "required", desc: "Full database connection string (postgresql://...)" },
+                { name: "--workspace", type: "string", default: "Production", desc: "Target workspace tier (Production, Staging, Analytics)" },
+              ]} />
             </div>
-            <h2 id="auth-login" style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 12 }}>
-              Authentication & Tenant Security
-            </h2>
-            <p style={{ fontSize: 14.5, color: "#94a3b8", lineHeight: 1.7 }}>
-              GitHub-style (<InlineCode>gh auth login</InlineCode>) browser OAuth authentication. Spawns a local listener on port 9876, handles the token exchange, and stores credentials in <InlineCode>~/.querycraft/auth.json</InlineCode> with 600 file permissions.
-            </p>
+          )}
 
-            <CodeBlock title="Browser OAuth Login" shell="zsh">
+          {/* PAGE: AUTH-LOGIN */}
+          {activePageId === "auth-login" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  querycraft auth login
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Browser OAuth Handshake
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                GitHub CLI-style (<InlineCode>gh auth login</InlineCode>) browser OAuth authentication. Spawns a local listener on port 9876, handles the token exchange, and stores credentials in <InlineCode>~/.querycraft/auth.json</InlineCode> with 600 file permissions.
+              </p>
+
+              <CodeBlock title="Browser OAuth Login" shell="zsh">
 {`$ querycraft auth login
 
   🔑 Opening browser for authentication...
@@ -969,195 +1173,269 @@ uv run querycraft --help`}
 
   ✅ Logged in as: nitindeep65@gmail.com
   Session token saved to ~/.querycraft/auth.json (valid for 30 days)`}
-            </CodeBlock>
+              </CodeBlock>
 
-            <h3 id="auth-whoami" style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginTop: 32, marginBottom: 8 }}>
-              querycraft auth whoami
-            </h3>
-            <p style={{ fontSize: 14, color: "#94a3b8", marginBottom: 10 }}>
-              Verifies current authenticated session token, user email, and backend status:
-            </p>
+              <ParamTable rows={[
+                { name: "--force", type: "flag", default: "false", desc: "Re-authenticate even if an active session already exists" },
+              ]} />
+            </div>
+          )}
 
-            <CodeBlock title="Check Identity" shell="zsh">
+          {/* PAGE: AUTH-WHOAMI */}
+          {activePageId === "auth-whoami" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  querycraft auth whoami
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Identity Check
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                Verifies your current authenticated session token, user email, and backend status.
+              </p>
+
+              <CodeBlock title="Check Identity" shell="zsh">
 {`$ querycraft auth whoami
 
   ✅ Logged in as: nitindeep65@gmail.com
   Session created: 2026-08-31  |  Expires: 2026-09-30
   Backend: http://localhost:8000`}
-            </CodeBlock>
+              </CodeBlock>
+            </div>
+          )}
 
-            <h3 id="auth-logout" style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginTop: 32, marginBottom: 8 }}>
-              querycraft auth logout
-            </h3>
-            <p style={{ fontSize: 14, color: "#94a3b8", marginBottom: 10 }}>
-              Clears and deletes stored session tokens from <InlineCode>~/.querycraft/auth.json</InlineCode>:
-            </p>
+          {/* PAGE: AUTH-LOGOUT */}
+          {activePageId === "auth-logout" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  querycraft auth logout
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Session Teardown
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                Clears and deletes stored session tokens from <InlineCode>~/.querycraft/auth.json</InlineCode>.
+              </p>
 
-            <CodeBlock title="Logout" shell="zsh">
+              <CodeBlock title="Logout" shell="zsh">
 {`$ querycraft auth logout
 
   👋 Logged out successfully. Stored credentials removed.`}
-            </CodeBlock>
-          </div>
-
-          {/* ═════════════════════════════════════════════════════════ */}
-          {/* CHAPTER 5: WORKSPACES */}
-          {/* ═════════════════════════════════════════════════════════ */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 40, marginBottom: 60 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#10b981", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
-              Chapter 5
+              </CodeBlock>
             </div>
-            <h2 id="workspaces" style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 12 }}>
-              Workspaces & Environments (<InlineCode>querycraft workspaces list</InlineCode>)
-            </h2>
-            <p style={{ fontSize: 14.5, color: "#94a3b8", lineHeight: 1.7 }}>
-              Lists all database workspaces configured for your account, showing database engine, environment tier, and connection status.
-            </p>
+          )}
 
-            <CodeBlock title="List Workspaces" shell="zsh">
+          {/* PAGE: WORKSPACES */}
+          {activePageId === "workspaces" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  querycraft workspaces list
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Multi-Tenant Workspaces
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                Lists all database workspaces configured for your account, showing database engine, environment tier, and connection status.
+              </p>
+
+              <CodeBlock title="List Workspaces" shell="zsh">
 {`$ querycraft workspaces list
 
-  📁 Workspaces for nitindeep65@gmail.com (3 total):
+  📁 Workspaces for nitindeep65@gmail.com (2 total):
 
   • Production (ws-default)  [ACTIVE]
     Engine: postgres  │  Environment: Production  │  Connected: Yes
 
   • Staging (ws-staging)
-    Engine: postgres  │  Environment: Staging     │  Connected: Yes
-
-  • Analytics (ws-analytics)
-    Engine: mongodb   │  Environment: Analytics   │  Connected: No`}
-            </CodeBlock>
-          </div>
-
-          {/* ═════════════════════════════════════════════════════════ */}
-          {/* CHAPTER 6: CONFIGURATION & CHEATSHEET */}
-          {/* ═════════════════════════════════════════════════════════ */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 40, marginBottom: 60 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#10b981", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
-              Chapter 6
+    Engine: postgres  │  Environment: Staging     │  Connected: Yes`}
+              </CodeBlock>
             </div>
-            <h2 id="env-vars" style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 12 }}>
-              Environment Variables & Reference
-            </h2>
-            <p style={{ fontSize: 14.5, color: "#94a3b8", lineHeight: 1.7 }}>
-              Configure network endpoints and model parameters in your environment:
-            </p>
+          )}
 
-            <ParamTable rows={[
-              { name: "QUERYCRAFT_BACKEND_URL", type: "string", default: "http://localhost:8000", desc: "FastAPI microservice backend base URL" },
-              { name: "QUERYCRAFT_FRONTEND_URL", type: "string", default: "http://localhost:3000", desc: "Next.js Web Studio and OAuth login receiver base URL" },
-              { name: "NVIDIA_API_KEY", type: "string", default: "—", desc: "Optional API key for direct Llama 3.1 70B compilation via NVIDIA NIM" },
-            ]} />
+          {/* PAGE: CHEATSHEET */}
+          {activePageId === "cheatsheet" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  Command Cheat Sheet
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Quick Reference
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                A concise reference card of all QueryCraft CLI commands:
+              </p>
 
-            {/* Quick Command Cheat Sheet */}
-            <h3 id="cheatsheet" style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginTop: 36, marginBottom: 14 }}>
-              Command Cheat Sheet
-            </h3>
-
-            <div style={{
-              background: "rgba(255, 255, 255, 0.02)",
-              border: "1px solid rgba(255, 255, 255, 0.07)",
-              borderRadius: 12, overflow: "hidden",
-            }}>
-              {[
-                { cmd: "querycraft setup", desc: "1-Click auto-configure Claude Desktop, Cursor & Antigravity" },
-                { cmd: "querycraft ask \"<prompt>\"", desc: "Natural language English to SQL query with live table results" },
-                { cmd: "querycraft check \"<SQL>\"", desc: "Pre-Flight Cost Guard & 3-tier risk analysis (LOW/MED/HIGH)" },
-                { cmd: "querycraft doctor \"<error/SQL>\"", desc: "SQL Doctor self-healing agent & error code diagnosis" },
-                { cmd: "querycraft query \"<SQL>\"", desc: "Execute raw read-only SQL directly with execution timing" },
-                { cmd: "querycraft schema", desc: "Introspect tables, data types, primary keys, and foreign keys" },
-                { cmd: "querycraft connect <URI>", desc: "Connect live PostgreSQL (Supabase, Neon, AWS RDS, CockroachDB)" },
-                { cmd: "querycraft auth login", desc: "GitHub-style browser OAuth login on port 9876" },
-                { cmd: "querycraft auth whoami", desc: "Check current logged-in identity and session status" },
-                { cmd: "querycraft auth logout", desc: "Clear stored credentials and session tokens" },
-                { cmd: "querycraft workspaces list", desc: "List all database workspaces configured for your user" },
-              ].map((row, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "12px 16px",
-                    borderBottom: i < 8 ? "1px solid rgba(255, 255, 255, 0.04)" : "none",
-                  }}
-                >
-                  <code style={{ fontFamily: "'JetBrains Mono', monospace", color: "#34d399", fontSize: 12.5, fontWeight: 600 }}>
-                    {row.cmd}
-                  </code>
-                  <span style={{ fontSize: 12.5, color: "#94a3b8" }}>
-                    {row.desc}
-                  </span>
-                </div>
-              ))}
+              <div style={{
+                background: "rgba(255, 255, 255, 0.02)",
+                border: "1px solid rgba(255, 255, 255, 0.07)",
+                borderRadius: 10, overflow: "hidden",
+              }}>
+                {[
+                  { cmd: "querycraft setup", desc: "1-Click auto-configure Claude Desktop, Cursor & Antigravity" },
+                  { cmd: "querycraft ask \"<prompt>\"", desc: "Natural language English to safe SQL with live table results" },
+                  { cmd: "querycraft check \"<SQL>\"", desc: "Pre-Flight Cost Guard & 3-tier risk analysis (LOW/MED/HIGH)" },
+                  { cmd: "querycraft doctor \"<error/SQL>\"", desc: "SQL Doctor self-healing agent & error code diagnosis" },
+                  { cmd: "querycraft query \"<SQL>\"", desc: "Execute raw read-only SQL directly with latency timing" },
+                  { cmd: "querycraft schema", desc: "Introspect tables, data types, primary keys, and foreign keys" },
+                  { cmd: "querycraft connect <URI>", desc: "Connect live PostgreSQL (Supabase, Neon, AWS RDS, CockroachDB)" },
+                  { cmd: "querycraft auth login", desc: "GitHub-style browser OAuth login on port 9876" },
+                  { cmd: "querycraft auth whoami", desc: "Check current logged-in identity and session status" },
+                  { cmd: "querycraft auth logout", desc: "Clear stored credentials and session tokens" },
+                  { cmd: "querycraft workspaces list", desc: "List all database workspaces configured for your user" },
+                ].map((row, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "11px 16px",
+                      borderBottom: i < 10 ? "1px solid rgba(255, 255, 255, 0.04)" : "none",
+                    }}
+                  >
+                    <code style={{ fontFamily: "'JetBrains Mono', monospace", color: "#34d399", fontSize: 12.5, fontWeight: 600 }}>
+                      {row.cmd}
+                    </code>
+                    <span style={{ fontSize: 12.5, color: "#94a3b8" }}>
+                      {row.desc}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Footer Navigation Cards */}
+          {/* PAGE: ENV-VARS */}
+          {activePageId === "env-vars" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", letterSpacing: "-0.6px", margin: 0 }}>
+                  Environment Variables
+                </h1>
+                <span style={{ fontSize: 11, fontWeight: 700, background: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 12 }}>
+                  Configuration
+                </span>
+              </div>
+              <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 20 }}>
+                Configure endpoints and runtime settings via environment variables in your shell or CI/CD pipelines:
+              </p>
+
+              <ParamTable rows={[
+                { name: "QUERYCRAFT_BACKEND_URL", type: "string", default: "http://localhost:8000", desc: "FastAPI microservice backend base URL" },
+                { name: "QUERYCRAFT_FRONTEND_URL", type: "string", default: "http://localhost:3000", desc: "Next.js Web Studio and OAuth receiver base URL" },
+                { name: "POSTGRES_URL", type: "string", default: "—", desc: "Optional direct PostgreSQL connection string fallback" },
+                { name: "READ_ONLY_ENFORCED", type: "boolean", default: "true", desc: "Strictly block destructive DDL/DML mutations" },
+                { name: "AUTO_LIMIT", type: "number", default: "50", desc: "Default row limit injected if none specified in prompt" },
+              ]} />
+            </div>
+          )}
+
+          {/* ── Page-Wise Sequential Pagination Footer ─────────────────── */}
           <div style={{
-            marginTop: 64,
-            paddingTop: 32,
+            marginTop: 48,
+            paddingTop: 24,
             borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
             gap: 16,
           }}>
-            <Link
-              href="/Dashboard"
-              style={{
-                background: "rgba(255, 255, 255, 0.02)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                borderRadius: 10,
-                padding: "20px",
-                textDecoration: "none",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"
-                e.currentTarget.style.borderColor = "rgba(16, 185, 129, 0.3)"
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.02)"
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)"
-              }}
-            >
-              <div style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>
-                Next Chapter
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#34d399", display: "flex", alignItems: "center", gap: 6 }}>
-                <span>Web Dashboard Studio</span>
-                <ArrowRight size={14} />
-              </div>
-            </Link>
+            {prevPage ? (
+              <button
+                type="button"
+                onClick={() => navigateToPage(prevPage.id)}
+                style={{
+                  background: "rgba(255, 255, 255, 0.03)",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: 8,
+                  padding: "10px 16px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  color: "#cbd5e1",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.06)"
+                  e.currentTarget.style.borderColor = "rgba(16, 185, 129, 0.3)"
+                  e.currentTarget.style.color = "#34d399"
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)"
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)"
+                  e.currentTarget.style.color = "#cbd5e1"
+                }}
+              >
+                <ArrowLeft size={14} />
+                <span>Previous: {prevPage.label}</span>
+              </button>
+            ) : <div />}
 
-            <Link
-              href="/Dashboard/canvas"
-              style={{
-                background: "rgba(255, 255, 255, 0.02)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                borderRadius: 10,
-                padding: "20px",
-                textDecoration: "none",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"
-                e.currentTarget.style.borderColor = "rgba(16, 185, 129, 0.3)"
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.02)"
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)"
-              }}
-            >
-              <div style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>
-                Advanced Feature
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#60a5fa", display: "flex", alignItems: "center", gap: 6 }}>
-                <span>Autonomous Canvas Mode</span>
+            {nextPage ? (
+              <button
+                type="button"
+                onClick={() => navigateToPage(nextPage.id)}
+                style={{
+                  background: "rgba(255, 255, 255, 0.03)",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: 8,
+                  padding: "10px 16px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  color: "#cbd5e1",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.06)"
+                  e.currentTarget.style.borderColor = "rgba(16, 185, 129, 0.3)"
+                  e.currentTarget.style.color = "#34d399"
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)"
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)"
+                  e.currentTarget.style.color = "#cbd5e1"
+                }}
+              >
+                <span>Next: {nextPage.label}</span>
                 <ArrowRight size={14} />
-              </div>
-            </Link>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigateToPage("overview")}
+                style={{
+                  background: "rgba(255, 255, 255, 0.03)",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: 8,
+                  padding: "10px 16px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  color: "#34d399",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                <span>Back to Overview</span>
+                <RefreshCw size={13} />
+              </button>
+            )}
           </div>
 
         </main>
@@ -1185,7 +1463,7 @@ uv run querycraft --help`}
             z-index: 50 !important;
           }
           .docs-main-content {
-            padding: 24px 16px 80px !important;
+            padding: 20px 16px 60px !important;
           }
           .docs-mobile-btn {
             display: block !important;
