@@ -12,6 +12,7 @@ import {
   Code2,
   Copy,
   Database,
+  Download,
   Eye,
   FileText,
   HelpCircle,
@@ -303,6 +304,58 @@ export default function CompilerPage() {
     await navigator.clipboard.writeText(text)
     setIsCopied(true)
     setTimeout(() => setIsCopied(false), 1800)
+  }
+
+  const [isCopiedRows, setIsCopiedRows] = useState(false)
+  const handleCopyRows = async () => {
+    if (!liveResult?.rows || liveResult.rows.length === 0) return
+    const text = JSON.stringify(liveResult.rows, null, 2)
+    await navigator.clipboard.writeText(text)
+    setIsCopiedRows(true)
+    setTimeout(() => setIsCopiedRows(false), 1800)
+  }
+
+  const handleExportCsv = () => {
+    if (!liveResult?.rows || liveResult.rows.length === 0) return
+    const cols = liveResult.columns || Object.keys(liveResult.rows[0] || {})
+    const header = cols.join(",")
+    const body = liveResult.rows
+      .map((r) =>
+        cols
+          .map((c) => {
+            const val = r[c] === null ? "" : String(r[c])
+            return val.includes(",") || val.includes('"') || val.includes("\n")
+              ? `"${val.replace(/"/g, '""')}"`
+              : val
+          })
+          .join(",")
+      )
+      .join("\n")
+    const csvContent = `${header}\n${body}`
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.setAttribute("download", `querycraft_results_${Date.now()}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const formatSql = () => {
+    const target = isEditingSql ? editedSql : sqlQuery
+    if (!target) return
+    const keywords = ["SELECT", "FROM", "WHERE", "JOIN", "LEFT JOIN", "RIGHT JOIN", "INNER JOIN", "ON", "GROUP BY", "ORDER BY", "LIMIT", "HAVING", "AND", "OR", "AS"]
+    let formatted = target
+    keywords.forEach((kw) => {
+      const regex = new RegExp(`\\b${kw}\\b`, "gi")
+      formatted = formatted.replace(regex, kw)
+    })
+    if (isEditingSql) {
+      setEditedSql(formatted)
+    } else {
+      setSqlQuery(formatted)
+    }
   }
 
   const handleExplain = async () => {
@@ -670,6 +723,17 @@ export default function CompilerPage() {
 
                       <Button
                         type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={formatSql}
+                        className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                        title="Format and standardize SQL keywords"
+                      >
+                        Format
+                      </Button>
+
+                      <Button
+                        type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => handleCopy(isEditingSql ? editedSql : sqlQuery)}
@@ -732,46 +796,76 @@ export default function CompilerPage() {
                       )}
                     </div>
 
-                    {/* Result Presentation Switcher */}
-                    <div className="flex items-center rounded-lg border border-border bg-muted/60 p-0.5 text-xs">
-                      <button
-                        type="button"
-                        onClick={() => setResultMode("table")}
-                        className={`px-2.5 py-1 rounded-md font-semibold transition ${
-                          resultMode === "table"
-                            ? "bg-card text-foreground shadow-2xs font-bold"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        Table
-                      </button>
+                    {/* Result Actions & View Switcher */}
+                    <div className="flex items-center gap-2">
+                      {liveResult.success && liveResult.rows?.length > 0 && resultMode === "table" && (
+                        <div className="flex items-center gap-1 mr-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleCopyRows}
+                            className="h-7 px-2 text-[11px] gap-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                            title="Copy table data as JSON"
+                          >
+                            {isCopiedRows ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
+                            <span>{isCopiedRows ? "Copied" : "Copy"}</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleExportCsv}
+                            className="h-7 px-2 text-[11px] gap-1 border-border hover:bg-muted cursor-pointer"
+                            title="Download results as CSV spreadsheet"
+                          >
+                            <Download className="size-3 text-emerald-600" />
+                            <span>Export CSV</span>
+                          </Button>
+                        </div>
+                      )}
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setResultMode("safety")
-                          if (!explainPlan) handleExplain()
-                        }}
-                        className={`px-2.5 py-1 rounded-md font-semibold transition ${
-                          resultMode === "safety"
-                            ? "bg-card text-foreground shadow-2xs font-bold"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        Safety & Plan
-                      </button>
+                      {/* Result Presentation Switcher */}
+                      <div className="flex items-center rounded-lg border border-border bg-muted/60 p-0.5 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => setResultMode("table")}
+                          className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
+                            resultMode === "table"
+                              ? "bg-card text-foreground shadow-2xs font-bold"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          Table
+                        </button>
 
-                      <button
-                        type="button"
-                        onClick={() => setResultMode("json")}
-                        className={`px-2.5 py-1 rounded-md font-semibold transition ${
-                          resultMode === "json"
-                            ? "bg-card text-foreground shadow-2xs font-bold"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        JSON
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setResultMode("safety")
+                            if (!explainPlan) handleExplain()
+                          }}
+                          className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
+                            resultMode === "safety"
+                              ? "bg-card text-foreground shadow-2xs font-bold"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          Safety &amp; Plan
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setResultMode("json")}
+                          className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
+                            resultMode === "json"
+                              ? "bg-card text-foreground shadow-2xs font-bold"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          JSON
+                        </button>
+                      </div>
                     </div>
                   </div>
 

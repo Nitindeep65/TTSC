@@ -82,7 +82,7 @@ export default function CostGuardDashboard() {
   }, [rawSql, isLoading, guardMutation])
 
   return (
-    <div className="w-full flex flex-col gap-6 text-[#e3ebe6]">
+    <div className="w-full flex flex-col gap-6 text-foreground">
       {/* ── TOP BANNER & TELEMETRY BAR ── */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card/80 p-5 shadow-xs backdrop-blur-md">
         <div className="flex items-center gap-3.5">

@@ -537,7 +537,7 @@ export default function Chatbox() {
                 {/* Hero Badge */}
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-white px-3.5 py-1 text-xs font-semibold text-[#1b6b3a] shadow-xs">
                   <Database className="size-3.5 text-emerald-600" />
-                  <span>Universal SQL &amp; NoSQL Clarification Engine</span>
+                  <span>PostgreSQL Safety &amp; Clarification Engine</span>
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#111c16] tracking-tight px-2 max-w-2xl leading-tight">

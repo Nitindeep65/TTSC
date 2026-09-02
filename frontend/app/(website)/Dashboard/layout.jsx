@@ -116,55 +116,68 @@ function DashboardNavbar({ onOpenSettings, onOpenCommandPalette }) {
         </div>
       </div>
 
-      {/* ── ZONE 2: CENTER (MVP Nav: Chat | Compiler | Guard) ── */}
-      <div className="flex items-center rounded-xl border border-border bg-muted/60 p-0.5 text-xs font-semibold shadow-2xs">
+      {/* ── ZONE 2: CENTER (MVP Nav: Chat ⌘1 | Guard ⌘2 | Compiler ⌘3) ── */}
+      <div className="flex items-center rounded-xl border border-border bg-muted/60 p-1 text-xs font-semibold shadow-2xs">
         <Link
           href="/Dashboard/chat"
           className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 transition-all duration-150 ${
             isChat
-              ? "bg-primary text-primary-foreground shadow-2xs"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              ? "bg-background text-foreground shadow-2xs border border-border/60"
+              : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
           }`}
-          title="SQL Doctor — Conversational AI Query Studio (⌘1)"
+          title="SQL Doctor & Clarification Chat Studio (⌘1)"
         >
-          <MessageSquareText className="size-3.5" />
+          <MessageSquareText className="size-3.5 text-emerald-500" />
           <span>Chat</span>
-        </Link>
-
-        <Link
-          href="/Dashboard"
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 transition-all duration-150 ${
-            isCompiler
-              ? "bg-primary text-primary-foreground shadow-2xs"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground"
-          }`}
-          title="SQL Compiler — Direct Query Editor (⌘3)"
-        >
-          <Terminal className="size-3.5" />
-          <span>Compiler</span>
+          <kbd className="hidden lg:inline font-mono text-[9px] opacity-60 ml-0.5">⌘1</kbd>
         </Link>
 
         <Link
           href="/Dashboard/guard"
           className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 transition-all duration-150 ${
             isGuard
-              ? "bg-primary text-primary-foreground shadow-2xs"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              ? "bg-background text-foreground shadow-2xs border border-border/60"
+              : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
           }`}
           title="Pre-Flight Cost Guard — AI Safety Firewall (⌘2)"
         >
-          <ShieldCheck className="size-3.5 text-emerald-400" />
-          <span>Guard</span>
+          <ShieldCheck className="size-3.5 text-emerald-500" />
+          <span>Cost Guard</span>
+          <kbd className="hidden lg:inline font-mono text-[9px] opacity-60 ml-0.5">⌘2</kbd>
+        </Link>
+
+        <Link
+          href="/Dashboard"
+          className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 transition-all duration-150 ${
+            isCompiler
+              ? "bg-background text-foreground shadow-2xs border border-border/60"
+              : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+          }`}
+          title="SQL Compiler — Direct Query Editor (⌘3)"
+        >
+          <Terminal className="size-3.5 text-emerald-500" />
+          <span>Compiler</span>
+          <kbd className="hidden lg:inline font-mono text-[9px] opacity-60 ml-0.5">⌘3</kbd>
         </Link>
       </div>
 
-      {/* ── ZONE 3: RIGHT (DB Status + ⌘K Palette + User Menu) ── */}
+      {/* ── ZONE 3: RIGHT (Docs Link + Command Palette + DB Status + User Menu) ── */}
       <div className="flex items-center gap-2 shrink-0">
+        {/* CLI & MCP Docs Quick Link */}
+        <Link
+          href="/docs/cli"
+          className="hidden xl:flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-border bg-background text-xs text-muted-foreground hover:text-foreground hover:border-border-hover transition shadow-2xs"
+          title="CLI & MCP Documentation"
+        >
+          <BookOpen className="size-3.5 text-emerald-500" />
+          <span className="text-[11px] font-medium">CLI Docs</span>
+        </Link>
+
         {/* Command Palette Trigger Button */}
         <button
           type="button"
           onClick={onOpenCommandPalette}
-          className="hidden md:flex items-center gap-2 h-8 px-2.5 rounded-lg border border-border bg-background text-xs text-muted-foreground hover:border-border-hover hover:text-foreground transition shadow-2xs"
+          className="hidden md:flex items-center gap-2 h-8 px-2.5 rounded-lg border border-border bg-background text-xs text-muted-foreground hover:border-border-hover hover:text-foreground transition shadow-2xs cursor-pointer"
           title="Search views, database schema, commands (⌘K)"
         >
           <Search className="size-3.5" />
@@ -193,12 +206,12 @@ function DashboardNavbar({ onOpenSettings, onOpenCommandPalette }) {
                   {dbInfo.db_type ? dbInfo.db_type.toUpperCase() : "POSTGRES"}
                 </span>
                 <span className="hidden lg:inline text-muted-foreground text-[10px]">·</span>
-                <span className="hidden lg:inline font-mono text-[11px] text-muted-foreground truncate max-w-[100px]">
+                <span className="hidden lg:inline font-mono text-[11px] text-muted-foreground truncate max-w-[110px]">
                   {dbInfo.host || "localhost"}
                 </span>
               </div>
-              <span className="rounded bg-emerald-500/20 px-1.5 py-0.2 text-[9.5px] font-mono font-bold text-emerald-700 dark:text-emerald-300">
-                {dbInfo.tables_count} tbl
+              <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[9.5px] font-mono font-bold text-emerald-700 dark:text-emerald-300">
+                {dbInfo.tables_count} tbls
               </span>
             </>
           ) : (
