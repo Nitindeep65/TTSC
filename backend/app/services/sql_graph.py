@@ -1,6 +1,7 @@
 """
 QueryCraft — LangGraph Multi-Agent StateGraph Orchestration Engine
-Wires together isolated services (llm_services, db_service, explain_service, healing_service, semantic_service, memory_service)
+MVP: PostgreSQL safety and intelligence layer.
+Wires together isolated services (llm_services, db_service, explain_service, healing_service, memory_service)
 into a resilient, self-healing, multi-agent query generation & optimization loop.
 """
 
@@ -12,7 +13,6 @@ from typing import TypedDict, List, Dict, Any, Optional
 from langgraph.graph import StateGraph, START, END
 
 from app.Models.schema import (
-    VisualIntent,
     ExtractedSQLData,
     ClarificationResponse,
     HealedQueryInfo,
@@ -27,15 +27,14 @@ from app.services.llm_services import (
     LIVE_DATABASE_SCHEMA_SQL,
 )
 from app.services.db_service import (
-    detect_engine_type,
     introspect_cloud_database,
     execute_read_only_query,
     parse_connection_info,
 )
 from app.services.explain_service import run_explain_plan
 from app.services.healing_service import heal_sql_with_critic
+from app.services.memory_service import find_relevant_few_shot_examples
 from app.services.semantic_service import find_matching_metrics
-from app.services.memory_service import find_relevant_few_shot_examples, prune_schema_for_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,8 @@ class AgentState(TypedDict):
     # Inputs
     user_prompt: str
     connection_uri: Optional[str]
-    database_type: Optional[str]  # "postgres" | "mongodb" | "redis" | "mysql"
+    # MVP: PostgreSQL is the primary supported engine; kept for future adapter extensibility
+    database_type: Optional[str]
     session_history: List[Dict[str, Any]]
     
     # Context (Node 2)
@@ -60,12 +60,11 @@ class AgentState(TypedDict):
     # Generation & Clarification (Node 1 & 3)
     status: str  # "needs_clarification" | "intent_clear" | "complete" | "error"
     clarification_message: Optional[str]
-    visual_intent: Optional[Dict[str, Any]]
     generated_query: Optional[str]
     tables_identified: List[str]
     explanation: Optional[str]
     
-    # Execution & Healing (Node 4 & 5)
+    # Execution, Safety & Healing (Node 4 & 5)
     query_results: Optional[List[Dict[str, Any]]]
     result_columns: Optional[List[str]]
     row_count: Optional[int]
@@ -73,7 +72,8 @@ class AgentState(TypedDict):
     retry_count: int
     explain_plan: Optional[Dict[str, Any]]
     healing_info: Optional[Dict[str, Any]]
-
+    # MVP: Unified 3-tier risk classification
+    risk_level: Optional[str]  # "LOW" | "MEDIUM" | "HIGH"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 2. NODE IMPLEMENTATIONS (LEVERAGING EXISTING SERVICES)
@@ -81,19 +81,13 @@ class AgentState(TypedDict):
 
 async def intent_and_clarifier_node(state: AgentState) -> Dict[str, Any]:
     """
-    NODE 1: Evaluates user intent, detects visual requirements,
-    and checks whether conversational clarification is required before query generation.
+    NODE 1: Evaluates user intent and checks whether conversational clarification
+    is required before query generation. PostgreSQL-focused.
     """
     user_prompt = state.get("user_prompt", "")
     conn_uri = state.get("connection_uri") or ""
-    db_type = detect_engine_type(conn_uri) if conn_uri else "postgres"
-    
-    # 1. NLP Visual Intent Detection
-    v_intent = detect_visual_intent(user_prompt)
-    v_intent_dict = v_intent.model_dump() if hasattr(v_intent, "model_dump") else v_intent.dict()
 
-    # 2. Ambiguity & Clarification Evaluation
-    # If live_schema is already provided, evaluate with it; otherwise evaluate with default/introspected schema
+    # Schema introspection for ambiguity evaluation
     schema_to_use = state.get("live_schema")
     if not schema_to_use and conn_uri:
         try:
@@ -111,8 +105,6 @@ async def intent_and_clarifier_node(state: AgentState) -> Dict[str, Any]:
         return {
             "status": "needs_clarification",
             "clarification_message": eval_result.message,
-            "visual_intent": v_intent_dict,
-            "database_type": db_type,
             "live_schema": schema_to_use,
             "generated_query": None,
             "tables_identified": [],
@@ -124,8 +116,6 @@ async def intent_and_clarifier_node(state: AgentState) -> Dict[str, Any]:
     return {
         "status": "intent_clear",
         "clarification_message": eval_result.message,
-        "visual_intent": v_intent_dict,
-        "database_type": db_type,
         "live_schema": schema_to_use,
         "generated_query": extracted.sql_query if extracted else None,
         "tables_identified": extracted.tables_identified if extracted else [],
@@ -242,9 +232,9 @@ async def query_compiler_node(state: AgentState) -> Dict[str, Any]:
 async def execute_and_guard_node(state: AgentState) -> Dict[str, Any]:
     """
     NODE 4: Performance Guard & Execution Node.
-    - Dry-runs PostgreSQL EXPLAIN to estimate cost and detect sequential scans.
+    - Dry-runs PostgreSQL EXPLAIN to estimate cost, detect sequential scans, classify risk level.
     - Executes read-only queries with strict timeouts.
-    - Intercepts execution errors and records them for Critic self-healing.
+    - Intercepts execution errors and records them for Critic self-healing (Node 5).
     """
     query = state.get("generated_query")
     if not query:
@@ -252,11 +242,13 @@ async def execute_and_guard_node(state: AgentState) -> Dict[str, Any]:
 
     conn_uri = state.get("connection_uri")
     explain_data = None
+    risk_level = "LOW"  # Default to LOW; elevated by EXPLAIN analysis
 
-    # 1. Performance Guard (EXPLAIN Plan)
+    # 1. Performance Guard (EXPLAIN Plan + Risk Classification)
     try:
         exp_res = run_explain_plan(conn_uri or "", query)
         explain_data = exp_res.model_dump() if hasattr(exp_res, "model_dump") else exp_res.dict()
+        risk_level = exp_res.risk_level  # Already computed in explain_service
     except Exception as exp_err:
         logger.debug(f"Explain plan evaluation notice: {exp_err}")
 
@@ -277,12 +269,14 @@ async def execute_and_guard_node(state: AgentState) -> Dict[str, Any]:
                 "row_count": exec_res.get("row_count", 0),
                 "db_error": None,
                 "explain_plan": explain_data,
+                "risk_level": risk_level,
             }
         except Exception as exec_err:
             logger.warning(f"Database execution failed: {exec_err}")
             return {
                 "db_error": str(exec_err),
                 "explain_plan": explain_data,
+                "risk_level": risk_level,
             }
     else:
         # Prompt-only mode (no live DB connection attached to request)
@@ -292,6 +286,7 @@ async def execute_and_guard_node(state: AgentState) -> Dict[str, Any]:
             "row_count": 0,
             "db_error": None,
             "explain_plan": explain_data,
+            "risk_level": risk_level,
         }
 
 
@@ -387,7 +382,7 @@ def route_after_execution(state: AgentState) -> str:
     """Routes to Critic Healer if a database error occurred and retries remain (< 3)."""
     if state.get("db_error") and state.get("retry_count", 0) < 3:
         return "critic_healer"
-    return "visualizer_router"
+    return "end"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -402,7 +397,7 @@ workflow.add_node("context_retriever", context_retriever_node)
 workflow.add_node("query_compiler", query_compiler_node)
 workflow.add_node("execute_and_guard", execute_and_guard_node)
 workflow.add_node("critic_healer", critic_healer_node)
-workflow.add_node("visualizer_router", visualizer_router_node)
+# NOTE: visualizer_router_node removed — visualization is handled by the frontend
 
 # Add Graph Edges & Conditional Routing
 workflow.add_edge(START, "intent_and_clarifier")
@@ -424,13 +419,12 @@ workflow.add_conditional_edges(
     route_after_execution,
     {
         "critic_healer": "critic_healer",
-        "visualizer_router": "visualizer_router",
+        "end": END,
     }
 )
 
 # Critic Healer loops back to Execute & Guard to re-test the repaired query
 workflow.add_edge("critic_healer", "execute_and_guard")
-workflow.add_edge("visualizer_router", END)
 
 # Compiled Production Graph
 querycraft_graph = workflow.compile()

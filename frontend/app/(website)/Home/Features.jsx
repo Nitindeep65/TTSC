@@ -14,27 +14,22 @@ import {
 
 const PRIMARY_FEATURES = [
   {
-    icon: Database,
-    badge: "Multi-Model Engines",
-    title: "Universal SQL & NoSQL Compiler",
+    icon: ShieldCheck,
+    badge: "Pre-Flight Cost Guard",
+    title: "EXPLAIN Cost Firewall & 3-Tier Risk",
     description:
-      "Native support for relational SQL (PostgreSQL, MySQL, Supabase, Neon) and document stores (MongoDB Atlas, DynamoDB, Redis). Generates optimized queries tailored to your target engine — with zero syntax drift.",
-    highlight: "Postgres · MySQL · Mongo · Redis",
-    snippet: `-- Relational SQL:
-SELECT u.id, SUM(oi.price) AS total
-FROM users u JOIN orders o ON u.id = o.uid
-JOIN order_items oi ON o.id = oi.oid
-GROUP BY u.id LIMIT 50;
-
-// MongoDB MQL:
-db.orders.aggregate([
-  { $match: { status: "completed" } },
-  { $unwind: "$items" }
-]);`,
+      "Simulates compute plans before execution using PostgreSQL EXPLAIN (FORMAT JSON, COSTS TRUE). Classifies queries into LOW (<60 cost), MEDIUM (60-300), and HIGH (>300), detects unindexed sequential scans, and auto-suggests index DDL.",
+    highlight: "LOW · MEDIUM · HIGH Risk Engine",
+    snippet: `EXPLAIN (FORMAT JSON) SELECT * FROM orders;
+→ Total Cost: 48.8 | Scan: Seq Scan
+→ Risk: [MEDIUM RISK - REVIEW RECOMMENDED]
+→ Suggested Index:
+  CREATE INDEX CONCURRENTLY IF NOT EXISTS
+  idx_orders_status ON orders(status);`,
     spanClass: "sm:col-span-1",
-    accentColor: "text-blue-600",
-    accentBg: "bg-blue-600",
-    accentLight: "bg-blue-50 border-blue-200",
+    accentColor: "text-emerald-600",
+    accentBg: "bg-emerald-600",
+    accentLight: "bg-emerald-50 border-emerald-200",
   },
   {
     icon: HelpCircle,
@@ -60,50 +55,50 @@ const SECONDARY_FEATURES = [
   {
     icon: Cloud,
     badge: "Live Introspection",
-    title: "Schema & Collection Grounding",
+    title: "Zero-Hallucination Schema Grounding",
     description:
-      "Inspects live database catalogs — relational tables, UUIDs, JSONB columns, foreign keys, and MongoDB document schemas. Never hallucinates non-existent fields or invalid types.",
-    highlight: "Zero Hallucination Guarantee",
-    snippet: `Schema: users(id UUID, email TEXT)\norders(total DECIMAL, status TEXT)\nCollections: products, sessions`,
+      "Introspects live PostgreSQL catalogs — tables, UUIDs, JSONB columns, foreign keys, and constraints. Never hallucinates non-existent columns or invalid types.",
+    highlight: "Live DDL Grounding",
+    snippet: `Schema: users(id UUID [PK], email TEXT)\norders(user_id UUID [FK], total NUMERIC)\nIndexed: orders(status, created_at)`,
     accentColor: "text-teal-600",
     accentBg: "bg-teal-600",
   },
   {
     icon: Zap,
     badge: "Self-Healing AI",
-    title: "Critic Loop — SQL & MQL Doctor",
+    title: "Critic Loop — SQL Doctor",
     description:
-      "Intercepts runtime errors, parses SQLSTATE codes, uses an LLM critic to diagnose root causes, and auto-repairs queries with up to 3 self-healing retries.",
-    highlight: "Automated Error Recovery",
-    snippet: `PostgreSQL ERROR 42703\n→ Diagnosis: column 'total_spend'\n   does not exist\n→ Auto-heal: mapped to\n   SUM(oi.quantity * oi.unit_price) ✓`,
+      "Intercepts runtime errors, maps SQLSTATE error codes (42703, 42P01, 22P02, 42803), uses an LLM critic to diagnose root causes, and auto-repairs queries with up to 3 self-healing retries.",
+    highlight: "SQLSTATE 42703 / 42803 Recovery",
+    snippet: `PostgreSQL ERROR 42703 (undefined_column)\n→ Diagnosis: 'full_name' not in users\n→ Auto-heal: replaced with users.name\n→ Status: Verified & Executed ✓`,
     accentColor: "text-amber-600",
     accentBg: "bg-amber-500",
   },
   {
-    icon: ShieldCheck,
+    icon: Database,
     badge: "Universal Safety",
-    title: "Read-Only Sandboxing",
+    title: "Read-Only AST Sandboxing",
     description:
-      "Strictly enforces read-only access across SQL (SELECT only) and NoSQL (find/aggregate, GET). Intercepts INSERT, DELETE, DROP before they reach your database.",
-    highlight: "Read-Only Enforced Everywhere",
-    snippet: `BLOCKED: INSERT / UPDATE / DROP\nALLOWED: SELECT / find() / aggregate()\nAuto-guard: LIMIT 50 injected`,
-    accentColor: "text-emerald-600",
-    accentBg: "bg-emerald-600",
+      "Strictly enforces read-only access (SELECT, WITH only). Intercepts and blocks destructive mutations (INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE) before they touch your database.",
+    highlight: "Zero Mutations Allowed",
+    snippet: `BLOCKED: DROP, DELETE, INSERT, ALTER\nALLOWED: SELECT, WITH\nAuto-guard: LIMIT 50 injected`,
+    accentColor: "text-blue-600",
+    accentBg: "bg-blue-600",
   },
 ]
 
 const WIDE_FEATURE = {
   icon: Layers,
-  badge: "Business Intelligence",
-  title: "Cross-Engine Semantic KPI Layer",
+  badge: "Universal Agent Architecture",
+  title: "Model Context Protocol (MCP) & Standalone CLI",
   description:
-    "Define business KPI formulas and glossary terms once. QueryCraft applies them across both relational joins and nested NoSQL document pipelines. Teach the AI your custom metric definitions, upload policy documents, and let the semantic layer surface verified calculations every time.",
-  highlight: "Unified Business Definitions",
+    "Give AI coding agents (Claude Desktop, Cursor IDE, Antigravity, Windsurf) direct, safe access to your PostgreSQL database through 6 standardized tools. Run queries from terminal with querycraft ask, check costs with querycraft check, and heal errors with querycraft doctor.",
+  highlight: "6 MCP Tools · 1-Click Auto-Setup",
   items: [
-    { label: "Net Revenue", formula: "total_amount - refund_amount - discount_amount" },
-    { label: "Active Churn Rate", formula: "churned_users / prev_month_active * 100" },
-    { label: "MRR Growth", formula: "current_mrr - prev_mrr / prev_mrr * 100" },
-    { label: "LTV / CAC Ratio", formula: "customer_ltv / customer_acquisition_cost" },
+    { label: "inspect_schema", formula: "Live PostgreSQL schema & types in Markdown" },
+    { label: "generate_safe_sql", formula: "NL → SQL with 3-tier risk classification" },
+    { label: "evaluate_and_heal_sql", formula: "Pre-Flight Cost Guard + auto-heal execution" },
+    { label: "querycraft check", formula: "Terminal EXPLAIN cost analyzer & index advisor" },
   ],
 }
 

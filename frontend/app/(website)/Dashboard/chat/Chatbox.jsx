@@ -52,7 +52,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import DataVisualizer from "@/components/visualization/DataVisualizer"
-import MetricGlossaryModal from "@/components/semantic/MetricGlossaryModal"
+import { RiskBadge, RiskBanner } from "@/components/guard/RiskBadge"
 import TableDataProfilerModal from "@/components/database/TableDataProfilerModal"
 import QueryNotebookModal from "@/components/workspace/QueryNotebookModal"
 import { useTour } from "@/lib/tourContext"
@@ -73,26 +73,18 @@ const STARTER_PROMPTS = [
     icon: Terminal,
   },
   {
-    type: "NoSQL Pipeline",
-    text: "Calculate total revenue and unit sales per product category in MongoDB",
-    desc: "Generates a clean MongoDB Aggregation pipeline ($match, $unwind, $group)",
-    color: "purple",
-    icon: Layers,
-  },
-  {
-    type: "Visual Analytics",
-    text: "Show daily completed order revenue for the last 30 days as a trend chart",
-    desc: "Detects visual intent and automatically renders an interactive SVG chart",
+    type: "Cost & Index Analysis",
+    text: "Find active users with high order count and total spend over $500",
+    desc: "Analyzes cost, detects sequential scans, and suggests optimal indexes",
     color: "blue",
-    icon: TrendingUp,
+    icon: ShieldCheck,
   },
   {
-    type: "Dashboard Architect",
-    text: "Build an Executive SaaS Performance Dashboard with MRR, churn, and top cohorts",
-    desc: "Spins up supervisor planner and 4 parallel workers in Canvas Mode",
-    color: "emerald",
+    type: "SQL Doctor Repair",
+    text: "Fix query: SELECT u.name, o.total FROM users u JOIN orders o GROUP BY u.name;",
+    desc: "Auto-heals missing GROUP BY columns and runtime SQL errors with Critic loop",
+    color: "purple",
     icon: Sparkles,
-    isCanvas: true,
   },
 ]
 
@@ -250,7 +242,7 @@ export default function Chatbox() {
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         }])
       } else if (data.status === "complete") {
-        const { sql_query, explanation, tables_identified, visual_intent, matched_metrics } = data.extracted_data || {}
+        const { sql_query, explanation, tables_identified, visual_intent, matched_metrics, risk_level } = data.extracted_data || {}
         setMessages(p => [...p, {
           role: "assistant",
           status: "complete",
@@ -258,6 +250,7 @@ export default function Chatbox() {
           explanation,
           tables: tables_identified || [],
           sql_query,
+          risk_level: risk_level || data.risk_level || "LOW",
           visual_intent: visual_intent || data.visual_intent,
           matched_metrics: matched_metrics || [],
           rawContent: `${data.message || ""} ${explanation || ""} SQL: ${sql_query || ""}`,
@@ -486,16 +479,6 @@ export default function Chatbox() {
             >
               <Bookmark className="size-3.5 text-[#34c06a]" />
               <span>Notebook</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsMetricModalOpen(true)}
-              className="gap-1.5 text-xs font-semibold text-[#1a5c37] h-8 hidden xl:flex border-[#d4e2d8] hover:bg-[#edf5ef] hover:border-[#b8d4bc] shadow-2xs cursor-pointer"
-            >
-              <Wand2 className="size-3.5 text-[#34c06a]" />
-              <span>Metrics</span>
             </Button>
 
             {!dbInfo && (
@@ -810,11 +793,14 @@ export default function Chatbox() {
                       {msg.sql_query && (
                         <div className="mx-3 sm:mx-5 mb-4 rounded-xl overflow-hidden border border-[#1b2b22] shadow-sm">
                           <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0c1410] px-3.5 sm:px-4 py-2 border-b border-[#1b2b22]">
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-2">
                               <Terminal className="size-3.5 text-[#34c06a]" />
                               <span className="font-mono text-[10.5px] sm:text-[11px] font-bold text-[#75ab8f]">
-                                SQL · Read-Only
+                                SQL · PostgreSQL
                               </span>
+                              {msg.risk_level && (
+                                <RiskBadge level={msg.risk_level} size="sm" />
+                              )}
                             </div>
 
                             <div className="flex items-center gap-1 sm:gap-1.5">
@@ -1303,9 +1289,6 @@ export default function Chatbox() {
           </div>
         </div>
       )}
-
-      {/* Semantic Metrics Modal */}
-      <MetricGlossaryModal isOpen={isMetricModalOpen} onClose={() => setIsMetricModalOpen(false)} />
 
       {/* Query Notebook Modal */}
       <QueryNotebookModal isOpen={isNotebookModalOpen} onClose={() => setIsNotebookModalOpen(false)} />

@@ -833,6 +833,138 @@ def cmd_ask(args):
         print(f"  {DIM}Ensure backend is running: cd backend && uv run uvicorn app.main:app{RESET}\n")
 
 
+def cmd_check(args):
+    """Evaluates a SQL query with Pre-Flight Cost Guard and prints risk classification & index suggestions."""
+    sql = " ".join(args.sql) if isinstance(args.sql, list) else args.sql
+    if not sql:
+        print(f"\n  {YELLOW}Please provide a SQL query to check.{RESET}")
+        print(f"  {DIM}Example: querycraft check \"SELECT * FROM orders WHERE total_amount > 100;\"{RESET}\n")
+        return
+
+    creds = load_credentials()
+    email = creds.get("email") if creds else "default_user"
+    token = creds.get("cli_token") if creds else ""
+
+    print(f"\n  {CYAN}🛡️ QueryCraft Cost Guard{RESET}  {DIM}[User: {email}]{RESET}")
+    print(f"  {BOLD}Query:{RESET} {sql.strip()}")
+    print(f"  {DIM}Analyzing AST, running EXPLAIN cost planner, detecting sequential scans...{RESET}\n")
+
+    try:
+        import urllib.request
+        req_data = json.dumps({
+            "sql_query": sql.strip(),
+            "cost_threshold": getattr(args, "threshold", 150.0),
+        }).encode("utf-8")
+
+        headers = {"Content-Type": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
+        req = urllib.request.Request(
+            f"{BACKEND_BASE}/api/v1/guard",
+            data=req_data,
+            headers=headers
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode())
+
+        is_safe = data.get("is_safe", True)
+        cost_metrics = data.get("cost_metrics") or {}
+        total_cost = cost_metrics.get("total_cost", 0.0)
+        has_seq_scan = cost_metrics.get("has_seq_scan", False)
+        plan_rows = cost_metrics.get("plan_rows", 0)
+        action_type = data.get("action_type", "clean")
+        suggested_index = data.get("suggested_index")
+        explanation = data.get("explanation", "")
+
+        # Risk Classification (LOW / MEDIUM / HIGH)
+        if total_cost < 60 and not (has_seq_scan and total_cost > 30):
+            risk_color = GREEN
+            risk_badge = f"{GREEN}[LOW RISK - SAFE TO EXECUTE]{RESET}"
+        elif total_cost < 300:
+            risk_color = YELLOW
+            risk_badge = f"{YELLOW}[MEDIUM RISK - REVIEW RECOMMENDED]{RESET}"
+        else:
+            risk_color = RED
+            risk_badge = f"{RED}[HIGH RISK - EXECUTION BLOCKED]{RESET}"
+
+        print(f"  Risk Level: {risk_badge}")
+        print(f"  Estimated Cost: {risk_color}{total_cost:,.1f}{RESET}")
+        print(f"  Scan Type: {YELLOW if has_seq_scan else GREEN}{'Sequential Scan' if has_seq_scan else 'Index Scan'}{RESET}")
+        print(f"  Plan Rows: {plan_rows:,}")
+        print(f"  Action: {BOLD}{action_type.upper()}{RESET}")
+        if explanation:
+            print(f"\n  {DIM}{explanation}{RESET}")
+
+        if suggested_index:
+            print(f"\n  {YELLOW}{BOLD}Suggested Index DDL:{RESET}")
+            print(f"  {CYAN}{suggested_index}{RESET}")
+
+        if data.get("healed_query") and action_type == "rewritten":
+            print(f"\n  {GREEN}{BOLD}Auto-Healed Optimized Query:{RESET}")
+            print(f"  {CYAN}{data.get('healed_query')}{RESET}")
+
+        print()
+
+    except Exception as e:
+        print(f"  {YELLOW}⚠ Could not evaluate query via Cost Guard: {e}{RESET}")
+        print(f"  {DIM}Ensure backend is running: cd backend && uv run uvicorn app.main:app{RESET}\n")
+
+
+def cmd_doctor(args):
+    """Diagnoses and heals failing SQL queries or PostgreSQL runtime errors using SQL Doctor."""
+    sql_or_error = " ".join(args.query_or_error) if isinstance(args.query_or_error, list) else args.query_or_error
+    if not sql_or_error:
+        print(f"\n  {YELLOW}Please provide a broken SQL query or error message.{RESET}")
+        print(f"  {DIM}Example: querycraft doctor \"column users.full_name does not exist\"{RESET}\n")
+        return
+
+    print(f"\n  {CYAN}🩺 QueryCraft SQL Doctor{RESET}")
+    print(f"  {BOLD}Input:{RESET} {sql_or_error}")
+    print(f"  {DIM}Diagnosing SQLSTATE error code, mapping schema, generating verified repair...{RESET}\n")
+
+    try:
+        import urllib.request
+        is_sql = sql_or_error.strip().upper().startswith(("SELECT", "WITH", "INSERT", "UPDATE", "DELETE"))
+        payload = {
+            "error_message": sql_or_error if not is_sql else "Runtime execution syntax/column error in query",
+            "failing_sql": sql_or_error if is_sql else None,
+        }
+
+        req = urllib.request.Request(
+            f"{BACKEND_BASE}/api/database/diagnose",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode())
+
+        error_code = data.get("error_code")
+        error_category = data.get("error_category", "runtime_error")
+        root_cause = data.get("root_cause", "")
+        healed_sql = data.get("healed_sql", "")
+        explanation = data.get("explanation", "")
+        affected = data.get("affected_entities", [])
+
+        print(f"  Status: {GREEN}Diagnosed{RESET}")
+        if error_code:
+            print(f"  SQLSTATE Code: {BOLD}{error_code}{RESET} ({error_category})")
+        if root_cause:
+            print(f"  Root Cause: {YELLOW}{root_cause}{RESET}")
+        if affected:
+            print(f"  Affected Entities: {', '.join(affected)}")
+        if healed_sql:
+            print(f"\n  {GREEN}{BOLD}Healed SQL Query:{RESET}")
+            print(f"  {CYAN}{healed_sql.strip()}{RESET}")
+        if explanation:
+            print(f"\n  {DIM}ℹ {explanation}{RESET}")
+
+        print()
+
+    except Exception as e:
+        print(f"  {YELLOW}⚠ SQL Doctor diagnosis notice: {e}{RESET}\n")
+
+
 # ─────────────────────────────────────────────────
 # Entry Point & Argument Parser
 # ─────────────────────────────────────────────────
@@ -860,6 +992,17 @@ Examples:
     ask_p = subparsers.add_parser("ask", help="Ask a question about your database in plain English")
     ask_p.add_argument("prompt", nargs="+", help="Natural language query or question")
     ask_p.set_defaults(func=cmd_ask)
+
+    # check command (Pre-Flight Cost Guard)
+    check_p = subparsers.add_parser("check", help="Run Pre-Flight Cost Guard & risk analysis on any SQL query")
+    check_p.add_argument("sql", nargs="+", help="SQL query to evaluate")
+    check_p.add_argument("--threshold", type=float, default=150.0, help="Compute cost threshold (default: 150.0)")
+    check_p.set_defaults(func=cmd_check)
+
+    # doctor command (SQL Doctor self-healing)
+    doctor_p = subparsers.add_parser("doctor", help="Diagnose and auto-heal broken SQL or runtime errors")
+    doctor_p.add_argument("query_or_error", nargs="+", help="Failing SQL query or PostgreSQL error message")
+    doctor_p.set_defaults(func=cmd_doctor)
 
     # query command (direct SQL execution)
     query_p = subparsers.add_parser("query", help="Execute a raw SQL query against your active database")
@@ -921,10 +1064,12 @@ Examples:
         args.func(args)
     else:
         print(LOGO)
-        print(f"  {BOLD}QueryCraft CLI{RESET} — The AI-powered SQL & NoSQL query engine\n")
+        print(f"  {BOLD}QueryCraft CLI{RESET} — AI-Powered PostgreSQL Safety & Intelligence Layer\n")
         print(f"  {DIM}Quick start:{RESET}")
         print(f"    {CYAN}querycraft connect postgresql://user:pass@host/db{RESET}  # Connect database")
         print(f"    {CYAN}querycraft ask \"show total orders by month\"{RESET}        # Ask in English")
+        print(f"    {CYAN}querycraft check \"SELECT * FROM orders;\"{RESET}           # Pre-Flight Cost Guard")
+        print(f"    {CYAN}querycraft doctor \"column users.name does not exist\"{RESET}# Fix broken SQL")
         print(f"    {CYAN}querycraft query \"SELECT * FROM users LIMIT 10;\"{RESET}   # Run raw SQL")
         print(f"    {CYAN}querycraft schema{RESET}                                    # Inspect tables")
         print(f"    {CYAN}querycraft setup{RESET}                                     # Connect to AI tools\n")

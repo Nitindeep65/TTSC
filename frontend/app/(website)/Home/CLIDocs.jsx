@@ -738,13 +738,18 @@ $ bash setup-mcp.sh`}</CodeBlock>
             <div id="doc-reference">
               <DocSection id="reference" icon={BookOpen} title="Full Command Reference">
                 <div className="cmd-table">
+                  <CmdRow cmd="querycraft setup"          desc="1-Click universal auto-config for Claude Desktop, Cursor IDE, Antigravity, and Windsurf MCP." />
+                  <CmdRow cmd="querycraft ask"            flags={["\"<prompt>\""]} desc="Natural language English to safe PostgreSQL SQL with EXPLAIN cost check and table results." />
+                  <CmdRow cmd="querycraft check"          flags={["\"<SQL>\"", "[--threshold <cost>]"]} desc="Pre-Flight Cost Guard: Evaluates EXPLAIN cost, detects sequential scans, and suggests index DDL." />
+                  <CmdRow cmd="querycraft doctor"         flags={["\"<error or SQL>\""]} desc="SQL Doctor self-healing agent: Diagnoses PostgreSQL SQLSTATE error codes and generates verified repairs." />
+                  <CmdRow cmd="querycraft query"          flags={["\"<SQL>\""]} desc="Execute raw read-only SQL queries directly against your connected database with latency metrics." />
+                  <CmdRow cmd="querycraft schema"         desc="Introspect tables, column data types, Primary Keys [PK], and Foreign Keys [FK]." />
+                  <CmdRow cmd="querycraft connect"        flags={["<URI>", "[--workspace <name>]"]} desc="Connect and link a live PostgreSQL database (Supabase, Neon, AWS RDS) to a workspace." />
                   <CmdRow cmd="querycraft auth login"    flags={["[--force]"]} desc="Open browser and authenticate via QueryCraft website. Use --force to re-authenticate even if already logged in." />
                   <CmdRow cmd="querycraft auth logout"   desc="Clear stored credentials and end CLI session." />
                   <CmdRow cmd="querycraft auth whoami"   desc="Show current logged-in email, session creation date, and expiry." />
                   <CmdRow cmd="querycraft workspaces list" desc="List all database workspaces for your account with connection status." />
                   <CmdRow cmd="querycraft --help"        desc="Show global help and available commands." />
-                  <CmdRow cmd="querycraft auth --help"   desc="Show authentication subcommand help." />
-                  <CmdRow cmd="querycraft workspaces --help" desc="Show workspace subcommand help." />
                 </div>
               </DocSection>
             </div>

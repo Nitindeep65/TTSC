@@ -1,19 +1,21 @@
 """
-QueryCraft MCP Server — Model Context Protocol Service
-Multi-Tenant, User-Scoped Database Reliability & Pre-Flight Cost Guard Layer.
+QueryCraft MCP Server — Model Context Protocol Service (v2.0-mvp)
+PostgreSQL Safety & Intelligence Layer — Single source of truth for all AI agents.
 
-Features:
-- User Session Binding & Authentication (`login_querycraft`)
-- Multi-Workspace Management (`list_workspaces`, `switch_workspace`)
-- Zero-Hallucination Safe Read-Only Execution with AST Guard
-- Pre-Flight Cost Guard with Auto-Healing Critic Loops
-- Live Data Table Formatting in Markdown
+MVP Tools:
+- login_querycraft        — User session binding & authentication
+- list_workspaces         — Multi-workspace management
+- switch_workspace        — Set active workspace for session
+- evaluate_and_heal_sql   — Pre-flight cost guard + auto-heal + safe execution
+- inspect_schema          — [NEW] Live PostgreSQL schema inspection (tables, columns, types)
+- generate_safe_sql       — [NEW] NL → SQL with risk classification via LangGraph engine
 """
 
 import os
 import sys
 import json
 import logging
+import asyncio
 import urllib.request
 import urllib.parse
 from datetime import datetime
@@ -35,7 +37,7 @@ except ImportError:
     sys.exit(1)
 
 from app.services.cost_guard_graph import cost_guard_app as guard_workflow, GuardState
-from app.services.db_service import execute_read_only_query, sample_table_data
+from app.services.db_service import execute_read_only_query, sample_table_data, introspect_cloud_database
 from app.services.workspace_service import (
     get_user_workspaces,
     save_user_workspaces,
@@ -175,9 +177,9 @@ def format_rows_to_markdown_table(columns: List[str], rows: List[Dict[str, Any]]
 # ─────────────────────────────────────────────────────────────────────────────
 
 mcp_server = MCPServer(
-    name="QueryCraft-CostGuard",
-    description="User-Scoped Multi-Tenant Database Reliability & Pre-Flight Cost Guard Engine",
-    version="1.6.0",
+    name="QueryCraft-PostgreSQL-Safety",
+    description="PostgreSQL Safety & Intelligence Layer — Zero-hallucination schema grounding, cost guard, SQL Doctor, risk classification",
+    version="2.0.0-mvp",
 )
 
 
@@ -500,13 +502,227 @@ def evaluate_and_heal_sql(
     )
 
 
+@mcp_server.tool(
+    name="inspect_schema",
+    description=(
+        "Inspects the live PostgreSQL database schema for the active workspace or a provided connection URI. "
+        "Returns all tables, columns, data types, primary keys, and foreign key relationships formatted as "
+        "a clean Markdown table for use in query generation and validation tasks."
+    ),
+)
+def inspect_schema(
+    workspace: Optional[str] = None,
+    user_email: Optional[str] = None,
+    connection_uri: Optional[str] = None,
+    table_filter: Optional[str] = None,
+) -> types.CallToolResult:
+    """
+    Returns the live PostgreSQL schema (tables, columns, types, keys) as Markdown.
+    """
+    target_user = user_email or CURRENT_SESSION["user_email"]
+    ws_target = workspace or CURRENT_SESSION.get("active_workspace")
+
+    resolved_uri, ws_label, _ = resolve_user_workspace(
+        user_key=target_user,
+        workspace_identifier=ws_target,
+        direct_uri=connection_uri
+    )
+
+    if not resolved_uri:
+        return types.CallToolResult(
+            is_error=True,
+            content=[
+                types.TextContent(
+                    type="text",
+                    text=(
+                        f"\u26a0\ufe0f No database connection URI configured for workspace '{ws_label}'.\n"
+                        "Connect a PostgreSQL database to this workspace using the QueryCraft web studio "
+                        "or run: `querycraft connect <URI>`"
+                    ),
+                )
+            ],
+        )
+
+    try:
+        table_infos, schema_sql = introspect_cloud_database(resolved_uri)
+    except Exception as e:
+        return types.CallToolResult(
+            is_error=True,
+            content=[types.TextContent(type="text", text=f"\u274c Schema introspection failed: {e}")],
+        )
+
+    # Optional table filter
+    if table_filter:
+        table_infos = [t for t in table_infos if table_filter.lower() in t.table_name.lower()]
+
+    lines = [
+        f"### \U0001f5c4\ufe0f Live PostgreSQL Schema — `{ws_label}`\n",
+        f"**{len(table_infos)} table(s) found**\n",
+    ]
+
+    for table in table_infos:
+        lines.append(f"\n#### `{table.table_name}`")
+        lines.append("| Column | Type | Constraints |")
+        lines.append("| :--- | :--- | :--- |")
+        for col in table.columns:
+            constraints = []
+            if col.is_primary_key:
+                constraints.append("PRIMARY KEY")
+            if col.is_foreign_key:
+                ref = f" → `{col.references}`" if col.references else ""
+                constraints.append(f"FK{ref}")
+            constraint_str = ", ".join(constraints) if constraints else "—"
+            lines.append(f"| `{col.name}` | `{col.type}` | {constraint_str} |")
+
+    lines.append(
+        "\n_Use `generate_safe_sql` to generate queries grounded in this schema, "
+        "or `evaluate_and_heal_sql` to check existing SQL against this database._"
+    )
+
+    return types.CallToolResult(
+        is_error=False,
+        content=[types.TextContent(type="text", text="\n".join(lines))],
+    )
+
+
+@mcp_server.tool(
+    name="generate_safe_sql",
+    description=(
+        "Converts a natural language question into a production-ready PostgreSQL SELECT query "
+        "grounded in the live schema of the active workspace. Runs the full LangGraph SQL generation "
+        "pipeline (schema retrieval → query compilation → read-only safety enforcement → EXPLAIN risk "
+        "classification). Returns the generated SQL, risk level (LOW/MEDIUM/HIGH), and plain-English explanation. "
+        "Does NOT execute the query — use `evaluate_and_heal_sql` to run it safely."
+    ),
+)
+def generate_safe_sql(
+    natural_language_prompt: str,
+    workspace: Optional[str] = None,
+    user_email: Optional[str] = None,
+    connection_uri: Optional[str] = None,
+) -> types.CallToolResult:
+    """
+    Converts a natural language prompt to safe PostgreSQL SQL using the LangGraph engine.
+    """
+    if not natural_language_prompt or not natural_language_prompt.strip():
+        return types.CallToolResult(
+            is_error=True,
+            content=[types.TextContent(type="text", text="Error: 'natural_language_prompt' cannot be empty.")],
+        )
+
+    target_user = user_email or CURRENT_SESSION["user_email"]
+    ws_target = workspace or CURRENT_SESSION.get("active_workspace")
+
+    resolved_uri, ws_label, _ = resolve_user_workspace(
+        user_key=target_user,
+        workspace_identifier=ws_target,
+        direct_uri=connection_uri
+    )
+
+    # Import and run the LangGraph sql_graph pipeline
+    try:
+        from app.services.sql_graph import querycraft_graph
+
+        initial_state = {
+            "user_prompt": natural_language_prompt.strip(),
+            "connection_uri": resolved_uri,
+            "database_type": "postgres",
+            "session_history": [],
+            "live_schema": None,
+            "semantic_rules": None,
+            "few_shot_examples": None,
+            "matched_metrics": [],
+            "status": "needs_clarification",
+            "clarification_message": None,
+            "generated_query": None,
+            "tables_identified": [],
+            "explanation": None,
+            "query_results": None,
+            "result_columns": None,
+            "row_count": 0,
+            "db_error": None,
+            "retry_count": 0,
+            "explain_plan": None,
+            "healing_info": None,
+            "risk_level": None,
+        }
+
+        # LangGraph is async — run it in a blocking call from the sync MCP tool handler
+        loop = asyncio.new_event_loop()
+        try:
+            final_state = loop.run_until_complete(querycraft_graph.ainvoke(initial_state))
+        finally:
+            loop.close()
+
+    except Exception as e:
+        logger.error(f"generate_safe_sql pipeline error: {e}", exc_info=True)
+        return types.CallToolResult(
+            is_error=True,
+            content=[types.TextContent(type="text", text=f"\u274c SQL generation pipeline error: {e}")],
+        )
+
+    status = final_state.get("status", "needs_clarification")
+    generated_sql = final_state.get("generated_query")
+    explanation = final_state.get("explanation") or final_state.get("clarification_message") or ""
+    risk_level = final_state.get("risk_level") or "LOW"
+    tables = final_state.get("tables_identified", [])
+    db_error = final_state.get("db_error")
+
+    RISK_ICONS = {"LOW": "\u2705", "MEDIUM": "\u26a0\ufe0f", "HIGH": "\U0001f6a8"}
+    risk_icon = RISK_ICONS.get(risk_level, "\u2705")
+
+    if status == "needs_clarification":
+        return types.CallToolResult(
+            is_error=False,
+            content=[
+                types.TextContent(
+                    type="text",
+                    text=(
+                        f"\U0001f4ac **Clarification Needed**\n\n"
+                        f"{explanation}\n\n"
+                        "_Please provide more details and call `generate_safe_sql` again with a more specific prompt._"
+                    ),
+                )
+            ],
+        )
+
+    if not generated_sql:
+        return types.CallToolResult(
+            is_error=True,
+            content=[types.TextContent(type="text", text=f"\u274c Could not generate SQL. {explanation}")],
+        )
+
+    lines = [
+        f"### \u2728 Generated PostgreSQL Query — `{ws_label}`\n",
+        f"{risk_icon} **Risk Level**: `{risk_level}`  ",
+        f"\U0001f5c3\ufe0f **Tables Used**: {', '.join(f'`{t}`' for t in tables) if tables else '_auto-detected_'}\n",
+        "**Generated SQL:**",
+        f"```sql\n{generated_sql}\n```\n",
+        f"**Explanation:** {explanation}\n",
+    ]
+
+    if db_error:
+        lines.append(f"\u26a0\ufe0f **Execution Note:** {db_error} _(Query was generated but execution encountered an issue)_")
+
+    lines.append(
+        "\n---\n"
+        "_To execute this query safely, call: `evaluate_and_heal_sql(sql_query=...)` with the SQL above._\n"
+        "_To inspect the live schema, call: `inspect_schema()`_"
+    )
+
+    return types.CallToolResult(
+        is_error=False,
+        content=[types.TextContent(type="text", text="\n".join(lines))],
+    )
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. ENTRYPOINT (STDIO TRANSPORT)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def main():
     """Runs the MCP server over standard input/output (stdio)."""
-    logger.info("Initializing QueryCraft Universal MCP Server on stdio transport...")
+    logger.info("Initializing QueryCraft PostgreSQL Safety MCP Server on stdio transport...")
     mcp_server.run(transport="stdio")
 
 

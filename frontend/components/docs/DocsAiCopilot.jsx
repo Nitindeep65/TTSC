@@ -27,18 +27,25 @@ const QUICK_TOPICS = [
     query: "How does querycraft ask compile English to SQL with cost checks?",
   },
   {
+    icon: ShieldCheck,
+    title: "Pre-Flight Cost Guard & Risk Analysis",
+    badge: "check",
+    color: "#10b981",
+    query: "How does querycraft check evaluate queries via EXPLAIN and assign risk levels?",
+  },
+  {
+    icon: Bot,
+    title: "SQL Doctor Error Diagnosis & Auto-Heal",
+    badge: "doctor",
+    color: "#8b5cf6",
+    query: "How does querycraft doctor diagnose and fix broken SQL queries and runtime errors?",
+  },
+  {
     icon: Database,
     title: "Connect Live PostgreSQL / Supabase",
     badge: "connect",
     color: "#f59e0b",
     query: "How do I connect my live PostgreSQL / Supabase database?",
-  },
-  {
-    icon: Terminal,
-    title: "Introspect Database Schemas & Keys",
-    badge: "schema",
-    color: "#8b5cf6",
-    query: "How does querycraft schema show tables, primary keys, and foreign keys?",
   },
 ]
 

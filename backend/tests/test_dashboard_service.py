@@ -109,6 +109,7 @@ async def test_orchestrate_dashboard_generation_end_to_end():
         assert len(w.rows) > 0
         assert len(w.columns) > 0
 
+@pytest.mark.skip(reason="MVP: Dashboard router disabled \u2014 /api/dashboard/* returns 404 intentionally. Re-enable when BI Canvas feature is restored.")
 def test_api_dashboard_templates_endpoint(client):
     response = client.get("/api/dashboard/templates")
     assert response.status_code == 200
@@ -116,6 +117,7 @@ def test_api_dashboard_templates_endpoint(client):
     assert data["status"] == "success"
     assert len(data["templates"]) >= 4
 
+@pytest.mark.skip(reason="MVP: Dashboard router disabled \u2014 /api/dashboard/* returns 404 intentionally. Re-enable when BI Canvas feature is restored.")
 def test_api_dashboard_generate_endpoint(client):
     payload = {
         "user_prompt": "Build me a SaaS Executive Dashboard for Q3",
@@ -128,6 +130,7 @@ def test_api_dashboard_generate_endpoint(client):
     assert len(data["widgets"]) == 4
     assert "executive_summary" in data
 
+@pytest.mark.skip(reason="MVP: Dashboard router disabled \u2014 /api/dashboard/* returns 404 intentionally. Re-enable when BI Canvas feature is restored.")
 def test_api_dashboard_generate_validation_error(client):
     response = client.post("/api/dashboard/generate", json={"user_prompt": ""})
     assert response.status_code == 400

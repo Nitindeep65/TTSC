@@ -2,14 +2,13 @@ import {
   API_BASE_URL,
   clarificationApi,
   databaseApi,
-  semanticApi,
+  workspaceApi,
   memoryApi,
   settingsApi,
-  dashboardApi,
   apiClient,
 } from '@/lib/api'
 
-describe('Centralized Frontend API Client (lib/api.js)', () => {
+describe('Centralized Frontend API Client (lib/api.js) — MVP API Suite', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
@@ -74,32 +73,82 @@ describe('Centralized Frontend API Client (lib/api.js)', () => {
     expect(result.row_count).toBe(1)
   })
 
-  test('semanticApi.getMetrics and createMetric call appropriate endpoints', async () => {
+  test('databaseApi.explain calls /api/database/explain with payload', async () => {
+    const mockPost = jest.spyOn(apiClient, 'post').mockResolvedValueOnce({
+      data: {
+        status: 'success',
+        total_cost: 24.5,
+        risk_level: 'LOW',
+        performance_rating: 'fast',
+        has_seq_scan: false,
+      },
+    })
+
+    const result = await databaseApi.explain({
+      connection_uri: 'postgresql://usr:pwd@host/db',
+      sql_query: 'SELECT * FROM users WHERE id = 1;',
+    })
+
+    expect(mockPost).toHaveBeenCalledWith('/api/database/explain', {
+      connection_uri: 'postgresql://usr:pwd@host/db',
+      sql_query: 'SELECT * FROM users WHERE id = 1;',
+    })
+    expect(result.risk_level).toBe('LOW')
+  })
+
+  test('databaseApi.diagnose calls /api/database/diagnose with payload', async () => {
+    const mockPost = jest.spyOn(apiClient, 'post').mockResolvedValueOnce({
+      data: {
+        status: 'success',
+        error_code: '42703',
+        error_category: 'undefined_column',
+        root_cause: 'Column does not exist',
+        healed_sql: 'SELECT email FROM users;',
+      },
+    })
+
+    const result = await databaseApi.diagnose({
+      error_message: 'column users.full_name does not exist',
+      failing_sql: 'SELECT full_name FROM users;',
+    })
+
+    expect(mockPost).toHaveBeenCalledWith('/api/database/diagnose', {
+      error_message: 'column users.full_name does not exist',
+      failing_sql: 'SELECT full_name FROM users;',
+      live_schema: null,
+      user_prompt: null,
+    })
+    expect(result.error_category).toBe('undefined_column')
+  })
+
+  test('workspaceApi.list and sync call workspace endpoints', async () => {
     const mockGet = jest.spyOn(apiClient, 'get').mockResolvedValueOnce({
-      data: { metrics: [{ id: 'm-1', name: 'Net MRR' }] },
+      data: [{ id: 'ws-1', name: 'Production' }],
     })
     const mockPost = jest.spyOn(apiClient, 'post').mockResolvedValueOnce({
-      data: { success: true, metric: { id: 'm-2', name: 'Churn Rate' } },
+      data: { status: 'synced' },
     })
 
-    const metricsRes = await semanticApi.getMetrics()
-    expect(mockGet).toHaveBeenCalledWith('/api/semantic/metrics')
-    expect(metricsRes.metrics).toHaveLength(1)
+    const workspaces = await workspaceApi.list('test@example.com')
+    expect(mockGet).toHaveBeenCalledWith('/api/workspaces?email=test%40example.com')
+    expect(workspaces).toHaveLength(1)
 
-    const createRes = await semanticApi.createMetric({
-      name: 'Churn Rate',
-      definition: 'Churned users / active users',
+    const syncRes = await workspaceApi.sync({
+      email: 'test@example.com',
+      user_id: 'u-1',
+      workspaces: [{ id: 'ws-1', name: 'Production' }],
     })
-    expect(mockPost).toHaveBeenCalledWith('/api/semantic/metrics', {
-      name: 'Churn Rate',
-      definition: 'Churned users / active users',
+    expect(mockPost).toHaveBeenCalledWith('/api/workspaces/sync', {
+      email: 'test@example.com',
+      user_id: 'u-1',
+      workspaces: [{ id: 'ws-1', name: 'Production' }],
     })
-    expect(createRes.success).toBe(true)
+    expect(syncRes.status).toBe('synced')
   })
 
   test('memoryApi and settingsApi execute successfully', async () => {
     const mockGet = jest.spyOn(apiClient, 'get').mockResolvedValueOnce({
-      data: { queries: [{ id: 'n-1', title: 'Top Spend' }] },
+      data: [{ id: 'n-1', title: 'Top Spend' }],
     })
     const mockPost = jest.spyOn(apiClient, 'post').mockResolvedValueOnce({
       data: { success: true },
@@ -107,46 +156,10 @@ describe('Centralized Frontend API Client (lib/api.js)', () => {
 
     const notebook = await memoryApi.getNotebook()
     expect(mockGet).toHaveBeenCalledWith('/api/memory/notebook')
-    expect(notebook.queries[0].title).toBe('Top Spend')
+    expect(notebook[0].title).toBe('Top Spend')
 
     const usage = await settingsApi.incrementUsage('queries')
     expect(mockPost).toHaveBeenCalledWith('/api/settings/usage/increment?field=queries')
     expect(usage.success).toBe(true)
-  })
-
-  test('dashboardApi.generateDashboard calls /api/dashboard/generate with payload', async () => {
-    const mockPost = jest.spyOn(apiClient, 'post').mockResolvedValueOnce({
-      data: {
-        status: 'complete',
-        dashboard_title: 'SaaS Executive Overview',
-        widgets: [{ id: 'w1', title: 'MRR' }],
-      },
-    })
-
-    const result = await dashboardApi.generateDashboard({
-      user_prompt: 'Build me an Executive SaaS Dashboard',
-      theme: 'executive',
-      live_schema: 'CREATE TABLE orders (id uuid);',
-      connection_uri: 'postgresql://usr:pwd@host/db',
-    })
-
-    expect(mockPost).toHaveBeenCalledWith('/api/dashboard/generate', {
-      user_prompt: 'Build me an Executive SaaS Dashboard',
-      theme: 'executive',
-      live_schema: 'CREATE TABLE orders (id uuid);',
-      connection_uri: 'postgresql://usr:pwd@host/db',
-    })
-    expect(result.status).toBe('complete')
-    expect(result.dashboard_title).toBe('SaaS Executive Overview')
-  })
-
-  test('dashboardApi.getTemplates calls /api/dashboard/templates', async () => {
-    const mockGet = jest.spyOn(apiClient, 'get').mockResolvedValueOnce({
-      data: { templates: [{ id: 'saas_executive', title: 'SaaS Overview' }] },
-    })
-
-    const templates = await dashboardApi.getTemplates()
-    expect(mockGet).toHaveBeenCalledWith('/api/dashboard/templates')
-    expect(templates[0].id).toBe('saas_executive')
   })
 })

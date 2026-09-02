@@ -84,16 +84,31 @@ def run_explain_plan(connection_uri: str, sql_query: str) -> ExplainPlanResponse
 
         traverse_nodes(plan_root)
 
-        # Performance Grading
-        if total_cost < 60 and not (has_seq_scan and total_cost > 30):
+        # Check for expensive nested loop joins
+        def has_nested_loop(node: Dict[str, Any]) -> bool:
+            if node.get("Node Type") == "Nested Loop":
+                # Nested loops become expensive when both sides are large
+                if float(node.get("Total Cost", 0)) > 100:
+                    return True
+            for child in node.get("Plans", []):
+                if has_nested_loop(child):
+                    return True
+            return False
+        has_expensive_nested_loop = has_nested_loop(plan_root)
+
+        # Performance Grading + MVP Unified Risk Classification
+        if total_cost < 60 and not (has_seq_scan and total_cost > 30) and not has_expensive_nested_loop:
             rating = "fast"
             rating_label = "Optimal / Indexed (Low Cost)"
-        elif total_cost < 300:
+            risk_level = "LOW"
+        elif total_cost < 300 and not has_expensive_nested_loop:
             rating = "moderate"
             rating_label = "Moderate (Acceptable Overhead)"
+            risk_level = "MEDIUM"
         else:
             rating = "heavy"
             rating_label = "Heavy / Slow Query (Consider Indexing)"
+            risk_level = "HIGH"
 
         # Deduplicate index recommendations
         unique_index_recs = list(set(index_recommendations))
@@ -108,6 +123,7 @@ def run_explain_plan(connection_uri: str, sql_query: str) -> ExplainPlanResponse
             scan_details=scan_details,
             performance_rating=rating,
             rating_label=rating_label,
+            risk_level=risk_level,
             index_recommendations=unique_index_recs,
             raw_plan=plan_root
         )
@@ -144,6 +160,7 @@ def run_explain_plan(connection_uri: str, sql_query: str) -> ExplainPlanResponse
 
         est_cost = 24.50 if not has_seq_scan else 48.75 + (len(tables) * 15.0)
         rating = "fast" if est_cost < 35 else "moderate"
+        risk_level = "LOW" if rating == "fast" else "MEDIUM"
         rating_label = "Optimal Plan (Heuristic Estimation)" if rating == "fast" else "Standard Plan (Heuristic Estimation)"
 
         return ExplainPlanResponse(
@@ -156,6 +173,7 @@ def run_explain_plan(connection_uri: str, sql_query: str) -> ExplainPlanResponse
             scan_details=scan_details if scan_details else ["Standard Scan Plan"],
             performance_rating=rating,
             rating_label=rating_label,
+            risk_level=risk_level,
             index_recommendations=list(set(index_recs)),
             raw_plan={"Plan": {"Total Cost": est_cost, "Plan Rows": 10, "Node Type": "Estimated Plan"}}
         )

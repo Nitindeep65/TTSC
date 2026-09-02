@@ -21,7 +21,7 @@ const STEPS = [
     num: "01",
     icon: Plug,
     title: "Connect Your Database",
-    desc: "Paste a connection URI — Supabase, Neon, AWS RDS, PostgreSQL, MongoDB Atlas, or Redis. Live schema discovery runs in under 3 seconds.",
+    desc: "Paste a connection URI — Supabase, Neon, AWS RDS, CockroachDB, or Cloud PostgreSQL. Live schema discovery runs in under 3 seconds.",
     accent: "bg-blue-50 border-blue-200 text-blue-700",
     iconBg: "bg-blue-600",
     preview: (

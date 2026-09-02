@@ -49,24 +49,22 @@ LIMIT 6;`,
       },
       {
         prompt: "Top 5 product categories by total units sold this quarter",
-        dialect: "MongoDB MQL",
-        query: `db.orders.aggregate([
-  { $match: {
-    status: "completed",
-    created_at: { $gte: ISODate("2024-07-01") }
-  }},
-  { $unwind: "$items" },
-  { $group: {
-    _id: "$items.category",
-    units: { $sum: "$items.qty" }
-  }},
-  { $sort: { units: -1 } },
-  { $limit: 5 }
-]);`,
+        dialect: "PostgreSQL",
+        query: `SELECT 
+  p.category,
+  SUM(oi.quantity) AS total_units_sold,
+  SUM(oi.quantity * oi.unit_price) AS category_revenue
+FROM order_items oi
+JOIN products p ON oi.product_id = p.id
+JOIN orders o ON oi.order_id = o.id
+WHERE o.status = 'completed'
+GROUP BY p.category
+ORDER BY total_units_sold DESC
+LIMIT 5;`,
         result: [
-          { col: "Enterprise SaaS", val: "4,820 units", trend: "#1" },
-          { col: "Hardware Kits", val: "3,240 units", trend: "#2" },
-          { col: "Cloud Licenses", val: "2,180 units", trend: "#3" },
+          { col: "Enterprise SaaS", val: "4,820 units", trend: "$124,000" },
+          { col: "Hardware Kits", val: "3,240 units", trend: "$82,500" },
+          { col: "Cloud Licenses", val: "2,180 units", trend: "$64,200" },
         ],
       },
     ],

@@ -1,24 +1,28 @@
 import os
 from fastapi import FastAPI
-from app.routers import clarification, database, semantic, memory, settings, dashboard, guard, workspaces
+# MVP: dashboard and semantic routers are disabled for the MVP scope
+# from app.routers import clarification, database, semantic, memory, settings, dashboard, guard, workspaces
+from app.routers import clarification, database, memory, settings, guard, workspaces
 from app.routers.workspaces import auth_router
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
-app = FastAPI(title="Text-to-SQL Clarification & Query Engine API")
+app = FastAPI(title="QueryCraft — AI-Powered PostgreSQL Safety & Intelligence Layer")
 
-# Register Routers
+# Register Core MVP Routers
 app.include_router(clarification.router)
 app.include_router(database.router)
-app.include_router(semantic.router)
 app.include_router(memory.router)
 app.include_router(settings.router)
-app.include_router(dashboard.router)
 app.include_router(guard.router)
 app.include_router(workspaces.router)
 app.include_router(auth_router)  # CLI OAuth token exchange: /api/auth/cli-token, /api/auth/cli-verify
+
+# MVP Disabled Routers (commented out — not deleted, recoverable)
+# app.include_router(dashboard.router)   # BI Dashboard Canvas — out of MVP scope
+# app.include_router(semantic.router)    # Enterprise Semantic Layer — postponed
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,49 +35,28 @@ app.add_middleware(
 @app.get("/")
 def health():
     return {
-        "message": "Text-to-SQL Clarification & Query Engine API is online",
+        "message": "QueryCraft — AI-Powered PostgreSQL Safety & Intelligence Layer is online",
+        "version": "2.0.0-mvp",
         "features": [
             "Zero-Hallucination Schema Grounding",
-            "Automatic Self-Healing Critic Loop",
+            "Automatic Self-Healing SQL Doctor (max 3 retries)",
             "PostgreSQL EXPLAIN Cost Estimator",
-            "RAG Semantic Layer & Custom Metrics",
-            "Adaptive Table/Chart Visualizer",
-            "Schema RAG & Few-Shot Memory"
-        ]
+            "Unified Risk Classification: LOW / MEDIUM / HIGH",
+            "Sequential Scan Detection & Index Advisor",
+            "Schema RAG & Few-Shot Memory",
+            "MCP Server: evaluate_and_heal_sql, inspect_schema, generate_safe_sql",
+            "CLI: querycraft ask, check, doctor, run",
+        ],
+        "database_engines": ["PostgreSQL"],
+        "disabled_features": ["BI Dashboard Canvas", "Semantic Layer", "ChatGPT Custom Action"],
     }
 
-@app.get("/.well-known/ai-plugin.json")
-def openai_plugin_manifest():
-    return {
-        "schema_version": "v1",
-        "name_for_human": "QueryCraft Database Copilot",
-        "name_for_model": "querycraft",
-        "description_for_human": "Query and inspect your PostgreSQL, MySQL, MongoDB, and Redis databases safely with AI schema grounding and cost guard.",
-        "description_for_model": "Universal SQL and NoSQL query engine. Can list workspaces, inspect live schemas, evaluate query safety and cost via EXPLAIN, heal SQL runtime errors, and execute read-only queries.",
-        "auth": {
-            "type": "none"
-        },
-        "api": {
-            "type": "openapi",
-            "url": "http://localhost:8000/api/gpt-action/openapi.json"
-        },
-        "logo_url": "http://localhost:3000/pics/Card.png",
-        "contact_email": "support@querycraft.ai",
-        "legal_info_url": "http://localhost:3000"
-    }
+# MVP Disabled: ChatGPT Plugin Manifest & OpenAPI Action
+# These endpoints are commented out as ChatGPT integration is out of MVP scope.
+# To re-enable, uncomment and ensure docs/chatgpt_custom_action.json is present.
 
-@app.get("/api/gpt-action/openapi.json")
-def get_gpt_action_openapi_schema():
-    import json
-    schema_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "docs", "chatgpt_custom_action.json")
-    if os.path.exists(schema_path):
-        with open(schema_path, "r") as f:
-            return json.load(f)
-    return {
-        "openapi": "3.1.0",
-        "info": {
-            "title": "QueryCraft Database AI Action",
-            "version": "1.5.0"
-        },
-        "paths": {}
-    }
+# @app.get("/.well-known/ai-plugin.json")
+# def openai_plugin_manifest(): ...
+
+# @app.get("/api/gpt-action/openapi.json")
+# def get_gpt_action_openapi_schema(): ...

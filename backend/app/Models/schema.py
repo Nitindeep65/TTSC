@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict, Any, Literal
 from pydantic import BaseModel, Field
 
-# --- VISUAL INTENT DETECTION ---
+# --- VISUAL INTENT DETECTION (kept for backwards-compat with existing tests) ---
 class VisualIntent(BaseModel):
     should_visualize: bool = False
     recommended_chart: Optional[Literal["bar", "line", "area", "pie", "donut", "table"]] = "table"
@@ -14,14 +14,24 @@ class ExtractedSQLData(BaseModel):
     sql_query: str = Field(description="Production-ready PostgreSQL SELECT query")
     tables_identified: List[str] = Field(description="List of database tables referenced in the query")
     explanation: str = Field(description="1-2 sentence plain-English explanation of joins, filters, aggregations, and limits applied")
+    # visual_intent kept for backward-compat but deprecated — frontend handles visualization
     visual_intent: Optional[VisualIntent] = None
     matched_metrics: Optional[List[str]] = Field(default=[], description="Semantic business metrics applied")
+    risk_level: Optional[Literal["LOW", "MEDIUM", "HIGH"]] = Field(
+        default=None,
+        description="Query risk classification: LOW (safe), MEDIUM (review), HIGH (block)"
+    )
 
 class ClarificationResponse(BaseModel):
     status: Literal["needs_clarification", "complete"]
     message: str = Field(description="Direct acknowledgment/clarification question or friendly confirmation message")
     extracted_data: Optional[ExtractedSQLData] = None
+    # visual_intent kept for backward-compat
     visual_intent: Optional[VisualIntent] = None
+    risk_level: Optional[Literal["LOW", "MEDIUM", "HIGH"]] = Field(
+        default=None,
+        description="Pre-flight query risk classification based on EXPLAIN analysis"
+    )
 
 class ClarificationRequest(BaseModel):
     user_prompt: str
@@ -100,6 +110,11 @@ class ExplainPlanResponse(BaseModel):
     scan_details: List[str] = []
     performance_rating: Literal["fast", "moderate", "heavy"]
     rating_label: str
+    # MVP: Unified 3-tier risk classification across Cost Guard and Explain Service
+    risk_level: Literal["LOW", "MEDIUM", "HIGH"] = Field(
+        default="LOW",
+        description="LOW = safe to execute, MEDIUM = review recommended, HIGH = execution blocked"
+    )
     index_recommendations: List[str] = []
     raw_plan: Optional[Dict[str, Any]] = None
 
@@ -192,6 +207,11 @@ class DiagnoseErrorRequest(BaseModel):
 class DiagnoseErrorResponse(BaseModel):
     status: str
     error_code: Optional[str] = None
+    # MVP: Structured SQLSTATE error category for frontend display
+    error_category: Optional[str] = Field(
+        default=None,
+        description="Structured error class: undefined_column, undefined_table, syntax_error, type_error, aggregation_error, runtime_error"
+    )
     root_cause: str
     healed_sql: Optional[str] = None
     affected_entities: List[str] = []

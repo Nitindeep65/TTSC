@@ -105,6 +105,35 @@ def extract_pg_error_code(error_msg: str) -> str:
     return "42000" # General SQL error
 
 
+def classify_postgres_error(error_code: str, error_message: str = "") -> str:
+    """
+    Maps a PostgreSQL SQLSTATE code (or pattern-matched code) to a structured
+    error category string for frontend display.
+    
+    Categories:
+      - undefined_column   (42703) — column referenced does not exist
+      - undefined_table    (42P01) — relation/table does not exist
+      - type_error         (22P02) — invalid input syntax / type mismatch
+      - aggregation_error  (42803) — column must appear in GROUP BY
+      - syntax_error       (42601) — SQL syntax error
+      - permission_denied  (42501) — insufficient privilege
+      - deadlock           (40P01) — deadlock detected
+      - runtime_error      (other) — generic runtime error
+    """
+    category_map = {
+        "42703": "undefined_column",
+        "42P01": "undefined_table",
+        "22P02": "type_error",
+        "22003": "type_error",
+        "42803": "aggregation_error",
+        "42601": "syntax_error",
+        "42501": "permission_denied",
+        "40P01": "deadlock",
+        "42000": "runtime_error",
+    }
+    return category_map.get(error_code, "runtime_error")
+
+
 def diagnose_and_heal_error(
     error_message: str,
     failing_sql: Optional[str] = None,
@@ -165,9 +194,11 @@ Original Prompt / Intent:
         )
         content = response.choices[0].message.content.strip()
         data = json.loads(content)
+        final_error_code = data.get("error_code", error_code)
         return {
             "status": "success",
-            "error_code": data.get("error_code", error_code),
+            "error_code": final_error_code,
+            "error_category": classify_postgres_error(final_error_code, error_message),
             "root_cause": data.get("root_cause", f"PostgreSQL error code {error_code}: {error_message}"),
             "healed_sql": data.get("healed_sql", failing_sql or ""),
             "affected_entities": data.get("affected_entities", []),
@@ -178,6 +209,7 @@ Original Prompt / Intent:
         return {
             "status": "partial",
             "error_code": error_code,
+            "error_category": classify_postgres_error(error_code, error_message),
             "root_cause": f"Error {error_code}: {error_message}",
             "healed_sql": failing_sql or "",
             "affected_entities": [],

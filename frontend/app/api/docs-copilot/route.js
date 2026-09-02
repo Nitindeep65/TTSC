@@ -6,26 +6,35 @@ const NVIDIA_MODEL = process.env.NVIDIA_MODEL || "meta/llama-3.1-70b-instruct"
 const NVIDIA_BASE_URL = process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1"
 
 const CRAFT_AI_SYSTEM_PROMPT = `You are Craft AI, the official intelligent documentation and developer guide for QueryCraft.
-Your mission is to guide developers on how to use QueryCraft, its CLI commands, MCP integrations (Claude Desktop, Cursor IDE, Antigravity, Windsurf), Web Studio, and database connectivity.
+Your mission is to guide developers on how to use QueryCraft, its CLI commands, MCP integrations (Claude Desktop, Cursor IDE, Antigravity, Windsurf), Web Studio, and PostgreSQL database safety layers.
 
 CORE KNOWLEDGE BASE:
+- Identity: QueryCraft is an AI-powered PostgreSQL Safety & Intelligence Layer.
 - CLI Suite:
   * querycraft setup: 1-Click universal auto-config for Claude Desktop, Cursor IDE, Antigravity, and Windsurf MCP.
-  * querycraft ask "<question>": Translates natural language into safe SQL with Llama 3.1 70B, evaluates safety with EXPLAIN cost guard, executes on live database, and renders an ASCII table.
+  * querycraft ask "<question>": Translates natural language into safe PostgreSQL SQL with Llama 3.1 70B, evaluates safety with EXPLAIN cost guard, executes on live database, and renders an ASCII table.
+  * querycraft check "<SQL>": Pre-Flight Cost Guard analysis on any SQL query — returns risk classification (LOW / MEDIUM / HIGH), estimated cost, scan method, and suggested CREATE INDEX CONCURRENTLY DDL.
+  * querycraft doctor "<SQL or Error>": SQL Doctor self-healing agent — diagnoses PostgreSQL SQLSTATE error codes (42703, 42P01, 22P02, 42803, 42601) and generates verified repairs.
   * querycraft query "<SQL>": Executes raw read-only SQL queries with execution timing.
   * querycraft schema: Introspects and displays all tables, column types, primary keys [PK], and foreign keys [FK].
-  * querycraft connect <URI> [--workspace <name>]: Connects and saves live PostgreSQL, Supabase, Neon, AWS RDS, or MongoDB Atlas database.
+  * querycraft connect <URI> [--workspace <name>]: Connects and saves live PostgreSQL (Supabase, Neon, AWS RDS, CockroachDB).
   * querycraft auth login: GitHub-style browser OAuth flow on port 9876, saves credentials to ~/.querycraft/auth.json (chmod 600).
   * querycraft auth whoami: Shows active session, email, and active workspace.
   * querycraft auth logout: Clears stored credentials.
   * querycraft workspaces list: Lists all configured database workspaces.
-- MCP Server:
-  * Command: querycraft ai mcp-stdio
-  * Tools provided: list_workspaces, evaluate_and_heal_sql, introspect_schema, execute_query.
+- Model Context Protocol (MCP) Server (v2.0-mvp):
+  * Command: querycraft ai mcp-stdio (or auto-configured via querycraft setup)
+  * Tools provided:
+    1. login_querycraft: Binds user session & loads workspaces
+    2. list_workspaces: Lists configured database workspaces
+    3. switch_workspace: Sets active workspace
+    4. evaluate_and_heal_sql: Pre-flight cost guard, auto-heals joins, safe execution
+    5. inspect_schema: Live PostgreSQL schema introspection in Markdown
+    6. generate_safe_sql: NL to safe SQL with risk classification
 - Web Dashboard:
-  * Canvas Mode (/Dashboard/canvas): Autonomous multi-widget analytical canvas.
+  * SQL Compiler (/Dashboard): Direct query compiler with Safety & Plan analysis panel.
+  * SQL Doctor Chat (/Dashboard/chat): Conversational SQL generation and self-healing.
   * Pre-Flight Cost Guard (/Dashboard/guard): Cost estimation, sequential scan detection, and index advisor.
-  * SQL & MQL Doctor: Critic self-healing loop with automatic retry.
 
 STRICT SECURITY & BOUNDARY RULES:
 1. ONLY answer questions regarding QueryCraft documentation, CLI commands, AI setup, database connectivity, and SQL optimization.
@@ -60,16 +69,29 @@ function getDeterministicDocsAnswer(prompt) {
     return `### 📋 Inspecting Database Schema\n\nRun:\n\`\`\`bash\nquerycraft schema\n\`\`\`\nThis lists all tables, column types, Primary Keys \`[PK]\`, and Foreign Keys \`[FK]\` in your active workspace.`
   }
 
-  return `I am **Craft AI**, your documentation copilot for QueryCraft.
+  if (p.includes("check") || p.includes("cost guard") || p.includes("risk") || p.includes("cost")) {
+    return `### 🛡️ Pre-Flight Cost Guard & Risk Analysis\n\nRun \`querycraft check\` on any SQL statement before running it in production:\n\`\`\`bash\nquerycraft check "SELECT * FROM orders WHERE total_amount > 100;"\n\`\`\`\nQueryCraft evaluates the query via PostgreSQL EXPLAIN, detects full sequential scans, assigns a risk badge (\`[LOW RISK]\`, \`[MEDIUM RISK]\`, or \`[HIGH RISK]\`), and suggests index DDL.`
+  }
 
-**Popular Commands:**
-- \`querycraft ask "<question>"\`: Natural language to SQL with ASCII table results
+  if (p.includes("doctor") || p.includes("heal") || p.includes("fix") || p.includes("error")) {
+    return `### 🩺 SQL Doctor Self-Healing\n\nDiagnose and repair failing queries or PostgreSQL error messages:\n\`\`\`bash\nquerycraft doctor "column users.full_name does not exist"\n# or provide the failing query directly\nquerycraft doctor "SELECT u.name, o.total FROM users u JOIN orders o GROUP BY u.name;"\n\`\`\`\nSQL Doctor maps the error code to schema definitions and generates a corrected query.`
+  }
+
+  if (p.includes("mcp") || p.includes("tools")) {
+    return `### 🔌 Model Context Protocol (MCP) Tools\n\nQueryCraft exposes 6 native MCP tools:\n- \`login_querycraft\`: Session authentication & workspace binding\n- \`list_workspaces\`: Multi-workspace management\n- \`switch_workspace\`: Set active workspace\n- \`evaluate_and_heal_sql\`: Cost guard analysis & safe execution\n- \`inspect_schema\`: Live PostgreSQL schema in Markdown\n- \`generate_safe_sql\`: NL to safe SQL with risk classification\n\nConfigure in 1 click with \`querycraft setup\`.`
+  }
+
+  return `I am **Craft AI**, your documentation copilot for QueryCraft — the AI-Powered PostgreSQL Safety & Intelligence Layer.
+
+**Core Commands:**
+- \`querycraft ask "<question>"\`: Natural language to safe PostgreSQL SQL with live execution
+- \`querycraft check "<SQL>"\`: Pre-Flight Cost Guard & 3-tier risk analysis (LOW/MED/HIGH)
+- \`querycraft doctor "<error/SQL>"\`: SQL Doctor self-healing agent
 - \`querycraft query "<SQL>"\`: Direct read-only SQL execution
-- \`querycraft schema\`: Introspect tables and schemas
-- \`querycraft setup\`: 1-Click connect to Claude Desktop, Cursor, Antigravity
-- \`querycraft auth login\`: Browser OAuth login
+- \`querycraft schema\`: Live schema introspection
+- \`querycraft setup\`: 1-Click setup for Claude Desktop, Cursor, Antigravity
 
-Visit our full documentation at [/docs/cli](/docs/cli) for complete command references!`
+Visit full documentation at [/docs/cli](/docs/cli) for complete references!`
 }
 
 export async function POST(req) {

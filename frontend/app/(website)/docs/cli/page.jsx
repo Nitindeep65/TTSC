@@ -221,13 +221,15 @@ const DOCS_NAV = [
     category: "2. Universal AI Integration",
     items: [
       { id: "setup",        label: "querycraft setup",          icon: Zap, badge: "1-Click" },
-      { id: "mcp-server",   label: "Claude & Cursor MCP",      icon: Cpu },
+      { id: "mcp-server",   label: "Claude & Cursor MCP",      icon: Cpu, badge: "6 Tools" },
     ],
   },
   {
-    category: "3. Query & Inspection",
+    category: "3. Query, Safety & Self-Healing",
     items: [
       { id: "ask",          label: "querycraft ask",            icon: Sparkles, isCommand: true },
+      { id: "check",        label: "querycraft check",          icon: Shield, isCommand: true, badge: "Cost Guard" },
+      { id: "doctor",       label: "querycraft doctor",         icon: CheckCircle2, isCommand: true, badge: "Self-Heal" },
       { id: "query",        label: "querycraft query",          icon: Terminal, isCommand: true },
       { id: "schema",       label: "querycraft schema",         icon: Table, isCommand: true },
       { id: "connect",      label: "querycraft connect",        icon: Database, isCommand: true },
@@ -559,7 +561,9 @@ function CLIReferenceInner() {
               {[
                 { label: "📦 Install", id: "installation" },
                 { label: "⚡ 1-Click AI Hook", id: "setup" },
-                { label: "🧠 Natural Language (ask)", id: "ask" },
+                { label: "🧠 Plain English (ask)", id: "ask" },
+                { label: "🛡️ Cost Guard (check)", id: "check" },
+                { label: "🩺 SQL Doctor (doctor)", id: "doctor" },
                 { label: "⚡ Raw SQL (query)", id: "query" },
                 { label: "🔌 Link Database (connect)", id: "connect" },
                 { label: "🔑 OAuth Login", id: "auth-login" },
@@ -725,12 +729,33 @@ uv run querycraft --help`}
             </CodeBlock>
 
             <h3 id="mcp-server" style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginTop: 32, marginBottom: 10 }}>
-              Manual MCP Configuration Reference
+              Model Context Protocol (MCP) Server Reference (v2.0-mvp)
             </h3>
             <p style={{ fontSize: 14, color: "#94a3b8", marginBottom: 12 }}>
-              If you prefer manual configuration, add this to your MCP configuration file:
+              QueryCraft exposes **6 native MCP tools** for LLMs (Claude, Cursor, Antigravity, Windsurf):
             </p>
 
+            <div style={{
+              background: "rgba(255, 255, 255, 0.02)",
+              border: "1px solid rgba(255, 255, 255, 0.07)",
+              borderRadius: 12, overflow: "hidden", marginBottom: 20
+            }}>
+              {[
+                { tool: "login_querycraft(email, api_key)", desc: "Authenticates user session and binds real database workspaces" },
+                { tool: "list_workspaces()", desc: "Lists all database workspaces with environment tags and live connection status" },
+                { tool: "switch_workspace(workspace_name)", desc: "Switches active database workspace for the current session" },
+                { tool: "evaluate_and_heal_sql(sql_query, ...)", desc: "Pre-Flight Cost Guard analysis, auto-heals joins, executes read-only query safely" },
+                { tool: "inspect_schema([workspace])", desc: "Returns live PostgreSQL tables, columns, data types, PKs and FKs in Markdown table" },
+                { tool: "generate_safe_sql(prompt, ...)", desc: "Converts natural language to safe PostgreSQL SQL with 3-tier risk badge (LOW/MED/HIGH)" },
+              ].map((row, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                  <code style={{ fontFamily: "'JetBrains Mono', monospace", color: "#34d399", fontSize: 12, fontWeight: 600 }}>{row.tool}</code>
+                  <span style={{ fontSize: 12, color: "#94a3b8", maxWidth: "55%" }}>{row.desc}</span>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 8 }}>Manual Configuration JSON:</p>
             <CodeBlock title="claude_desktop_config.json / mcp.json" shell="json">
 {`{
   "mcpServers": {
@@ -788,6 +813,57 @@ uv run querycraft --help`}
   │ b4d2e5f6-7a8b-9c0d-1e2f-3a4b5c.. │ Elena Rostova │ elena.rostova@datadrive.net │ customer │ True      │
   │ c5e3f6a7-8b9c-0d1e-2f3a-4b5c6d.. │ Liam Chen     │ liam.chen@techcorp.io       │ merchant │ True      │
   └──────────────────────────────────┴───────────────┴─────────────────────────────┴──────────┴───────────┘`}
+            </CodeBlock>
+
+            {/* querycraft check */}
+            <h3 id="check" style={{ fontSize: 18, fontWeight: 700, color: "#34d399", marginTop: 36, marginBottom: 8 }}>
+              querycraft check &quot;&lt;SQL&gt;&quot; [--threshold &lt;cost&gt;]
+            </h3>
+            <p style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.6 }}>
+              Runs Pre-Flight Cost Guard &amp; risk classification on any SQL query via PostgreSQL EXPLAIN. Detects full sequential scans on high-row tables and suggests <InlineCode>CREATE INDEX CONCURRENTLY</InlineCode> DDL.
+            </p>
+
+            <CodeBlock title="Pre-Flight Cost Guard Check" shell="zsh">
+{`$ querycraft check "SELECT * FROM orders WHERE total_amount > 100;"
+
+  🛡️ QueryCraft Cost Guard  [User: nitindeep65@gmail.com]
+  Query: SELECT * FROM orders WHERE total_amount > 100;
+  Analyzing AST, running EXPLAIN cost planner, detecting sequential scans...
+
+  Risk Level: [MEDIUM RISK - REVIEW RECOMMENDED]
+  Estimated Cost: 48.8
+  Scan Type: Sequential Scan
+  Plan Rows: 20
+  Action: CLEAN
+
+  Suggested Index DDL:
+  CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_total_amount ON orders(total_amount);`}
+            </CodeBlock>
+
+            {/* querycraft doctor */}
+            <h3 id="doctor" style={{ fontSize: 18, fontWeight: 700, color: "#34d399", marginTop: 36, marginBottom: 8 }}>
+              querycraft doctor &quot;&lt;SQL or Error Message&gt;&quot;
+            </h3>
+            <p style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.6 }}>
+              PostgreSQL SQL Doctor &amp; Self-Healing Agent. Evaluates PostgreSQL runtime SQLSTATE error codes (<InlineCode>42703</InlineCode>, <InlineCode>42P01</InlineCode>, <InlineCode>22P02</InlineCode>, <InlineCode>42803</InlineCode>), maps schema definitions, and outputs a verified healed query.
+            </p>
+
+            <CodeBlock title="SQL Doctor Auto-Healing" shell="zsh">
+{`$ querycraft doctor "column users.full_name does not exist"
+
+  🩺 QueryCraft SQL Doctor
+  Input: column users.full_name does not exist
+  Diagnosing SQLSTATE error code, mapping schema, generating verified repair...
+
+  Status: Diagnosed
+  SQLSTATE Code: 42703 (undefined_column)
+  Root Cause: Users table defines 'name' rather than 'full_name'.
+  Affected Entities: users, full_name
+
+  Healed SQL Query:
+  SELECT id, name, email FROM users WHERE is_active = TRUE;
+
+  ℹ The query was diagnosed and repaired to match the live schema.`}
             </CodeBlock>
 
             {/* querycraft query */}
@@ -986,11 +1062,13 @@ uv run querycraft --help`}
             }}>
               {[
                 { cmd: "querycraft setup", desc: "1-Click auto-configure Claude Desktop, Cursor & Antigravity" },
-                { cmd: "querycraft ask \"<prompt>\"", desc: "Natural language English to SQL query with table results" },
+                { cmd: "querycraft ask \"<prompt>\"", desc: "Natural language English to SQL query with live table results" },
+                { cmd: "querycraft check \"<SQL>\"", desc: "Pre-Flight Cost Guard & 3-tier risk analysis (LOW/MED/HIGH)" },
+                { cmd: "querycraft doctor \"<error/SQL>\"", desc: "SQL Doctor self-healing agent & error code diagnosis" },
                 { cmd: "querycraft query \"<SQL>\"", desc: "Execute raw read-only SQL directly with execution timing" },
                 { cmd: "querycraft schema", desc: "Introspect tables, data types, primary keys, and foreign keys" },
-                { cmd: "querycraft connect <URI>", desc: "Connect live PostgreSQL, Supabase, Neon, or MongoDB" },
-                { cmd: "querycraft auth login", desc: "GitHub-style browser OAuth login" },
+                { cmd: "querycraft connect <URI>", desc: "Connect live PostgreSQL (Supabase, Neon, AWS RDS, CockroachDB)" },
+                { cmd: "querycraft auth login", desc: "GitHub-style browser OAuth login on port 9876" },
                 { cmd: "querycraft auth whoami", desc: "Check current logged-in identity and session status" },
                 { cmd: "querycraft auth logout", desc: "Clear stored credentials and session tokens" },
                 { cmd: "querycraft workspaces list", desc: "List all database workspaces configured for your user" },

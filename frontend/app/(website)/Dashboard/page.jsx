@@ -33,7 +33,7 @@ import { clarificationApi, databaseApi } from "@/lib/api"
 import { generateClarificationChips } from "@/lib/serverLlm"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import DataVisualizer from "@/components/visualization/DataVisualizer"
+import { RiskBadge, RiskBanner } from "@/components/guard/RiskBadge"
 
 const COMPILER_STARTERS = [
   "Show monthly revenue for the last 6 months",
@@ -74,7 +74,7 @@ export default function CompilerPage() {
   const [sqlQuery, setSqlQuery] = useState("")
   const [isEditingSql, setIsEditingSql] = useState(false)
   const [editedSql, setEditedSql] = useState("")
-  const [resultMode, setResultMode] = useState("table") // "table" | "chart" | "json"
+  const [resultMode, setResultMode] = useState("table") // "table" | "safety" | "json"
   const [liveResult, setLiveResult] = useState(null)
   const [isExecutingLive, setIsExecutingLive] = useState(false)
 
@@ -309,8 +309,9 @@ export default function CompilerPage() {
     if (!sqlQuery || isExplaining) return
     setIsExplaining(true)
     try {
-      const plan = await databaseApi.explain(sqlQuery, connectionUri || "")
+      const plan = await databaseApi.explain({ sql_query: sqlQuery, connection_uri: connectionUri || "" })
       setExplainPlan(plan)
+      setResultMode("safety")
       setShowTelemetry(true)
     } catch (err) {
       setExplainPlan({ error: err.message || "Explain plan requires active PostgreSQL connection." })
@@ -638,6 +639,9 @@ export default function CompilerPage() {
                       <span className="text-[9.5px] font-mono bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-1.5 py-0.2 rounded font-semibold">
                         LIMIT 50 ENFORCED
                       </span>
+                      {(apiResponse?.risk_level || explainPlan?.risk_level) && (
+                        <RiskBadge level={explainPlan?.risk_level || apiResponse?.risk_level} size="sm" />
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1.5">
@@ -723,10 +727,7 @@ export default function CompilerPage() {
                           <span className="text-[11px] font-mono text-muted-foreground tabular-nums">
                             ({liveResult.rowCount} rows · {liveResult.executionTimeMs}ms)
                           </span>
-                          <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 text-[9.5px] font-mono text-emerald-600">
-                            <Check className="size-2.5" />
-                            EXPLAIN Guard: Safe (&lt;60 cost)
-                          </span>
+                          <RiskBadge level={explainPlan?.risk_level || apiResponse?.risk_level || "LOW"} size="sm" />
                         </div>
                       )}
                     </div>
@@ -747,14 +748,17 @@ export default function CompilerPage() {
 
                       <button
                         type="button"
-                        onClick={() => setResultMode("chart")}
+                        onClick={() => {
+                          setResultMode("safety")
+                          if (!explainPlan) handleExplain()
+                        }}
                         className={`px-2.5 py-1 rounded-md font-semibold transition ${
-                          resultMode === "chart"
+                          resultMode === "safety"
                             ? "bg-card text-foreground shadow-2xs font-bold"
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
-                        Chart
+                        Safety & Plan
                       </button>
 
                       <button
@@ -824,15 +828,56 @@ export default function CompilerPage() {
                         )
                       )}
 
-                      {/* Chart View */}
-                      {resultMode === "chart" && (
-                        <div className="pt-2">
-                          <DataVisualizer
-                            columns={liveResult.columns}
-                            rows={liveResult.rows}
-                            recommendedChart="bar"
-                            title={extractedData?.explanation || "Query Result Visualizer"}
-                          />
+                      {/* Safety & EXPLAIN Analysis View */}
+                      {resultMode === "safety" && (
+                        <div className="pt-2 space-y-3">
+                          {explainPlan ? (
+                            <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <ShieldCheck className="size-4 text-emerald-600" />
+                                  <span className="font-semibold text-xs text-foreground">PostgreSQL EXPLAIN Pre-Flight Analysis</span>
+                                </div>
+                                <RiskBadge level={explainPlan.risk_level || "LOW"} showDetails={false} />
+                              </div>
+
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+                                <div className="rounded-md border border-border bg-card p-2">
+                                  <span className="text-[10px] text-muted-foreground uppercase">Estimated Cost</span>
+                                  <p className="font-bold text-foreground text-sm">{explainPlan.total_cost ?? "N/A"}</p>
+                                </div>
+                                <div className="rounded-md border border-border bg-card p-2">
+                                  <span className="text-[10px] text-muted-foreground uppercase">Scan Method</span>
+                                  <p className={`font-bold text-sm ${explainPlan.has_seq_scan ? "text-amber-500" : "text-emerald-500"}`}>
+                                    {explainPlan.has_seq_scan ? "Seq Scan" : "Index Scan"}
+                                  </p>
+                                </div>
+                                <div className="rounded-md border border-border bg-card p-2">
+                                  <span className="text-[10px] text-muted-foreground uppercase">Plan Rows</span>
+                                  <p className="font-bold text-foreground text-sm">{explainPlan.plan_rows ?? "N/A"}</p>
+                                </div>
+                                <div className="rounded-md border border-border bg-card p-2">
+                                  <span className="text-[10px] text-muted-foreground uppercase">Rating</span>
+                                  <p className="font-bold text-foreground text-sm capitalize">{explainPlan.performance_rating || "Fast"}</p>
+                                </div>
+                              </div>
+
+                              {explainPlan.index_recommendations?.length > 0 && (
+                                <div className="space-y-1.5 pt-1">
+                                  <span className="text-[11px] font-semibold text-foreground">Recommended Index DDL:</span>
+                                  {explainPlan.index_recommendations.map((idx, i) => (
+                                    <pre key={i} className="overflow-x-auto rounded bg-[#0d1410] p-2.5 font-mono text-[11px] text-emerald-300">
+                                      <code>{idx}</code>
+                                    </pre>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-center py-6 text-muted-foreground text-xs">
+                              <p>No EXPLAIN plan loaded yet. Click <strong>Explain</strong> above to analyze cost and indexes.</p>
+                            </div>
+                          )}
                         </div>
                       )}
 

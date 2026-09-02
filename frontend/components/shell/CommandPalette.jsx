@@ -102,17 +102,17 @@ export function CommandPalette({
             <CommandItem onSelect={() => handleNavigate("/Dashboard/chat")}>
               <div className="flex items-center gap-2.5">
                 <MessageSquareText className="size-4 text-emerald-600" />
-                <span>Chat Studio</span>
-                <span className="text-[11px] text-muted-foreground">Conversational SQL Assistant</span>
+                <span>SQL Doctor</span>
+                <span className="text-[11px] text-muted-foreground">Conversational AI Query Studio</span>
               </div>
               <CommandShortcut>⌘1</CommandShortcut>
             </CommandItem>
 
-            <CommandItem onSelect={() => handleNavigate("/Dashboard/canvas")}>
+            <CommandItem onSelect={() => handleNavigate("/Dashboard/guard")}>
               <div className="flex items-center gap-2.5">
-                <Sparkles className="size-4 text-emerald-600" />
-                <span>Canvas</span>
-                <span className="text-[11px] text-muted-foreground">Autonomous Multi-Agent Studio</span>
+                <ShieldCheck className="size-4 text-emerald-600" />
+                <span>Cost Guard</span>
+                <span className="text-[11px] text-muted-foreground">Pre-Flight AI Safety Firewall</span>
               </div>
               <CommandShortcut>⌘2</CommandShortcut>
             </CommandItem>
@@ -120,19 +120,10 @@ export function CommandPalette({
             <CommandItem onSelect={() => handleNavigate("/Dashboard")}>
               <div className="flex items-center gap-2.5">
                 <Terminal className="size-4 text-emerald-600" />
-                <span>Query Studio</span>
-                <span className="text-[11px] text-muted-foreground">Query Execution Sandbox</span>
+                <span>SQL Compiler</span>
+                <span className="text-[11px] text-muted-foreground">Direct Query Execution Sandbox</span>
               </div>
               <CommandShortcut>⌘3</CommandShortcut>
-            </CommandItem>
-
-            <CommandItem onSelect={() => handleNavigate("/Dashboard/guard")}>
-              <div className="flex items-center gap-2.5">
-                <ShieldCheck className="size-4 text-emerald-600" />
-                <span>Cost Guard</span>
-                <span className="text-[11px] text-muted-foreground">Pre-Flight AI Firewall</span>
-              </div>
-              <CommandShortcut>⌘4</CommandShortcut>
             </CommandItem>
 
             <CommandItem onSelect={() => handleNavigate("/")}>

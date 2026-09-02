@@ -328,10 +328,10 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                 </Button>
               </Link>
 
-              {/* Group 1: BUILD */}
+              {/* Group 1: CORE STUDIOS */}
               <SidebarGroup className="p-0">
                 <SidebarGroupLabel className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Build
+                  Studios
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu className="gap-0.5">
@@ -348,26 +348,26 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <MessageSquareText className="size-4 text-emerald-600 shrink-0" />
-                          <span className="truncate">Chat Studio</span>
+                          <span className="truncate">SQL Doctor &amp; Chat</span>
                         </div>
                         <kbd className="font-mono text-[9px] text-muted-foreground">⌘1</kbd>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
 
-                    {/* Canvas */}
+                    {/* Cost Guard */}
                     <SidebarMenuItem>
                       <SidebarMenuButton
-                        render={<Link href="/Dashboard/canvas" />}
-                        isActive={pathname === "/Dashboard/canvas"}
+                        render={<Link href="/Dashboard/guard" />}
+                        isActive={pathname === "/Dashboard/guard"}
                         className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
-                          pathname === "/Dashboard/canvas"
+                          pathname === "/Dashboard/guard"
                             ? "bg-accent text-accent-foreground font-bold shadow-2xs"
                             : "text-foreground hover:bg-muted/70"
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <Sparkles className="size-4 text-emerald-600 shrink-0" />
-                          <span className="truncate">Canvas</span>
+                          <ShieldCheck className="size-4 text-emerald-600 shrink-0" />
+                          <span className="truncate">Pre-Flight Cost Guard</span>
                         </div>
                         <kbd className="font-mono text-[9px] text-muted-foreground">⌘2</kbd>
                       </SidebarMenuButton>
@@ -386,66 +386,11 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <Terminal className="size-4 text-emerald-600 shrink-0" />
-                          <span className="truncate">Query Studio</span>
+                          <span className="truncate">SQL Compiler</span>
                         </div>
                         <kbd className="font-mono text-[9px] text-muted-foreground">⌘3</kbd>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-
-              {/* Group 2: OPTIMIZE & PROTECT */}
-              <SidebarGroup className="p-0">
-                <SidebarGroupLabel className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Protect &amp; Optimize
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu className="gap-0.5">
-                    {/* Cost Guard */}
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        render={<Link href="/Dashboard/guard" />}
-                        isActive={pathname === "/Dashboard/guard"}
-                        className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
-                          pathname === "/Dashboard/guard"
-                            ? "bg-accent text-accent-foreground font-bold shadow-2xs"
-                            : "text-foreground hover:bg-muted/70"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <ShieldCheck className="size-4 text-emerald-600 shrink-0" />
-                          <span className="truncate">Cost Guard</span>
-                        </div>
-                        <kbd className="font-mono text-[9px] text-muted-foreground">⌘4</kbd>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-
-              {/* Group 3: KNOWLEDGE & SEMANTICS */}
-              <SidebarGroup className="p-0">
-                <SidebarGroupLabel className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Knowledge
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu className="gap-0.5">
-                    {onOpenMetrics && (
-                      <SidebarMenuItem>
-                        <button
-                          type="button"
-                          onClick={onOpenMetrics}
-                          className="w-full flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/70 transition cursor-pointer"
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <BookOpen className="size-4 text-emerald-600 shrink-0" />
-                            <span className="truncate">Semantic Glossary</span>
-                          </div>
-                          <kbd className="font-mono text-[9px] text-muted-foreground">⌘G</kbd>
-                        </button>
-                      </SidebarMenuItem>
-                    )}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
@@ -668,8 +613,8 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-foreground">Sandbox Mode</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Connect PostgreSQL, MongoDB, or MySQL to introspect live schemas.
+                    <p className="text-xs text-muted-foreground">
+                      Connect PostgreSQL, Supabase, Neon, or AWS RDS to introspect live schemas.
                     </p>
                   </div>
                   <Button

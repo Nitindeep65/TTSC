@@ -4,19 +4,19 @@ import Link from "next/link"
 import { Code2, Database, ExternalLink, Link2, ShieldCheck, Users } from "lucide-react"
 
 const DB_ENGINES = [
-  { label: "Supabase & PostgreSQL", color: "#3ECF8E" },
+  { label: "Supabase", color: "#3ECF8E" },
   { label: "Neon Serverless", color: "#00E699" },
-  { label: "MongoDB Atlas (NoSQL)", color: "#00ED64" },
-  { label: "Redis Key-Value", color: "#DC382D" },
-  { label: "AWS RDS & DynamoDB", color: "#FF9900" },
-  { label: "MySQL & CockroachDB", color: "#336791" },
+  { label: "AWS RDS PostgreSQL", color: "#FF9900" },
+  { label: "CockroachDB", color: "#6933FF" },
+  { label: "Cloud PostgreSQL", color: "#336791" },
+  { label: "Heroku Postgres", color: "#79589F" },
 ]
 
 const PRODUCT_LINKS = [
-  { href: "/Dashboard/chat", label: "Interactive Chat Studio" },
-  { href: "/Dashboard", label: "Multi-Database Workspace" },
-  { href: "/Dashboard/canvas", label: "Autonomous Canvas" },
+  { href: "/Dashboard/chat", label: "SQL Doctor & Chat" },
+  { href: "/Dashboard", label: "SQL Compiler Sandbox" },
   { href: "/Dashboard/guard", label: "Pre-Flight Cost Guard" },
+  { href: "/docs/cli", label: "CLI & MCP Server" },
 ]
 
 const RESOURCES_LINKS = [
@@ -46,13 +46,13 @@ export default function Footer() {
               <div className="leading-none">
                 <span className="block text-sm font-bold text-[#0f172a]">QueryCraft</span>
                 <span className="block text-[9.5px] font-bold uppercase tracking-[0.12em] text-emerald-600 mt-0.5">
-                  AI Database Engine
+                  PostgreSQL Safety Layer
                 </span>
               </div>
             </Link>
 
             <p className="text-[13px] leading-relaxed text-slate-500">
-              Translate natural language into precise, production-ready SQL, MongoDB MQL, and Redis queries with live schema grounding and zero hallucination.
+              Transform natural language into safe, production-ready PostgreSQL queries with pre-flight cost analysis, 3-tier risk classification, and automated SQL Doctor healing.
             </p>
 
             {/* Status badge */}

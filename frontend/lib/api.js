@@ -290,56 +290,11 @@ export const workspaceApi = {
 }
 
 // ============================================================================
-// 3. SEMANTIC LAYER & BUSINESS RULES APIs
+// 3. SEMANTIC LAYER APIs — MVP DISABLED
+// Semantic layer KPI glossary is postponed for post-MVP.
+// Re-enable by un-commenting and restoring /api/semantic routes in the FastAPI backend.
 // ============================================================================
-export const semanticApi = {
-  /**
-   * Retrieves list of custom business KPI metrics.
-   */
-  getMetrics: async () => {
-    try {
-      const res = await apiClient.get("/api/semantic/metrics")
-      return res.data
-    } catch {
-      return DEFAULT_FALLBACK_METRICS
-    }
-  },
-
-  /**
-   * Saves a new custom metric definition.
-   */
-  createMetric: async (payload) => {
-    const res = await apiClient.post("/api/semantic/metrics", payload)
-    return res.data
-  },
-
-  /**
-   * Deletes a metric by ID.
-   */
-  deleteMetric: async (id) => {
-    const res = await apiClient.delete(`/api/semantic/metrics/${id}`)
-    return res.data
-  },
-
-  /**
-   * Teaches AI a new business KPI rule from plain natural language instruction.
-   */
-  teachAI: async ({ instruction }) => {
-    const res = await apiClient.post("/api/semantic/teach", { instruction })
-    return res.data
-  },
-
-  /**
-   * Ingests policy document or markdown and extracts KPI metrics.
-   */
-  uploadPolicy: async ({ title, content }) => {
-    const res = await apiClient.post("/api/semantic/upload-policy", {
-      title,
-      content,
-    })
-    return res.data
-  },
-}
+// export const semanticApi = { getMetrics, createMetric, deleteMetric, teachAI, uploadPolicy }
 
 // ============================================================================
 // 4. MEMORY & NOTEBOOK SNIPPETS APIs
@@ -466,166 +421,12 @@ export const settingsApi = {
   },
 }
 
-export function getClientFallbackDashboard(user_prompt = "") {
-  const p = (user_prompt || "").toLowerCase()
-  const isSaas = p.includes("saas") || p.includes("mrr") || p.includes("churn") || !p.trim()
-
-  return {
-    status: "complete",
-    dashboard_title: isSaas ? "SaaS Executive Performance Dashboard" : "Operational Growth Dashboard",
-    theme: isSaas ? "executive" : "operations",
-    executive_summary: isSaas
-      ? "Autonomous Multi-Agent Synthesis (4 queries compiled). Tracks Net MRR velocity (+17.5% MoM), order fulfillment rate (81%), and top enterprise accounts."
-      : "Autonomous Multi-Agent Synthesis (4 queries compiled). Synchronized transaction volume, category sales, and customer cohort activity.",
-    total_widgets: 4,
-    execution_time_total_ms: 280,
-    timestamp: new Date().toISOString(),
-    widgets: [
-      {
-        id: "net_mrr_trend",
-        title: isSaas ? "Net MRR Velocity" : "Revenue Growth Trend",
-        prompt: "Calculate total monthly revenue and net MRR trends over time",
-        sql_query: "SELECT DATE_TRUNC('month', created_at) AS month, SUM(total_amount) AS gross_revenue, COUNT(*) AS order_count FROM orders GROUP BY 1 ORDER BY 1 LIMIT 50;",
-        dialect: "postgresql",
-        explanation: "Aggregated monthly revenue velocity and order counts from transactions table.",
-        recommended_chart: "line",
-        grid_span: 2,
-        columns: ["month", "gross_revenue", "order_count"],
-        rows: [
-          { month: "May 2024", gross_revenue: 34200.0, order_count: 210 },
-          { month: "Jun 2024", gross_revenue: 41850.5, order_count: 265 },
-          { month: "Jul 2024", gross_revenue: 49200.0, order_count: 310 },
-          { month: "Aug 2024", gross_revenue: 58400.75, order_count: 380 },
-          { month: "Sep 2024", gross_revenue: 67150.0, order_count: 425 },
-          { month: "Oct 2024", gross_revenue: 78900.25, order_count: 510 },
-        ],
-        row_count: 6,
-        kpi_value: "$78.9K",
-        kpi_delta: "+17.5% MoM",
-        execution_time_ms: 24,
-      },
-      {
-        id: "order_status_breakdown",
-        title: "Order & Transaction Status",
-        prompt: "Breakdown orders by status including completed, processing, and cancelled",
-        sql_query: "SELECT status, COUNT(*) AS orders_count, SUM(total_amount) AS total_volume FROM orders GROUP BY status ORDER BY orders_count DESC LIMIT 50;",
-        dialect: "postgresql",
-        explanation: "Distribution of order fulfillment and settlement statuses.",
-        recommended_chart: "pie",
-        grid_span: 1,
-        columns: ["status", "orders_count", "total_volume"],
-        rows: [
-          { status: "completed", orders_count: 1420, total_volume: 182400.0 },
-          { status: "processing", orders_count: 180, total_volume: 24300.0 },
-          { status: "pending", orders_count: 95, total_volume: 12100.0 },
-          { status: "cancelled", orders_count: 45, total_volume: 5800.0 },
-          { status: "refunded", orders_count: 22, total_volume: 2900.0 },
-        ],
-        row_count: 5,
-        kpi_value: "81.0%",
-        kpi_delta: "Completion Rate",
-        execution_time_ms: 18,
-      },
-      {
-        id: "top_customers",
-        title: "Top Enterprise Accounts",
-        prompt: "List top 5 users by total completed order amount with email and total spend",
-        sql_query: "SELECT u.name AS customer_name, COUNT(o.id) AS orders_count, SUM(o.total_amount) AS total_spent FROM users u JOIN orders o ON u.id = o.user_id GROUP BY u.name ORDER BY total_spent DESC LIMIT 5;",
-        dialect: "postgresql",
-        explanation: "Highest grossing accounts by cumulative transaction value.",
-        recommended_chart: "bar",
-        grid_span: 1,
-        columns: ["customer_name", "orders_count", "total_spent"],
-        rows: [
-          { customer_name: "Acme Corp", orders_count: 48, total_spent: 19450.0 },
-          { customer_name: "Nexus Dynamics", orders_count: 39, total_spent: 16200.5 },
-          { customer_name: "Starlight Ltd", orders_count: 34, total_spent: 14100.0 },
-          { customer_name: "Apex Global", orders_count: 29, total_spent: 11850.75 },
-          { customer_name: "Vortex Media", orders_count: 25, total_spent: 9940.0 },
-        ],
-        row_count: 5,
-        kpi_value: "$19.45K",
-        kpi_delta: "Top Account",
-        execution_time_ms: 32,
-      },
-      {
-        id: "category_breakdown",
-        title: "Revenue by Product Category",
-        prompt: "Calculate average order amount and total revenue per product category",
-        sql_query: "SELECT category, COUNT(*) AS item_count, SUM(price) AS total_sales FROM products GROUP BY category ORDER BY total_sales DESC LIMIT 50;",
-        dialect: "postgresql",
-        explanation: "Product catalog segment distribution by sales volume.",
-        recommended_chart: "bar",
-        grid_span: 1,
-        columns: ["category", "item_count", "total_sales"],
-        rows: [
-          { category: "Enterprise Software", item_count: 12, total_sales: 84200.0 },
-          { category: "Cloud Infrastructure", item_count: 8, total_sales: 63100.5 },
-          { category: "Security & Auth", item_count: 15, total_sales: 45200.0 },
-          { category: "Developer Tools", item_count: 24, total_sales: 32800.0 },
-          { category: "Data & Analytics", item_count: 19, total_sales: 29400.0 },
-        ],
-        row_count: 5,
-        kpi_value: "$84.2K",
-        kpi_delta: "Leading Segment",
-        execution_time_ms: 22,
-      },
-    ],
-  }
-}
-
 // ============================================================================
-// 6. DASHBOARD ARCHITECT & MULTI-AGENT CANVAS APIs
+// 6. DASHBOARD ARCHITECT APIs — MVP DISABLED
+// BI Dashboard Canvas is out of MVP scope. Re-enable by restoring dashboardApi
+// and re-enabling app.include_router(dashboard.router) in backend/app/main.py.
 // ============================================================================
-export const dashboardApi = {
-  /**
-   * Generates a multi-widget dashboard canvas using Supervisor Multi-Agent workflow.
-   * With automatic fallback to Next.js serverless route and client template cache.
-   */
-  generateDashboard: async ({
-    user_prompt,
-    theme = "executive",
-    live_schema = null,
-    connection_uri = null,
-  }) => {
-    try {
-      const res = await apiClient.post("/api/dashboard/generate", {
-        user_prompt,
-        theme,
-        live_schema,
-        connection_uri,
-      })
-      return res.data
-    } catch (err) {
-      console.warn("Backend /api/dashboard/generate timed out or failed, falling back to local serverless route:", err.message)
-      try {
-        const localRes = await fetch("/api/dashboard/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_prompt, theme, live_schema, connection_uri }),
-        })
-        if (localRes.ok) {
-          return await localRes.json()
-        }
-      } catch (localErr) {
-        console.warn("Local serverless fallback failed, returning instant client canvas:", localErr.message)
-      }
-      return getClientFallbackDashboard(user_prompt)
-    }
-  },
-
-  /**
-   * Fetches curated dashboard starter templates.
-   */
-  getTemplates: async () => {
-    try {
-      const res = await apiClient.get("/api/dashboard/templates")
-      return res.data.templates || []
-    } catch {
-      return []
-    }
-  },
-}
+// export const dashboardApi = { generateDashboard, getTemplates }
 
 const api = {
   API_BASE_URL,
@@ -633,10 +434,10 @@ const api = {
   apiClient,
   clarificationApi,
   databaseApi,
-  semanticApi,
+  workspaceApi,
   memoryApi,
   settingsApi,
-  dashboardApi,
+  // MVP Disabled: dashboardApi, semanticApi
 }
 
 export default api

@@ -35,7 +35,8 @@ import { useAuth } from "@/lib/authContext"
 import ConnectDatabaseModal from "@/components/database/ConnectDatabaseModal"
 import CreateWorkspaceModal from "@/components/workspace/CreateWorkspaceModal"
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher"
-import MetricGlossaryModal from "@/components/semantic/MetricGlossaryModal"
+// MVP: MetricGlossaryModal disabled — Semantic Layer postponed post-MVP
+// import MetricGlossaryModal from "@/components/semantic/MetricGlossaryModal"
 import SettingsPanel from "@/components/settings/SettingsPanel"
 import ExtensionPromptModal from "@/components/extension/ExtensionPromptModal"
 import OnboardingModal from "@/components/onboarding/OnboardingModal"
@@ -53,7 +54,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
 
-function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }) {
+function DashboardNavbar({ onOpenSettings, onOpenCommandPalette }) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuth()
@@ -62,11 +63,11 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
   const { isTourActive, currentStep } = useTour()
 
   const isChat = pathname?.startsWith("/Dashboard/chat")
-  const isCanvas = pathname?.startsWith("/Dashboard/canvas")
   const isCompiler = pathname === "/Dashboard"
   const isGuard = pathname?.startsWith("/Dashboard/guard")
 
-  // Ergonomic keyboard shortcuts: ⌘1 (Chat), ⌘2 (Canvas), ⌘3 (Compiler), ⌘4 (Guard)
+  // MVP Keyboard shortcuts: ⌘1 (Chat), ⌘2 (Guard), ⌘3 (Compiler)
+  // Canvas shortcut ⌘2 removed — replaced by Guard (more critical for safety-focused MVP)
   useEffect(() => {
     const handleViewShortcuts = (e) => {
       if (["INPUT", "TEXTAREA"].includes(e.target.tagName) || e.target.isContentEditable) {
@@ -78,13 +79,10 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
           router.push("/Dashboard/chat")
         } else if (e.key === "2") {
           e.preventDefault()
-          router.push("/Dashboard/canvas")
+          router.push("/Dashboard/guard")
         } else if (e.key === "3") {
           e.preventDefault()
           router.push("/Dashboard")
-        } else if (e.key === "4") {
-          e.preventDefault()
-          router.push("/Dashboard/guard")
         }
       }
     }
@@ -118,7 +116,7 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
         </div>
       </div>
 
-      {/* ── ZONE 2: CENTER (Canonical Segmented Switcher: Chat | Canvas | Compiler | Guard) ── */}
+      {/* ── ZONE 2: CENTER (MVP Nav: Chat | Compiler | Guard) ── */}
       <div className="flex items-center rounded-xl border border-border bg-muted/60 p-0.5 text-xs font-semibold shadow-2xs">
         <Link
           href="/Dashboard/chat"
@@ -127,23 +125,10 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
               ? "bg-primary text-primary-foreground shadow-2xs"
               : "text-muted-foreground hover:bg-accent hover:text-foreground"
           }`}
-          title="Interactive Conversational AI Assistant (⌘1)"
+          title="SQL Doctor — Conversational AI Query Studio (⌘1)"
         >
           <MessageSquareText className="size-3.5" />
           <span>Chat</span>
-        </Link>
-
-        <Link
-          href="/Dashboard/canvas"
-          className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1 transition-all duration-150 ${
-            isCanvas
-              ? "bg-primary text-primary-foreground shadow-2xs"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground"
-          }`}
-          title="Autonomous Multi-Agent Dashboard Studio (⌘2)"
-        >
-          <Sparkles className="size-3.5 text-emerald-400" />
-          <span>Canvas</span>
         </Link>
 
         <Link
@@ -153,7 +138,7 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
               ? "bg-primary text-primary-foreground shadow-2xs"
               : "text-muted-foreground hover:bg-accent hover:text-foreground"
           }`}
-          title="Natural Language Query Compiler (⌘3)"
+          title="SQL Compiler — Direct Query Editor (⌘3)"
         >
           <Terminal className="size-3.5" />
           <span>Compiler</span>
@@ -166,10 +151,10 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
               ? "bg-primary text-primary-foreground shadow-2xs"
               : "text-muted-foreground hover:bg-accent hover:text-foreground"
           }`}
-          title="Pre-Flight Cost Guard AI Firewall (⌘4)"
+          title="Pre-Flight Cost Guard — AI Safety Firewall (⌘2)"
         >
           <ShieldCheck className="size-3.5 text-emerald-400" />
-          <span>Cost Guard</span>
+          <span>Guard</span>
         </Link>
       </div>
 
@@ -256,12 +241,6 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
               <span className="ml-auto font-mono text-[10px] text-muted-foreground">⌘,</span>
             </DropdownMenuItem>
 
-            <DropdownMenuItem onClick={onOpenMetrics}>
-              <BookOpen className="size-3.5 text-muted-foreground" />
-              <span>Metrics Glossary</span>
-              <span className="ml-auto font-mono text-[10px] text-muted-foreground">⌘G</span>
-            </DropdownMenuItem>
-
             <DropdownMenuItem onClick={() => openModal(!isInstalled)}>
               <Zap className="size-3.5 text-emerald-600" />
               <span>{isInstalled ? "Copilot Extension Active" : "Get Chrome Extension"}</span>
@@ -290,7 +269,6 @@ function DashboardNavbar({ onOpenMetrics, onOpenSettings, onOpenCommandPalette }
 function DashboardShell({ children }) {
   const router = useRouter()
   const { user, loading } = useAuth()
-  const [isMetricModalOpen, setIsMetricModalOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -341,11 +319,9 @@ function DashboardShell({ children }) {
     <SidebarProvider>
       <AppSidebar
         onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenMetrics={() => setIsMetricModalOpen(true)}
       />
       <SidebarInset className="bg-background min-w-0 max-w-full overflow-x-hidden flex-1">
         <DashboardNavbar
-          onOpenMetrics={() => setIsMetricModalOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         />
@@ -359,16 +335,11 @@ function DashboardShell({ children }) {
         open={isCommandPaletteOpen}
         onOpenChange={setIsCommandPaletteOpen}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenMetrics={() => setIsMetricModalOpen(true)}
       />
 
       {/* Modals */}
       <ConnectDatabaseModal />
       <CreateWorkspaceModal />
-      <MetricGlossaryModal
-        isOpen={isMetricModalOpen}
-        onClose={() => setIsMetricModalOpen(false)}
-      />
 
       {/* Shared Settings Panel (synced with Chrome Extension) */}
       <SettingsPanel

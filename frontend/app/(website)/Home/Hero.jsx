@@ -26,13 +26,13 @@ const DEMO_SCENARIOS = {
     clarifyQuestion: "Should I filter for completed orders only and calculate spend from order_items?",
     chips: ["Completed Orders Only", "Top 5 by Spend", "All Time"],
     selectedChip: "Top 5 by Spend",
-    query: `SELECT u.id, u.full_name,
+    query: `SELECT u.id, u.name,
   SUM(oi.quantity * oi.unit_price) AS total_spend
 FROM users u
 JOIN orders o ON u.id = o.user_id
 JOIN order_items oi ON o.id = oi.order_id
 WHERE o.status = 'completed'
-GROUP BY u.id, u.full_name
+GROUP BY u.id, u.name
 ORDER BY total_spend DESC
 LIMIT 5;`,
     rows: [
@@ -41,50 +41,44 @@ LIMIT 5;`,
       { col1: "Stripe Inc", col2: "$14,890", col3: "#3" },
     ],
   },
-  chart: {
-    tabLabel: "Time-Series",
+  cost_guard: {
+    tabLabel: "Cost Guard",
     dialect: "PostgreSQL",
-    userPrompt: "Monthly revenue trend for last 6 months as a chart",
-    clarifyQuestion: "Visual intent detected — grouping by month with completed orders filter.",
-    chips: ["Last 6 Months", "YTD 2024", "Include Taxes"],
-    selectedChip: "Last 6 Months",
-    query: `SELECT
-  TO_CHAR(created_at, 'YYYY-MM') AS month,
-  SUM(total_amount)              AS monthly_revenue
-FROM orders
-WHERE status = 'completed'
-GROUP BY 1
-ORDER BY 1 ASC
-LIMIT 6;`,
+    userPrompt: "Filter completed orders over $500 without index",
+    clarifyQuestion: "Pre-Flight Cost Guard: Estimated cost 48.8 with Sequential Scan on orders. Risk: MEDIUM.",
+    chips: ["Analyze Cost", "Seq Scan Alert", "Index Suggestion"],
+    selectedChip: "Index Suggestion",
+    query: `-- Risk Level: [MEDIUM RISK]
+-- Cost: 48.8 | Scan: Sequential Scan
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_total_status 
+  ON orders(status, total_amount);
+
+SELECT id, user_id, total_amount, status 
+FROM orders 
+WHERE status = 'completed' AND total_amount > 500
+LIMIT 50;`,
     rows: [
-      { col1: "2024-01", col2: "$42,000", col3: "↗ +12%" },
-      { col1: "2024-02", col2: "$58,400", col3: "↗ +39%" },
-      { col1: "2024-03", col2: "$71,200", col3: "↗ +22%" },
+      { col1: "idx_orders_total_status", col2: "Cost: 48.8 → 3.2", col3: "-93% compute" },
+      { col1: "Plan Rows: 20", col2: "Scan: Index Scan", col3: "Safe" },
     ],
   },
-  nosql: {
-    tabLabel: "MongoDB",
-    dialect: "MQL",
-    userPrompt: "Revenue per product category — unwind nested items array",
-    clarifyQuestion: "Unwinding nested '$items' array before aggregating by category.",
-    chips: ["Unwind Items", "Group by Category", "Top 5"],
-    selectedChip: "Unwind Items",
-    query: `db.orders.aggregate([
-  { $match: { status: "completed" } },
-  { $unwind: "$items" },
-  { $group: {
-      _id: "$items.category",
-      revenue: { $sum: {
-        $multiply: ["$items.qty","$items.price"]
-      }}
-  }},
-  { $sort: { revenue: -1 } },
-  { $limit: 5 }
-]);`,
+  doctor: {
+    tabLabel: "SQL Doctor",
+    dialect: "PostgreSQL",
+    userPrompt: "Fix: SELECT u.name, o.total FROM users u JOIN orders o GROUP BY u.name;",
+    clarifyQuestion: "SQL Doctor diagnosed SQLSTATE 42803 (must appear in GROUP BY or aggregate function).",
+    chips: ["Auto-Heal", "SQLSTATE 42803", "Verified Safe"],
+    selectedChip: "Auto-Heal",
+    query: `-- Diagnosed SQLSTATE 42803: Missing aggregation on o.total_amount
+SELECT u.name, SUM(o.total_amount) AS total_spent
+FROM users u
+JOIN orders o ON u.id = o.user_id
+GROUP BY u.name
+ORDER BY total_spent DESC
+LIMIT 50;`,
     rows: [
-      { col1: "Enterprise Software", col2: "$124,000", col3: "1,420 units" },
-      { col1: "Hardware Kits", col2: "$82,500", col3: "890 units" },
-      { col1: "Cloud Licenses", col2: "$64,200", col3: "610 units" },
+      { col1: "Root Cause", col2: "Missing SUM() aggregator", col3: "Healed" },
+      { col1: "Status", col2: "SQLSTATE 42803 fixed", col3: "Verified" },
     ],
   },
 }
@@ -92,16 +86,16 @@ LIMIT 6;`,
 const ENGINES = [
   { label: "Supabase", color: "#3ECF8E" },
   { label: "Neon", color: "#00E699" },
-  { label: "MongoDB", color: "#00ED64" },
-  { label: "PostgreSQL", color: "#336791" },
-  { label: "MySQL", color: "#F29111" },
   { label: "AWS RDS", color: "#FF9900" },
+  { label: "CockroachDB", color: "#6933FF" },
+  { label: "PostgreSQL", color: "#336791" },
+  { label: "Heroku PG", color: "#79589F" },
 ]
 
 const TRUST_METRICS = [
-  { value: "< 12ms", label: "Avg. query compile time" },
+  { value: "< 12ms", label: "Avg. pre-flight EXPLAIN check" },
   { value: "0", label: "Schema hallucinations" },
-  { value: "5+", label: "Database engines" },
+  { value: "3-Tier", label: "Risk classification system" },
 ]
 
 /* ── COMPONENT ─────────────────────────────────────────────────────────── */
@@ -172,10 +166,10 @@ export default function Hero() {
               <h1 className="text-[#0f172a]">
                 Stop guessing.{" "}
                 <br className="hidden sm:inline" />
-                <span className="gradient-text">Start verifying.</span>
+                <span className="gradient-text">Safeguard your PostgreSQL.</span>
               </h1>
               <p className="text-lg font-medium text-slate-500 leading-relaxed max-w-lg">
-                The AI that reads your live schema before writing a single line of SQL or MongoDB pipeline.
+                The AI safety &amp; intelligence layer that validates, optimizes, and protects production databases before execution.
               </p>
             </div>
 
@@ -183,11 +177,10 @@ export default function Hero() {
             <p className="text-[15px] text-slate-500 leading-relaxed max-w-xl">
               Connect <strong className="font-semibold text-slate-700">Supabase</strong>,{" "}
               <strong className="font-semibold text-slate-700">Neon</strong>,{" "}
-              <strong className="font-semibold text-slate-700">AWS RDS</strong>,{" "}
-              <strong className="font-semibold text-slate-700">PostgreSQL</strong>, or{" "}
-              <strong className="font-semibold text-slate-700">MongoDB Atlas</strong>. QueryCraft
-              introspects your real tables, catches typos, asks targeted clarifying questions before
-              compiling, and enforces read-only safety guards on every execution.
+              <strong className="font-semibold text-slate-700">AWS RDS</strong>, or{" "}
+              <strong className="font-semibold text-slate-700">PostgreSQL</strong>. QueryCraft
+              introspects live schemas, detects dangerous sequential scans, classifies risk (LOW/MED/HIGH),
+              heals SQLSTATE errors with the SQL Doctor, and provides native MCP &amp; CLI toolchains.
             </p>
 
             {/* CTA Buttons */}
