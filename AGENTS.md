@@ -15,7 +15,7 @@
 >      - 5-Pillar safety & architecture showcase, interactive CLI installer tabs, and developer testimonials
 >   3. **Model Context Protocol (MCP) Server**: Native `stdio` JSON-RPC 2.0 server with 6 tools for Cursor, Claude Desktop, Google Antigravity / Gemini, Windsurf, and custom agent swarms.
 >   4. **QueryCraft CLI (`querycraft`)**: Standalone terminal executable (`ask`, `check`, `doctor`, `query`, `schema`, `connect`, `setup`, `auth`, `workspaces`, `ai`).
->   5. **Interactive Page-Wise CLI Documentation Portal (`/docs/cli`)**: 6 chapters, 17 modular non-scrolling pages with hash-based deep linking (`#check`, `#doctor`, `#setup`), breadcrumbs, quick command jumper pills, and Craft AI Copilot.
+>   5. **Interactive 3-Zone CLI Documentation Portal (`/docs/cli`)**: 6 chapters, 17 modular non-scrolling pages with hash deep linking (`#check`, `#doctor`, `#setup`), 3-zone layout (persistent sidebar, ~780px reading column, sticky "On This Page" TOC), Light/Dark/System theme switcher, Raycast/Linear-style `⌘K` command discovery, and Craft AI Copilot.
 >   6. **Craft AI Docs Copilot (`DocsAiCopilot.jsx` & `/api/docs-copilot`)**: Grounded documentation AI guide with floating glassmorphic widget on Homepage and Docs.
 > **Dual AI Backend Architecture**: 
 >   1. **Serverless AI Engine**: Next.js Route Handlers (`serverLlm.js` + `dbDriver.js`) with Llama 3.1 70B Instruct via NVIDIA NIM & native `pg` driver (zero Python server required for Vercel deployment).
@@ -302,16 +302,24 @@ TTS/
   - `querycraft workspaces list`: Lists configured workspaces.
   - `querycraft ai setup | list | chatgpt`: AI assistant configuration tools.
 
-### 3.6. Page-Wise Minimalist CLI Documentation Portal
+### 3.6. Interactive 3-Zone CLI Documentation Portal
 - **Page**: [`frontend/app/(website)/docs/cli/page.jsx`](file:///Users/nitindeep/Developer/TTS/frontend/app/%28website%29/docs/cli/page.jsx)
-- **Architecture**: 6 organized chapters across 17 modular pages:
+- **Architecture**: 6 organized chapters across 17 modular non-scrolling pages:
   1. *Getting Started*: Overview & Architecture (`#overview`), Installation Options (`#installation`), 3-Step Quickstart (`#quickstart`).
   2. *Universal AI Integration*: `querycraft setup` (`#setup`), Claude & Cursor MCP (`#mcp-server`).
   3. *Query, Safety & Self-Healing*: `querycraft ask` (`#ask`), `querycraft check` (`#check`), `querycraft doctor` (`#doctor`), `querycraft query` (`#query`), `querycraft schema` (`#schema`), `querycraft connect` (`#connect`).
   4. *Authentication & Security*: `querycraft auth login` (`#auth-login`), `querycraft auth whoami` (`#auth-whoami`), `querycraft auth logout` (`#auth-logout`).
   5. *Workspaces & Environments*: `workspaces list` (`#workspaces`).
   6. *Reference & Config*: Command Cheat Sheet (`#cheatsheet`), Environment Variables (`#env-vars`).
-- **Features**: Hash-based deep linking (`/docs/cli#check`), breadcrumbs bar, top quick command jumper pills, copyable terminal snippets, argument tables, and sequential `< Previous` / `Next >` pagination. Zero endless scrolling.
+- **Design System & UX Features**:
+  - **3-Zone Desktop Layout**: Persistent left sidebar with real-time command filter, center reading column (~780px max-width) with hierarchical breadcrumbs, and sticky right sidebar ("On This Page" Table of Contents) for in-page section jumping.
+  - **First-Class Theme System**: Segmented theme selector in header supporting Light (☀), Dark (☾), and System (💻) with `localStorage` persistence and automatic `prefers-color-scheme` synchronization.
+  - **Raycast / Linear-Style Command Discovery Modal (`⌘K` / `Ctrl+K`)**: Fast modal indexing all 17 pages, flags, and descriptions with keyboard navigation (`↑`, `↓`, `Enter`, `Esc`).
+  - **Code Blocks as a Major UX Feature**: Distinct terminal header with mac dots and shell tags, distinct formatting between shell command prompts (`$ ` in emerald) and output/ASCII tables, plus precision 1-click copy with `Copied ✓` feedback.
+  - **Structured Command Metadata**: Top metadata row displaying Command signature, Category, Purpose, and Safety Level badge on all command pages.
+  - **Tasteful Callouts & Argument Tables**: 4 minimal callout variants (`Tip`, `Note`, `Warning`, `Security`) and high-contrast `ParamTable` with type badges, defaults, and descriptions.
+  - **Quick Command Jumper Pills**: Compact pill navigation bar (`ask`, `check`, `doctor`, `query`, `schema`, `connect`, `setup`, `cheatsheet`) with live active state highlighting.
+  - **Keyboard Navigation**: `⌘K` for search, `←` / `→` for sequential page navigation, and `Esc` to dismiss dialogs. Zero endless scrolling.
 
 ### 3.7. Craft AI Documentation Copilot
 - **Component**: [`DocsAiCopilot.jsx`](file:///Users/nitindeep/Developer/TTS/frontend/components/docs/DocsAiCopilot.jsx)

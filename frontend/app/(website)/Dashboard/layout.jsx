@@ -23,6 +23,7 @@ import {
   User,
   LogOut,
   BookOpen,
+  Command as CommandIcon,
 } from "lucide-react"
 import { DatabaseProvider, useDatabase } from "@/lib/databaseContext"
 import { SettingsProvider, useSettings } from "@/lib/settingsContext"
