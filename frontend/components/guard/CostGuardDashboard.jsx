@@ -20,6 +20,7 @@ import {
   Flame,
   CheckCircle2,
 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 const PRESET_QUERIES = [
   {
@@ -170,11 +171,11 @@ export default function CostGuardDashboard() {
               />
             </div>
 
-            <button
+            <Button
               type="button"
               disabled={isLoading || !rawSql.trim()}
               onClick={() => guardMutation.mutate(rawSql)}
-              className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] disabled:opacity-50 text-white font-bold text-xs sm:text-sm py-2.5 px-4 shadow-md shadow-emerald-950/40 transition-all cursor-pointer"
+              className="h-10 px-4 gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-950/40 cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -183,11 +184,11 @@ export default function CostGuardDashboard() {
                 </>
               ) : (
                 <>
-                  <Zap className="size-4 fill-current" />
+                  <Zap className="size-4 fill-current text-white" />
                   <span>Pre-Flight Guard (⌘↵)</span>
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
 

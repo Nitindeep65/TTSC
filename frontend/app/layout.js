@@ -18,8 +18,8 @@ const jetbrainsMono = JetBrains_Mono({
 import AuthProviderWrapper from "@/components/providers/AuthProviderWrapper";
 
 export const metadata = {
-  title: "QueryCraft — Universal Text-to-SQL & NoSQL Database Engine",
-  description: "Transform natural language into safe, production-ready PostgreSQL, MySQL, MongoDB MQL, DynamoDB, and Redis queries with live schema grounding and conversational clarification.",
+  title: "QueryCraft — The AI Firewall for Production PostgreSQL",
+  description: "Safely query, diagnose, and optimize your database with AI. Intercepts expensive sequential scans, auto-heals SQLSTATE errors, and grounds LLMs strictly in your live schema.",
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
@@ -39,7 +39,7 @@ export default function RootLayout({ children }) {
     >
       <body
         suppressHydrationWarning
-        className="min-h-full flex flex-col font-sans bg-[#f7f8f5] text-[#17241c] selection:bg-[#4ca873]/25 selection:text-[#114227] overflow-x-hidden"
+        className="min-h-full flex flex-col font-sans bg-background text-foreground selection:bg-teal-500/20 selection:text-teal-900 overflow-x-hidden"
       >
         <AuthProviderWrapper>
           {children}

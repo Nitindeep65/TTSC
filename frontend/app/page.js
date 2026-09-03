@@ -1,6 +1,6 @@
 import React from "react"
-import Homepage from "./(website)/Home/Homepage"
+import QueryCraftLandingPage from "./(website)/page"
 
 export default function Page() {
-  return <Homepage />
+  return <QueryCraftLandingPage />
 }

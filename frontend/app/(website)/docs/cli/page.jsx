@@ -328,9 +328,26 @@ function CLIReferenceInner() {
     <div style={{
       minHeight: "100vh",
       background: "#040711",
+      backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.05) 1.2px, transparent 1.2px), linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px)",
+      backgroundSize: "24px 24px, 72px 72px",
       color: "#e2e8f0",
       fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif",
+      position: "relative",
     }}>
+
+      {/* Subtle Top Ambient Lighting */}
+      <div style={{
+        position: "fixed",
+        top: 0,
+        left: "50%",
+        transform: "translateX(-50%)",
+        width: 1000,
+        height: 380,
+        background: "radial-gradient(ellipse at top, rgba(16, 185, 129, 0.09) 0%, rgba(99, 102, 241, 0.04) 50%, transparent 80%)",
+        filter: "blur(130px)",
+        pointerEvents: "none",
+        zIndex: 0,
+      }} />
 
       {/* ── Top Fixed Navigation Bar ───────────────────────────────── */}
       <header style={{
@@ -338,8 +355,8 @@ function CLIReferenceInner() {
         top: 0,
         zIndex: 40,
         height: 60,
-        background: "rgba(4, 7, 17, 0.88)",
-        backdropFilter: "blur(12px)",
+        background: "rgba(4, 7, 17, 0.92)",
+        backdropFilter: "blur(16px)",
         borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
         display: "flex",
         alignItems: "center",
@@ -379,7 +396,7 @@ function CLIReferenceInner() {
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <Link
             href="/"
-            style={{ fontSize: 13, color: "#94a3b8", textDecoration: "none" }}
+            style={{ fontSize: 13, color: "#94a3b8", textDecoration: "none", fontWeight: 500 }}
             onMouseEnter={e => e.currentTarget.style.color = "#fff"}
             onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}
           >
@@ -387,23 +404,33 @@ function CLIReferenceInner() {
           </Link>
           <Link
             href="/Dashboard/chat"
-            style={{ fontSize: 13, color: "#94a3b8", textDecoration: "none" }}
+            style={{ fontSize: 13, color: "#94a3b8", textDecoration: "none", fontWeight: 500 }}
             onMouseEnter={e => e.currentTarget.style.color = "#fff"}
             onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}
           >
-            SQL Doctor &amp; Chat
+            SQL Doctor (⌘1)
+          </Link>
+          <Link
+            href="/Dashboard/guard"
+            style={{ fontSize: 13, color: "#94a3b8", textDecoration: "none", fontWeight: 500 }}
+            onMouseEnter={e => e.currentTarget.style.color = "#fff"}
+            onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}
+          >
+            Cost Guard (⌘2)
           </Link>
           <Link
             href="/Dashboard"
             style={{
-              fontSize: 13, fontWeight: 600,
+              fontSize: 12.5, fontWeight: 700,
+              background: "linear-gradient(135deg, #10b981, #059669)",
               color: "#fff", textDecoration: "none",
-              background: "rgba(255, 255, 255, 0.08)",
-              border: "1px solid rgba(255, 255, 255, 0.14)",
-              borderRadius: 8, padding: "6px 14px",
+              padding: "6px 14px", borderRadius: 20,
+              boxShadow: "0 2px 12px rgba(16, 185, 129, 0.35)",
+              display: "flex", alignItems: "center", gap: 6,
             }}
           >
-            Launch Web Studio
+            <span>Launch Studio</span>
+            <kbd style={{ fontSize: 9.5, background: "rgba(0,0,0,0.25)", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>⌘3</kbd>
           </Link>
 
           <button

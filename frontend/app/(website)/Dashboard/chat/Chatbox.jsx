@@ -511,16 +511,16 @@ export default function Chatbox() {
               variant={isHelperOpen ? "secondary" : "outline"}
               size="sm"
               onClick={() => setIsHelperOpen(p => !p)}
-              className={`gap-1.5 text-xs h-8 px-2.5 sm:px-3 font-semibold border-[#d4e2d8] transition-all duration-200 shadow-2xs cursor-pointer ${
+              className={`gap-1.5 text-xs h-8 px-2.5 sm:px-3 font-semibold border-border transition-all duration-200 shadow-2xs cursor-pointer ${
                 isTourActive && currentStep === 2
-                  ? "relative z-[60] ring-4 ring-emerald-500 bg-white shadow-2xl scale-105"
+                  ? "relative z-[60] ring-4 ring-emerald-500 bg-card shadow-2xl scale-105"
                   : isHelperOpen
-                    ? "bg-[#111c16] text-white hover:bg-[#1e3328] border-[#111c16]"
-                    : "text-[#141a17] hover:bg-[#edf5ef]"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90 border-primary"
+                    : "text-foreground hover:bg-muted"
               }`}
               title="Toggle database schema explorer"
             >
-              {isHelperOpen ? <PanelRightClose className="size-3.5 text-[#5de08a]" /> : <PanelRightOpen className="size-3.5 text-[#34c06a]" />}
+              {isHelperOpen ? <PanelRightClose className="size-3.5 text-emerald-400" /> : <PanelRightOpen className="size-3.5 text-emerald-500" />}
               <span className="hidden xs:inline">Schema Explorer</span>
             </Button>
           </div>
@@ -540,14 +540,14 @@ export default function Chatbox() {
                   <span>PostgreSQL Safety &amp; Clarification Engine</span>
                 </div>
 
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#111c16] tracking-tight px-2 max-w-2xl leading-tight">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-foreground tracking-tight px-2 max-w-2xl leading-tight">
                   {user ? `Hello ${user.displayName || "Engineer"} — what data do you need?` : "What database insights do you need?"}
                 </h1>
 
-                <p className="mt-2.5 sm:mt-3 max-w-xl text-xs sm:text-[13.5px] text-[#617469] leading-relaxed px-2">
+                <p className="mt-2.5 sm:mt-3 max-w-xl text-xs sm:text-[13.5px] text-muted-foreground leading-relaxed px-2">
                   {dbInfo ? (
                     <>
-                      Grounded live on <strong className="text-[#111c16] font-semibold">{dbInfo.host}</strong> ({dbInfo.tables_count} tables).
+                      Grounded live on <strong className="text-foreground font-semibold">{dbInfo.host}</strong> ({dbInfo.tables_count} tables).
                       Typo-tolerant parser with automated parameter clarification before compilation.
                     </>
                   ) : (
@@ -582,7 +582,7 @@ export default function Chatbox() {
                 
                 {/* Assistant Bot Avatar */}
                 {msg.role === "assistant" && (
-                  <div className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-[#111c16] text-[#5de08a] shadow-xs mt-0.5 ring-1 ring-emerald-500/20">
+                  <div className="flex size-8 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-card border border-border text-emerald-500 shadow-xs mt-0.5 ring-1 ring-emerald-500/20">
                     <Bot className="size-4 sm:size-4.5" />
                   </div>
                 )}
@@ -593,16 +593,16 @@ export default function Chatbox() {
                   {msg.role === "user" && (
                     <div className="flex flex-col items-end gap-1 max-w-full">
                       <div className="flex items-center gap-1.5 px-1 max-w-full">
-                        <span className="text-[11px] font-bold text-[#141a17] truncate">
+                        <span className="text-[11px] font-bold text-foreground truncate">
                           {msg.userName || user?.displayName || "You"}
                         </span>
                         {(msg.userEmail || user?.email) && (
-                          <span className="text-[10px] text-[#718578] font-mono truncate hidden xs:inline">
+                          <span className="text-[10px] text-muted-foreground font-mono truncate hidden xs:inline">
                             ({msg.userEmail || user?.email})
                           </span>
                         )}
                       </div>
-                      <div className="rounded-2xl rounded-tr-md bg-[#111c16] border border-[#22362b] px-4 py-3 sm:px-5 sm:py-3.5 text-[14px] font-medium text-white shadow-xs leading-relaxed max-w-full break-words">
+                      <div className="rounded-2xl rounded-tr-md bg-primary text-primary-foreground px-4 py-3 sm:px-5 sm:py-3.5 text-[14px] font-medium shadow-xs leading-relaxed max-w-full break-words">
                         {msg.content}
                       </div>
                     </div>
@@ -610,25 +610,25 @@ export default function Chatbox() {
 
                   {/* ── Clarification Card ── */}
                   {msg.status === "needs_clarification" && (
-                    <div className="rounded-2xl rounded-tl-md border border-amber-200 bg-[#fffdfa] border-l-4 border-l-amber-500 p-4 sm:p-5 shadow-2xs space-y-3.5 max-w-full">
+                    <div className="rounded-2xl rounded-tl-md border border-amber-500/30 bg-amber-500/10 border-l-4 border-l-amber-500 p-4 sm:p-5 shadow-2xs space-y-3.5 max-w-full">
                       <div className="flex items-center gap-2">
-                        <div className="flex size-6 items-center justify-center rounded-lg bg-amber-100 text-amber-800 shrink-0">
+                        <div className="flex size-6 items-center justify-center rounded-lg bg-amber-500/20 text-amber-500 shrink-0">
                           <HelpCircle className="size-3.5" />
                         </div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                           Clarification Needed Before Execution
                         </span>
                       </div>
 
-                      <p className="text-[13.5px] sm:text-[14px] font-semibold text-amber-950 leading-relaxed break-words">
+                      <p className="text-[13.5px] sm:text-[14px] font-semibold text-foreground leading-relaxed break-words">
                         {msg.content}
                       </p>
 
                       {/* Multi-Select Clarification Reply Chips */}
-                      <div className="pt-2 border-t border-amber-200/60 space-y-2">
+                      <div className="pt-2 border-t border-amber-500/20 space-y-2">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
-                            <HelpCircle className="size-3 text-amber-600" />
+                          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                            <HelpCircle className="size-3 text-amber-500" />
                             <span>Select Parameters to Clarify:</span>
                           </p>
                           {(selectedChips[idx]?.length || 0) > 0 && (
@@ -641,7 +641,7 @@ export default function Chatbox() {
                                   handleSend(`Proceed with: ${selected.join(" AND ")}`)
                                 }
                               }}
-                              className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 px-2.5 py-1 rounded-md transition flex items-center gap-1 cursor-pointer"
+                              className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-1 rounded-md transition flex items-center gap-1 cursor-pointer"
                             >
                               <span>Submit ({selectedChips[idx]?.length})</span>
                               <ArrowUp className="size-3" />
@@ -669,8 +669,8 @@ export default function Chatbox() {
                                 }}
                                 className={`text-[11.5px] sm:text-xs font-medium px-3 py-1.5 rounded-lg border transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer select-none ${
                                   isSelected
-                                    ? "bg-emerald-600 text-white border-emerald-700 font-semibold"
-                                    : "bg-white border-amber-300 text-amber-950 hover:bg-amber-50"
+                                    ? "bg-emerald-600 text-white border-emerald-500 font-semibold shadow-xs"
+                                    : "bg-card border-amber-500/30 text-foreground hover:bg-amber-500/10"
                                 }`}
                               >
                                 {isSelected ? (
@@ -689,16 +689,16 @@ export default function Chatbox() {
 
                   {/* ── Complete SQL Card ── */}
                   {msg.status === "complete" && (
-                    <div className="w-full max-w-full rounded-2xl rounded-tl-md border border-[#dce7e0] bg-white shadow-2xs overflow-hidden">
+                    <div className="w-full max-w-full rounded-2xl rounded-tl-md border border-border bg-card shadow-2xs overflow-hidden">
 
                       {/* Card Header Bar */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-5 sm:py-3.5 border-b border-[#e4ece6] bg-[#f9faf9]">
+                      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-5 sm:py-3.5 border-b border-border bg-muted/40">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="flex items-center gap-1 rounded-full bg-emerald-100/90 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+                          <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                             <Check className="size-3" /> Ready
                           </span>
                           {msg.matched_metrics?.length > 0 && (
-                            <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-800">
+                            <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
                               {msg.matched_metrics.join(", ")}
                             </span>
                           )}
@@ -710,8 +710,8 @@ export default function Chatbox() {
                             onClick={() => handleSaveToNotebook(msg, idx)}
                             className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] sm:text-[11.5px] font-semibold transition-all duration-150 cursor-pointer ${
                               notebookSaved[idx]
-                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                : "text-[#55695e] hover:bg-[#edf5ef] hover:text-[#111c16]"
+                                ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             }`}
                           >
                             <Bookmark className={`size-3.5 ${notebookSaved[idx] ? "fill-emerald-500 text-emerald-500" : ""}`} />
@@ -723,8 +723,8 @@ export default function Chatbox() {
                             onClick={() => handleSaveVerified(msg, idx)}
                             className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] sm:text-[11.5px] font-semibold transition-all duration-150 cursor-pointer ${
                               verifiedSaved[idx]
-                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                : "text-[#55695e] hover:bg-[#edf5ef] hover:text-[#111c16]"
+                                ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             }`}
                           >
                             <Star className={`size-3.5 ${verifiedSaved[idx] ? "fill-emerald-500 text-emerald-500" : ""}`} />
@@ -735,11 +735,11 @@ export default function Chatbox() {
 
                       {/* Card Body */}
                       <div className="px-4 py-3.5 sm:px-5 sm:py-4 space-y-3">
-                        <p className="text-[14px] sm:text-[14.5px] font-bold text-[#111c16] leading-snug break-words">
+                        <p className="text-[14px] sm:text-[14.5px] font-bold text-foreground leading-snug break-words">
                           {msg.message}
                         </p>
                         {msg.explanation && (
-                          <p className="text-[12.5px] sm:text-[13px] text-[#55695e] leading-relaxed break-words">
+                          <p className="text-[12.5px] sm:text-[13px] text-muted-foreground leading-relaxed break-words">
                             {msg.explanation}
                           </p>
                         )}
