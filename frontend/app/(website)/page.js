@@ -19,6 +19,7 @@ import {
   Play,
   RefreshCw,
   Server,
+  Shield,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
@@ -29,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import DeveloperWorkflowSection from "@/components/workflow/DeveloperWorkflowSection"
 
 export default function QueryCraftLandingPage() {
   // Terminal scenario switcher state
@@ -36,6 +38,7 @@ export default function QueryCraftLandingPage() {
   const [copiedSnippet, setCopiedSnippet] = useState(false)
   const [copiedInstall, setCopiedInstall] = useState(false)
   const [copiedIndexDdl, setCopiedIndexDdl] = useState(false)
+  const [copiedFooter, setCopiedFooter] = useState(false)
   const [selectedClarifyChip, setSelectedClarifyChip] = useState("Completed Only")
 
   const copyToClipboard = (text, type = "snippet") => {
@@ -52,6 +55,9 @@ export default function QueryCraftLandingPage() {
     } else if (type === "index") {
       setCopiedIndexDdl(true)
       setTimeout(() => setCopiedIndexDdl(false), 1800)
+    } else if (type === "footer") {
+      setCopiedFooter(true)
+      setTimeout(() => setCopiedFooter(false), 1800)
     }
   }
 
@@ -114,9 +120,9 @@ export default function QueryCraftLandingPage() {
       </div>
 
       {/* ── MODERN FLOATING CAPSULE / ISLAND NAVBAR ── */}
-      <header className="fixed top-3 sm:top-4 inset-x-0 z-50 mx-auto max-w-5xl px-3 sm:px-6 w-full pointer-events-none">
+      <header className="fixed top-3 sm:top-4 inset-x-0 z-50 mx-auto max-w-6xl px-3 sm:px-6 w-full pointer-events-none">
         <div 
-          className={`pointer-events-auto rounded-full border transition-all duration-300 flex items-center justify-between px-3.5 sm:px-4 py-2 ${
+          className={`pointer-events-auto rounded-full border transition-all duration-300 flex items-center justify-between px-3.5 sm:px-5 py-2 ${
             isScrolled
               ? "bg-white/95 border-slate-300/90 shadow-[0_12px_40px_rgba(15,23,42,0.12)] backdrop-blur-2xl"
               : "bg-white/85 border-slate-200/90 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl"
@@ -124,32 +130,39 @@ export default function QueryCraftLandingPage() {
         >
           {/* Brand Logo & Live Engine Tag */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="size-8.5 rounded-full bg-gradient-to-br from-teal-500/20 to-emerald-500/20 border border-teal-500/35 flex items-center justify-center text-teal-600 shadow-2xs transition-transform duration-200 group-hover:scale-105">
+            <div className="size-9 rounded-xl bg-gradient-to-br from-teal-500/20 via-emerald-500/10 to-teal-600/25 border border-teal-500/35 flex items-center justify-center text-teal-600 shadow-2xs transition-transform duration-200 group-hover:scale-105">
               <Database className="size-4 text-teal-600" />
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm sm:text-base tracking-tight text-slate-900">QueryCraft</span>
-              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-50 border border-teal-200/80 text-[10px] font-mono font-bold text-teal-700">
+              <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-900">QueryCraft</span>
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal-50/90 border border-teal-200 text-[10.5px] font-mono font-bold text-teal-800">
                 <span className="size-1.5 rounded-full bg-teal-500 animate-pulse" />
-                PG 14-17
+                PG 14–17
               </span>
             </div>
           </Link>
 
           {/* Center Segmented Pill Navigation */}
-          <nav className="hidden md:flex items-center rounded-full bg-slate-100/80 p-1 border border-slate-200/60 text-xs font-medium text-slate-600 shadow-2xs">
-            <a href="#problem" className="px-3 py-1 rounded-full hover:text-slate-900 hover:bg-white transition-all">
+          <nav className="hidden md:flex items-center rounded-full bg-slate-100/70 p-1 border border-slate-200/70 text-xs font-semibold text-slate-600 shadow-2xs gap-0.5">
+            <a href="#workflow" className="px-3 py-1.5 rounded-full text-teal-700 hover:text-teal-900 hover:bg-white transition-all font-semibold flex items-center gap-1">
+              <span className="size-1.5 rounded-full bg-teal-500" />
+              <span>Workflow</span>
+            </a>
+            <a href="#problem" className="px-3 py-1.5 rounded-full hover:text-slate-900 hover:bg-white transition-all">
               Why Generic AI Fails
             </a>
-            <a href="#pillars" className="px-3 py-1 rounded-full hover:text-slate-900 hover:bg-white transition-all">
-              5 Core Pillars
+            <a href="#pillars" className="px-3 py-1.5 rounded-full hover:text-slate-900 hover:bg-white transition-all">
+              5 Pillars
             </a>
-            <a href="#how-it-works" className="px-3 py-1 rounded-full hover:text-slate-900 hover:bg-white transition-all">
+            <a href="#how-it-works" className="px-3 py-1.5 rounded-full hover:text-slate-900 hover:bg-white transition-all">
               Architecture
             </a>
-            <Link href="/docs/cli" className="px-3 py-1 rounded-full flex items-center gap-1.5 text-teal-700 hover:text-teal-800 hover:bg-white transition-all font-semibold">
+            <Link href="/docs/cli" className="px-3 py-1.5 rounded-full flex items-center gap-1.5 text-slate-700 hover:text-teal-800 hover:bg-white transition-all">
               <Terminal className="size-3 text-teal-600" />
               <span>CLI &amp; MCP</span>
+              <span className="text-[9px] font-mono bg-teal-50 text-teal-700 border border-teal-200/80 px-1 py-0.2 rounded font-bold">
+                v2.0
+              </span>
             </Link>
           </nav>
 
@@ -158,9 +171,9 @@ export default function QueryCraftLandingPage() {
             <Link href="/docs/cli" className="hidden lg:inline-flex">
               <button
                 type="button"
-                className="h-8 px-3 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="h-8.5 px-3.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                <Terminal className="size-3 text-teal-600" />
+                <Terminal className="size-3.5 text-teal-600" />
                 <span>CLI Docs</span>
               </button>
             </Link>
@@ -168,10 +181,10 @@ export default function QueryCraftLandingPage() {
             <Link href="/Dashboard">
               <button
                 type="button"
-                className="h-8.5 px-3.5 sm:px-4 rounded-full bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white text-xs font-bold tracking-tight shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
+                className="h-9 px-4 sm:px-4.5 rounded-full bg-slate-950 hover:bg-slate-800 active:scale-[0.98] text-white text-xs font-bold tracking-tight shadow-md flex items-center gap-2 transition-all cursor-pointer"
               >
                 <span>Launch Studio</span>
-                <kbd className="hidden sm:inline-block font-mono text-[9px] bg-white/20 px-1.5 py-0.2 rounded text-white font-bold">
+                <kbd className="hidden sm:inline-block font-mono text-[9px] bg-white/20 px-1.5 py-0.5 rounded text-white font-bold">
                   ⌘3
                 </kbd>
               </button>
@@ -193,6 +206,14 @@ export default function QueryCraftLandingPage() {
         {isMobileMenuOpen && (
           <div className="pointer-events-auto md:hidden mt-2 p-4 rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-2xl shadow-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="flex flex-col space-y-2 text-sm font-medium text-slate-700">
+              <a 
+                href="#workflow" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors font-semibold text-teal-700 flex items-center gap-2"
+              >
+                <span className="size-1.5 rounded-full bg-teal-500" />
+                <span>Developer Workflow</span>
+              </a>
               <a 
                 href="#problem" 
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -513,6 +534,12 @@ LIMIT 5;`}</code>
             </div>
           </div>
         </section>
+
+
+        {/* ========================================================================= */}
+        {/* DEVELOPER WORKFLOW: HOW QUERYCRAFT PROTECTS YOUR PRODUCTION DATABASE      */}
+        {/* ========================================================================= */}
+        <DeveloperWorkflowSection />
 
 
         {/* ========================================================================= */}
@@ -982,98 +1009,151 @@ LIMIT 5;`}</code>
 
       </main>
 
-      {/* ── PROFESSIONAL DEVTOOL MULTI-COLUMN FOOTER ── */}
-      <footer className="border-t border-slate-200 bg-slate-50/80 backdrop-blur-md pt-16 pb-12 text-slate-600 text-xs font-sans">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          {/* Top Row: Brand & Live Telemetry Status */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-12 border-b border-slate-200">
+      {/* ── HIGH-FIDELITY DEVELOPER-FIRST FOOTER ── */}
+      <footer className="border-t border-slate-800/80 bg-[#06090f] text-slate-400 text-xs font-sans relative overflow-hidden">
+        
+        {/* Subtle top ambient glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[120px] bg-teal-500/[0.04] blur-[100px] pointer-events-none" />
+
+        {/* ── Top Bar: Quick CLI Terminal Strip ── */}
+        <div className="border-b border-slate-800/80 bg-[#0a0f18]/60">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 font-mono text-[11.5px] text-slate-300">
+              <span className="text-teal-400 font-bold">$</span>
+              <span>npm install -g querycraft &amp;&amp; querycraft setup</span>
+            </div>
+
             <div className="flex items-center gap-3">
-              <div className="size-8.5 rounded-xl bg-gradient-to-br from-teal-500/20 to-emerald-500/20 border border-teal-500/35 flex items-center justify-center text-teal-700 shadow-2xs">
-                <Database className="size-4.5 text-teal-600" />
+              <button
+                type="button"
+                onClick={() => copyToClipboard("npm install -g querycraft && querycraft setup", "footer")}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-[11px] font-mono transition cursor-pointer border border-slate-700"
+              >
+                {copiedFooter ? (
+                  <>
+                    <Check className="size-3 text-teal-400" />
+                    <span className="text-teal-300">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-3 text-slate-400" />
+                    <span>Copy Setup Command</span>
+                  </>
+                )}
+              </button>
+
+              <span className="text-slate-600 hidden sm:inline">|</span>
+
+              <div className="hidden sm:flex items-center gap-2 font-mono text-[11px] text-slate-400">
+                <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Zero Mutations Permitted</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-12">
+          
+          {/* Top Row: Brand & Live Health Status */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-10 border-b border-slate-800/80">
+            <div className="flex items-center gap-3.5">
+              <div className="size-9 rounded-xl bg-gradient-to-br from-teal-500/20 to-emerald-500/20 border border-teal-500/35 flex items-center justify-center text-teal-400 shadow-2xs">
+                <Database className="size-4.5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-base text-slate-900 tracking-tight">QueryCraft</span>
-                  <Badge variant="outline" className="h-4.5 px-1.5 py-0 text-[9.5px] font-mono font-bold uppercase tracking-wider border-teal-500/30 bg-teal-50 text-teal-700">
+                  <span className="font-extrabold text-base text-white tracking-tight">QueryCraft</span>
+                  <span className="h-5 px-2 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border border-teal-500/30 bg-teal-500/10 text-teal-300 flex items-center">
                     v2.0.0-mvp
-                  </Badge>
+                  </span>
                 </div>
-                <p className="text-xs text-slate-500 font-normal">
-                  The AI Firewall &amp; Diagnostic Doctor for Production PostgreSQL
+                <p className="text-xs text-slate-400 mt-0.5">
+                  The PostgreSQL Safety Engine &amp; Pre-Flight AI Firewall
                 </p>
               </div>
             </div>
 
-            {/* Live Operational Health Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-200 bg-emerald-50/80 text-emerald-800 text-xs font-mono font-medium shadow-2xs">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>All Systems Operational</span>
-              <span className="text-emerald-300">·</span>
-              <span className="text-emerald-700 font-semibold">PostgreSQL 14 – 17</span>
+            {/* Operational Health Badge */}
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 text-emerald-300 text-xs font-mono font-medium shadow-2xs">
+              <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>All 6 MCP Tools Active</span>
+              <span className="text-emerald-500/50">·</span>
+              <span className="text-slate-300">PG 14–17 Read-Only</span>
+              <span className="text-emerald-500/50">·</span>
+              <span className="text-teal-300">8000ms Timeout</span>
             </div>
           </div>
 
-          {/* Middle Row: 4 Column Navigation Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 py-12 border-b border-slate-200 text-xs">
+          {/* Middle Row: 5 Column Navigation Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 py-10 border-b border-slate-800/80 text-xs">
             
-            {/* Column 1: Web Studio */}
+            {/* Column 1: Web Studios */}
             <div className="space-y-3">
-              <span className="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-900">
-                Web Studio
+              <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white">
+                Web Studios
               </span>
-              <ul className="space-y-2.5 text-slate-600 font-medium">
+              <ul className="space-y-2 text-slate-400 font-medium">
                 <li>
-                  <Link href="/Dashboard" className="hover:text-slate-900 transition-colors flex items-center justify-between">
+                  <Link href="/Dashboard" className="hover:text-white transition-colors flex items-center justify-between pr-2">
                     <span>SQL Compiler Sandbox</span>
-                    <kbd className="font-mono text-[9px] text-slate-400 bg-slate-200/60 px-1 rounded">⌘3</kbd>
+                    <kbd className="font-mono text-[9px] text-slate-400 bg-slate-800 px-1 py-0.2 rounded border border-slate-700">⌘3</kbd>
                   </Link>
                 </li>
                 <li>
-                  <Link href="/Dashboard/chat" className="hover:text-slate-900 transition-colors flex items-center justify-between">
+                  <Link href="/Dashboard/chat" className="hover:text-white transition-colors flex items-center justify-between pr-2">
                     <span>SQL Doctor Critic</span>
-                    <kbd className="font-mono text-[9px] text-slate-400 bg-slate-200/60 px-1 rounded">⌘1</kbd>
+                    <kbd className="font-mono text-[9px] text-slate-400 bg-slate-800 px-1 py-0.2 rounded border border-slate-700">⌘1</kbd>
                   </Link>
                 </li>
                 <li>
-                  <Link href="/Dashboard/guard" className="hover:text-slate-900 transition-colors flex items-center justify-between">
+                  <Link href="/Dashboard/guard" className="hover:text-white transition-colors flex items-center justify-between pr-2">
                     <span>Pre-Flight Cost Guard</span>
-                    <kbd className="font-mono text-[9px] text-slate-400 bg-slate-200/60 px-1 rounded">⌘2</kbd>
+                    <kbd className="font-mono text-[9px] text-slate-400 bg-slate-800 px-1 py-0.2 rounded border border-slate-700">⌘2</kbd>
                   </Link>
                 </li>
                 <li>
-                  <Link href="/Dashboard" className="hover:text-slate-900 transition-colors">
-                    Zero-Hallucination Schema
+                  <Link href="/Dashboard" className="hover:text-white transition-colors">
+                    Multi-Tab Editor &amp; CSV Export
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/Dashboard" className="hover:text-white transition-colors">
+                    Command Palette (<code className="text-teal-400 font-mono text-[10px]">⌘K</code>)
                   </Link>
                 </li>
               </ul>
             </div>
 
-            {/* Column 2: Developer Tooling */}
+            {/* Column 2: CLI & Agent Tools */}
             <div className="space-y-3">
-              <span className="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-900">
-                Developer Tooling
+              <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white">
+                CLI &amp; MCP Agents
               </span>
-              <ul className="space-y-2.5 text-slate-600 font-medium">
+              <ul className="space-y-2 text-slate-400 font-medium">
                 <li>
-                  <Link href="/docs/cli" className="hover:text-slate-900 transition-colors flex items-center gap-1.5 text-teal-700 font-semibold">
-                    <Terminal className="size-3 text-teal-600" />
-                    <span>Interactive CLI Docs</span>
+                  <Link href="/docs/cli" className="hover:text-white transition-colors flex items-center gap-1.5 text-teal-400 font-semibold">
+                    <Terminal className="size-3 text-teal-400" />
+                    <span>CLI Docs (6 Chapters)</span>
                   </Link>
                 </li>
                 <li>
-                  <Link href="/docs/cli#mcp-server" className="hover:text-slate-900 transition-colors">
-                    Universal MCP Server (Cursor)
+                  <Link href="/docs/cli#setup" className="hover:text-white transition-colors">
+                    1-Click Setup (<code className="text-teal-400 font-mono text-[10px]">querycraft setup</code>)
                   </Link>
                 </li>
                 <li>
-                  <Link href="/docs/cli#cheatsheet" className="hover:text-slate-900 transition-colors">
-                    Command Cheat Sheet
+                  <Link href="/docs/cli#mcp-server" className="hover:text-white transition-colors">
+                    Claude &amp; Cursor MCP Tools
                   </Link>
                 </li>
                 <li>
-                  <Link href="/docs/cli#setup" className="hover:text-slate-900 transition-colors">
-                    1-Click Setup (<code className="text-teal-700 font-mono text-[10px]">querycraft setup</code>)
+                  <Link href="/docs/cli#cheatsheet" className="hover:text-white transition-colors">
+                    Terminal Cheat Sheet
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/docs/cli#auth-login" className="hover:text-white transition-colors">
+                    Browser OAuth Handshake
                   </Link>
                 </li>
               </ul>
@@ -1081,86 +1161,142 @@ LIMIT 5;`}</code>
 
             {/* Column 3: Cloud PostgreSQL */}
             <div className="space-y-3">
-              <span className="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-900">
-                Supported Engines
+              <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white">
+                PostgreSQL Engines
               </span>
-              <ul className="space-y-2.5 text-slate-600 font-medium">
+              <ul className="space-y-2 text-slate-400 font-medium">
                 <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-emerald-500" />
+                  <span className="size-1.5 rounded-full bg-emerald-400" />
                   <span>Supabase Database</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-teal-500" />
+                  <span className="size-1.5 rounded-full bg-teal-400" />
                   <span>Neon Serverless PG</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-amber-500" />
-                  <span>AWS RDS PostgreSQL</span>
+                  <span className="size-1.5 rounded-full bg-amber-400" />
+                  <span>AWS RDS / Aurora PG</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-purple-500" />
+                  <span className="size-1.5 rounded-full bg-purple-400" />
                   <span>CockroachDB &amp; Heroku</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-blue-400" />
+                  <span>Docker &amp; Self-Hosted</span>
                 </li>
               </ul>
             </div>
 
-            {/* Column 4: Security & Protocols */}
+            {/* Column 4: Safety Architecture */}
             <div className="space-y-3">
-              <span className="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-slate-900">
-                Safety Protocol
+              <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white">
+                Safety Architecture
               </span>
-              <ul className="space-y-2.5 text-slate-600 font-mono text-[11.5px]">
-                <li className="text-emerald-700 font-semibold flex items-center gap-1.5">
-                  <CheckCircle2 className="size-3 text-emerald-600" />
-                  <span>SET TRANSACTION READ ONLY</span>
+              <ul className="space-y-2 text-slate-400 font-mono text-[11.5px]">
+                <li className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                  <CheckCircle2 className="size-3 text-emerald-400" />
+                  <span>SET READ ONLY Transaction</span>
                 </li>
-                <li className="text-slate-600 flex items-center gap-1.5">
+                <li className="flex items-center gap-1.5">
+                  <Shield className="size-3 text-teal-400" />
+                  <span>Dry-Run EXPLAIN Planner</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <Sparkles className="size-3 text-amber-400" />
+                  <span>Concurrent Index Advisor</span>
+                </li>
+                <li className="flex items-center gap-1.5">
                   <Lock className="size-3 text-slate-400" />
-                  <span>Stateless Session Store</span>
+                  <span>Stateless In-Memory Store</span>
                 </li>
-                <li className="text-slate-600 flex items-center gap-1.5">
-                  <Zap className="size-3 text-amber-500" />
-                  <span>8000ms Statement Timeout</span>
+                <li className="flex items-center gap-1.5">
+                  <Zap className="size-3 text-emerald-400" />
+                  <span>SQLSTATE Self-Healing</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 5: Ecosystem & Telemetry */}
+            <div className="space-y-3">
+              <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white">
+                Ecosystem &amp; API
+              </span>
+              <ul className="space-y-2 text-slate-400 font-medium">
+                <li>
+                  <a 
+                    href="https://github.com/Nitindeep65/TTSC" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="hover:text-white transition-colors flex items-center gap-1"
+                  >
+                    <span>GitHub Repository</span>
+                    <ExternalLink className="size-2.5 text-slate-500" />
+                  </a>
                 </li>
                 <li>
                   <a 
                     href="/api/settings" 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1"
+                    className="hover:text-white transition-colors flex items-center gap-1"
                   >
-                    <span>Settings &amp; Telemetry API</span>
-                    <ExternalLink className="size-2.5" />
+                    <span>Settings &amp; Quota API</span>
+                    <ExternalLink className="size-2.5 text-slate-500" />
                   </a>
+                </li>
+                <li>
+                  <a 
+                    href="/api/clarification/schema" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="hover:text-white transition-colors flex items-center gap-1"
+                  >
+                    <span>Schema Grounding API</span>
+                    <ExternalLink className="size-2.5 text-slate-500" />
+                  </a>
+                </li>
+                <li>
+                  <Link href="/docs/cli" className="hover:text-white transition-colors">
+                    Craft AI Docs Copilot
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/Dashboard/guard" className="hover:text-white transition-colors">
+                    Pre-Flight Firewall Studio
+                  </Link>
                 </li>
               </ul>
             </div>
 
           </div>
 
-          {/* Bottom Bar: Copyright & Shortcuts Hint */}
+          {/* Bottom Row: Copyright, Shortcuts Cheatsheet & Badge */}
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-[11px] font-mono">
             <div>
-              © 2026 QueryCraft Engine. Built for production PostgreSQL database safety.
+              © 2026 QueryCraft Engine. Mission-critical PostgreSQL safety layer.
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <span>Hotkeys:</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300 font-bold text-[9.5px]">⌘1 Chat</kbd>
+                <kbd className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300 font-bold text-[9.5px]">⌘2 Guard</kbd>
+                <kbd className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300 font-bold text-[9.5px]">⌘3 Studio</kbd>
+                <kbd className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300 font-bold text-[9.5px]">⌘K Palette</kbd>
+              </div>
+
+              <span className="text-slate-700 hidden sm:inline">·</span>
+
               <a 
                 href="https://github.com/Nitindeep65/TTSC" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 hover:text-slate-900 transition-colors"
+                className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors"
               >
                 <span>GitHub (TTSC)</span>
-                <ExternalLink className="size-3 text-slate-400" />
+                <ExternalLink className="size-3 text-slate-500" />
               </a>
-              <span className="text-slate-300">·</span>
-              <div className="flex items-center gap-1 text-slate-500">
-                <span>Shortcuts:</span>
-                <kbd className="px-1 py-0.5 rounded bg-slate-200/70 text-slate-700 font-bold text-[9.5px]">⌘1</kbd>
-                <kbd className="px-1 py-0.5 rounded bg-slate-200/70 text-slate-700 font-bold text-[9.5px]">⌘2</kbd>
-                <kbd className="px-1 py-0.5 rounded bg-slate-200/70 text-slate-700 font-bold text-[9.5px]">⌘3</kbd>
-              </div>
             </div>
           </div>
 

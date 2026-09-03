@@ -5,7 +5,7 @@
     "plan": "free"
   },
   "preferences": {
-    "theme": "dark",
+    "theme": "system",
     "fontSize": "12",
     "compactOnStart": false,
     "autoFocus": true

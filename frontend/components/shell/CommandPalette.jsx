@@ -13,28 +13,32 @@ import {
   CommandShortcut,
 } from "@/components/ui/command"
 import {
-  MessageSquareText,
-  Sparkles,
-  Terminal,
-  Database,
-  Layers,
-  Settings,
   BookOpen,
-  Plus,
-  Home,
-  Copy,
-  FolderKanban,
   Check,
-  Zap,
+  Code2,
+  Database,
+  ExternalLink,
+  FolderKanban,
+  FolderPlus,
+  Github,
+  Laptop,
+  Layers,
+  MessageSquareText,
+  Moon,
+  Plus,
+  Settings,
   ShieldCheck,
+  Sun,
+  Terminal,
+  Zap,
 } from "lucide-react"
 import { useDatabase } from "@/lib/databaseContext"
+import { useSettings } from "@/lib/settingsContext"
 
 export function CommandPalette({
   open,
   onOpenChange,
   onOpenSettings,
-  onOpenMetrics,
 }) {
   const router = useRouter()
   const {
@@ -45,24 +49,9 @@ export function CommandPalette({
     setActiveWorkspaceId,
     setIsWorkspaceModalOpen,
   } = useDatabase()
+  const { savePreferences } = useSettings()
 
   const [query, setQuery] = useState("")
-  const [recents, setRecents] = useState([])
-
-  // Load recent queries from localStorage when palette opens
-  useEffect(() => {
-    if (open) {
-      try {
-        const saved = localStorage.getItem("tts_recent_queries_v2")
-        if (saved) {
-          const parsed = JSON.parse(saved)
-          if (Array.isArray(parsed)) {
-            setRecents(parsed.slice(0, 4))
-          }
-        }
-      } catch {}
-    }
-  }, [open])
 
   // Global Cmd+K / Ctrl+K listener
   useEffect(() => {
@@ -86,147 +75,196 @@ export function CommandPalette({
     onOpenChange(false)
   }
 
+  const setTheme = (t) => {
+    const root = document.documentElement
+    if (t === "dark") {
+      root.classList.add("dark")
+      root.setAttribute("data-theme", "dark")
+    } else if (t === "light") {
+      root.classList.remove("dark")
+      root.setAttribute("data-theme", "light")
+    } else {
+      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+      root.classList.toggle("dark", isDark)
+      root.setAttribute("data-theme", isDark ? "dark" : "light")
+    }
+    try {
+      localStorage.setItem("querycraft-theme", t)
+      localStorage.setItem("querycraft-docs-theme", t)
+    } catch {}
+    if (savePreferences) {
+      savePreferences({ theme: t })
+    }
+    onOpenChange(false)
+  }
+
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <Command>
+      <Command className="rounded-2xl border border-border bg-popover text-foreground shadow-2xl">
         <CommandInput
-          placeholder="Search commands, views, schema, or settings... (⌘K)"
+          placeholder="Type a command, studio, or search... (⌘K)"
           value={query}
           onValueChange={setQuery}
         />
-        <CommandList>
-          <CommandEmpty>No matching commands found.</CommandEmpty>
+        <CommandList className="max-h-[60vh] p-2 space-y-1">
+          <CommandEmpty>No matching actions found.</CommandEmpty>
 
           {/* Navigation Group */}
-          <CommandGroup heading="Views & Studios">
-            <CommandItem onSelect={() => handleNavigate("/Dashboard/chat")}>
+          <CommandGroup heading="Studios & Navigation">
+            <CommandItem
+              onSelect={() => handleNavigate("/Dashboard")}
+              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs cursor-pointer"
+            >
               <div className="flex items-center gap-2.5">
-                <MessageSquareText className="size-4 text-emerald-600" />
-                <span>SQL Doctor</span>
-                <span className="text-[11px] text-muted-foreground">Conversational AI Query Studio</span>
-              </div>
-              <CommandShortcut>⌘1</CommandShortcut>
-            </CommandItem>
-
-            <CommandItem onSelect={() => handleNavigate("/Dashboard/guard")}>
-              <div className="flex items-center gap-2.5">
-                <ShieldCheck className="size-4 text-emerald-600" />
-                <span>Cost Guard</span>
-                <span className="text-[11px] text-muted-foreground">Pre-Flight AI Safety Firewall</span>
-              </div>
-              <CommandShortcut>⌘2</CommandShortcut>
-            </CommandItem>
-
-            <CommandItem onSelect={() => handleNavigate("/Dashboard")}>
-              <div className="flex items-center gap-2.5">
-                <Terminal className="size-4 text-emerald-600" />
-                <span>SQL Compiler</span>
-                <span className="text-[11px] text-muted-foreground">Direct Query Execution Sandbox</span>
+                <Terminal className="size-4 text-emerald-500" />
+                <span className="font-semibold">SQL Compiler Sandbox</span>
               </div>
               <CommandShortcut>⌘3</CommandShortcut>
             </CommandItem>
 
-            <CommandItem onSelect={() => handleNavigate("/")}>
+            <CommandItem
+              onSelect={() => handleNavigate("/Dashboard/guard")}
+              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs cursor-pointer"
+            >
               <div className="flex items-center gap-2.5">
-                <Home className="size-4 text-muted-foreground" />
-                <span>Landing Page</span>
+                <ShieldCheck className="size-4 text-emerald-500" />
+                <span className="font-semibold">Pre-Flight Cost Guard (AI Firewall)</span>
               </div>
+              <CommandShortcut>⌘2</CommandShortcut>
+            </CommandItem>
+
+            <CommandItem
+              onSelect={() => handleNavigate("/Dashboard/chat")}
+              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <MessageSquareText className="size-4 text-emerald-500" />
+                <span className="font-semibold">SQL Doctor &amp; Clarification Chat</span>
+              </div>
+              <CommandShortcut>⌘1</CommandShortcut>
             </CommandItem>
           </CommandGroup>
 
-          {/* Recent Queries Group */}
-          {recents && recents.length > 0 && (
-            <CommandGroup heading="Recent Queries">
-              {recents.map((item, idx) => (
-                <CommandItem
-                  key={idx}
-                  onSelect={() => handleNavigate(`/Dashboard/chat?prompt=${encodeURIComponent(item.query)}`)}
-                >
-                  <div className="flex items-center justify-between gap-2 w-full min-w-0">
-                    <div className="flex items-center gap-2 min-w-0 truncate">
-                      <Terminal className="size-3.5 text-muted-foreground shrink-0" />
-                      <span className="font-mono text-[11px] truncate text-foreground">{item.query}</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-sans shrink-0">{item.time || "Recent"}</span>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-
-          {/* Database Group */}
-          <CommandGroup heading="Database & Schema">
-            <CommandItem onSelect={() => handleAction(() => setIsModalOpen(true))}>
+          {/* Theme Switcher Group */}
+          <CommandGroup heading="Appearance & Theme">
+            <CommandItem
+              onSelect={() => setTheme("light")}
+              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs cursor-pointer"
+            >
               <div className="flex items-center gap-2.5">
-                <Database className="size-4 text-emerald-600" />
-                <span>{dbInfo ? "Manage Database Connection" : "Connect Database"}</span>
-                {dbInfo && (
-                  <span className="text-[11px] text-muted-foreground">
-                    Connected: {dbInfo.database || dbInfo.host}
-                  </span>
-                )}
+                <Sun className="size-4 text-amber-500" />
+                <span>Switch to Light Mode</span>
               </div>
-              <CommandShortcut>⌘ D</CommandShortcut>
+              <span className="text-[10px] text-muted-foreground font-mono">☀ Light</span>
             </CommandItem>
 
-            {dbInfo && (
-              <CommandItem onSelect={() => handleNavigate("/Dashboard/chat?prompt=Show%20all%20tables%20and%20row%20counts")}>
+            <CommandItem
+              onSelect={() => setTheme("dark")}
+              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <Moon className="size-4 text-emerald-400" />
+                <span>Switch to Dark Mode</span>
+              </div>
+              <span className="text-[10px] text-muted-foreground font-mono">☾ Dark</span>
+            </CommandItem>
+
+            <CommandItem
+              onSelect={() => setTheme("system")}
+              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <Laptop className="size-4 text-sky-400" />
+                <span>Sync with System Theme</span>
+              </div>
+              <span className="text-[10px] text-muted-foreground font-mono">💻 Auto</span>
+            </CommandItem>
+          </CommandGroup>
+
+          {/* Database Actions */}
+          <CommandGroup heading="Database & Actions">
+            <CommandItem
+              onSelect={() => handleAction(() => setIsModalOpen(true))}
+              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <Database className="size-4 text-emerald-500" />
+                <span>{dbInfo ? "Manage PostgreSQL Connection" : "Connect Live Database (Supabase/Neon/RDS)"}</span>
+              </div>
+            </CommandItem>
+
+            <CommandItem
+              onSelect={() => handleAction(() => setIsWorkspaceModalOpen(true))}
+              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <FolderPlus className="size-4 text-emerald-500" />
+                <span>Create New Database Workspace</span>
+              </div>
+            </CommandItem>
+
+            {onOpenSettings && (
+              <CommandItem
+                onSelect={() => handleAction(onOpenSettings)}
+                className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs cursor-pointer"
+              >
                 <div className="flex items-center gap-2.5">
-                  <Layers className="size-4 text-emerald-600" />
-                  <span>Inspect Schema &amp; Row Counts</span>
+                  <Settings className="size-4 text-muted-foreground" />
+                  <span>Open Engine Settings &amp; Keybindings</span>
                 </div>
+                <CommandShortcut>⌘,</CommandShortcut>
               </CommandItem>
             )}
           </CommandGroup>
 
           {/* Workspaces Group */}
-          <CommandGroup heading="Workspaces">
-            {(workspaces || []).map((ws) => (
-              <CommandItem
-                key={ws.id}
-                onSelect={() => handleAction(() => setActiveWorkspaceId(ws.id))}
-              >
-                <div className="flex items-center gap-2.5">
-                  <span
-                    className="size-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: ws.color || "#3aa363" }}
-                  />
-                  <span>{ws.name}</span>
-                  <span className="text-[11px] text-muted-foreground">({ws.environment})</span>
-                </div>
-                {ws.id === activeWorkspaceId && <Check className="size-3.5 text-emerald-600" />}
-              </CommandItem>
-            ))}
+          {workspaces?.length > 1 && (
+            <CommandGroup heading="Switch Workspace">
+              {workspaces.map((ws) => (
+                <CommandItem
+                  key={ws.id}
+                  onSelect={() => {
+                    setActiveWorkspaceId(ws.id)
+                    onOpenChange(false)
+                  }}
+                  className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <FolderKanban className="size-4 text-muted-foreground" />
+                    <span className="font-semibold">{ws.name}</span>
+                    <span className="text-[10px] text-muted-foreground">({ws.environment})</span>
+                  </div>
+                  {ws.id === activeWorkspaceId && <Check className="size-3.5 text-emerald-500" />}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
 
-            <CommandItem onSelect={() => handleAction(() => setIsWorkspaceModalOpen(true))}>
-              <div className="flex items-center gap-2.5 text-muted-foreground">
-                <Plus className="size-4" />
-                <span>Create New Workspace</span>
+          {/* Documentation & External */}
+          <CommandGroup heading="Documentation & Resources">
+            <CommandItem
+              onSelect={() => handleNavigate("/docs/cli")}
+              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <BookOpen className="size-4 text-emerald-500" />
+                <span>CLI &amp; MCP Documentation</span>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-500">v2.0-mvp</span>
+            </CommandItem>
+
+            <CommandItem
+              onSelect={() => {
+                window.open("https://github.com/Nitindeep65/TTSC", "_blank")
+                onOpenChange(false)
+              }}
+              className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <ExternalLink className="size-4 text-muted-foreground" />
+                <span>QueryCraft GitHub Repository</span>
               </div>
             </CommandItem>
-          </CommandGroup>
-
-          {/* Tools & Settings */}
-          <CommandGroup heading="Tools & Settings">
-            {onOpenMetrics && (
-              <CommandItem onSelect={() => handleAction(onOpenMetrics)}>
-                <div className="flex items-center gap-2.5">
-                  <BookOpen className="size-4 text-emerald-600" />
-                  <span>Semantic KPI Glossary</span>
-                </div>
-                <CommandShortcut>⌘ G</CommandShortcut>
-              </CommandItem>
-            )}
-
-            {onOpenSettings && (
-              <CommandItem onSelect={() => handleAction(onOpenSettings)}>
-                <div className="flex items-center gap-2.5">
-                  <Settings className="size-4 text-emerald-600" />
-                  <span>Settings &amp; Engine Preferences</span>
-                </div>
-                <CommandShortcut>⌘ ,</CommandShortcut>
-              </CommandItem>
-            )}
           </CommandGroup>
         </CommandList>
       </Command>

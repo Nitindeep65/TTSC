@@ -82,6 +82,15 @@ export default function CompilerPage() {
 
   // Draggable Column Widths
   const [columnWidths, setColumnWidths] = useState({})
+  const [copiedCell, setCopiedCell] = useState(null)
+
+  const handleCopyCell = (e, val, key) => {
+    e.stopPropagation()
+    if (val === null || val === undefined) return
+    navigator.clipboard.writeText(String(val))
+    setCopiedCell(key)
+    setTimeout(() => setCopiedCell(null), 1500)
+  }
 
   const handleResizeStart = (e, col) => {
     e.preventDefault()
@@ -762,10 +771,10 @@ export default function CompilerPage() {
                       value={editedSql}
                       onChange={(e) => setEditedSql(e.target.value)}
                       rows={6}
-                      className="w-full bg-[#0d1410] p-4 font-mono text-xs text-emerald-300 outline-none leading-relaxed"
+                      className="w-full bg-muted/30 dark:bg-[#070b09] p-4 font-mono text-xs text-foreground outline-none leading-relaxed"
                     />
                   ) : (
-                    <pre className="overflow-x-auto bg-[#0d1410] p-4 font-mono text-xs text-emerald-300 leading-relaxed">
+                    <pre className="overflow-x-auto bg-muted/30 dark:bg-[#070b09] p-4 font-mono text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
                       <code>{sqlQuery}</code>
                     </pre>
                   )}
@@ -872,14 +881,14 @@ export default function CompilerPage() {
                       {resultMode === "table" && (
                         liveResult.rows?.length > 0 ? (
                           <div className="max-h-80 overflow-auto rounded-lg border border-border">
-                            <table className="w-full text-left font-mono text-xs">
-                              <thead className="sticky top-0 bg-muted/70 text-foreground">
+                            <table className="w-full text-left font-mono text-xs border-collapse">
+                              <thead className="sticky top-0 bg-muted/80 text-foreground z-10 backdrop-blur-xs">
                                 <tr>
                                   {liveResult.columns.map((col) => (
                                     <th
                                       key={col}
                                       style={{ width: columnWidths[col] ? `${columnWidths[col]}px` : undefined }}
-                                      className="relative p-2.5 font-medium border-b border-border select-none"
+                                      className="relative p-2.5 font-semibold border-b border-border select-none"
                                     >
                                       <div className="flex items-center justify-between pr-2 truncate">
                                         <span className="truncate">{col}</span>
@@ -896,16 +905,37 @@ export default function CompilerPage() {
                               </thead>
                               <tbody className="divide-y divide-border/60">
                                 {liveResult.rows.map((row, rIdx) => (
-                                  <tr key={rIdx} className="hover:bg-muted/40">
-                                    {liveResult.columns.map((col) => (
-                                      <td key={col} className="p-2.5 text-foreground whitespace-nowrap">
-                                        {row[col] === null ? (
-                                          <span className="italic text-muted-foreground">null</span>
-                                        ) : (
-                                          String(row[col])
-                                        )}
-                                      </td>
-                                    ))}
+                                  <tr key={rIdx} className="hover:bg-muted/40 transition-colors">
+                                    {liveResult.columns.map((col) => {
+                                      const cellVal = row[col]
+                                      const cellKey = `${rIdx}-${col}`
+                                      const isNum = typeof cellVal === "number" || (!isNaN(cellVal) && !isNaN(parseFloat(cellVal)) && isFinite(cellVal) && cellVal !== "")
+                                      return (
+                                        <td
+                                          key={col}
+                                          onClick={(e) => handleCopyCell(e, cellVal, cellKey)}
+                                          title="Click to copy cell value"
+                                          className={`p-2.5 text-foreground whitespace-nowrap cursor-pointer transition-colors ${
+                                            isNum ? "text-right font-mono" : ""
+                                          }`}
+                                        >
+                                          {cellVal === null || cellVal === undefined ? (
+                                            <span className="italic text-muted-foreground/60 text-[10px] uppercase font-bold bg-muted/60 px-1 py-0.5 rounded">
+                                              null
+                                            </span>
+                                          ) : (
+                                            <span className="relative">
+                                              {String(cellVal)}
+                                              {copiedCell === cellKey && (
+                                                <span className="ml-1 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
+                                                  ✓
+                                                </span>
+                                              )}
+                                            </span>
+                                          )}
+                                        </td>
+                                      )
+                                    })}
                                   </tr>
                                 ))}
                               </tbody>
@@ -956,7 +986,7 @@ export default function CompilerPage() {
                                 <div className="space-y-1.5 pt-1">
                                   <span className="text-[11px] font-semibold text-foreground">Recommended Index DDL:</span>
                                   {explainPlan.index_recommendations.map((idx, i) => (
-                                    <pre key={i} className="overflow-x-auto rounded bg-[#0d1410] p-2.5 font-mono text-[11px] text-emerald-300">
+                                    <pre key={i} className="overflow-x-auto rounded-lg border border-border bg-muted/30 dark:bg-[#070b09] p-2.5 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
                                       <code>{idx}</code>
                                     </pre>
                                   ))}
@@ -973,13 +1003,13 @@ export default function CompilerPage() {
 
                       {/* Raw JSON View */}
                       {resultMode === "json" && (
-                        <pre className="overflow-x-auto rounded-lg bg-[#0d1410] p-4 font-mono text-xs text-emerald-300 leading-relaxed max-h-72">
+                        <pre className="overflow-x-auto rounded-lg border border-border bg-muted/30 dark:bg-[#070b09] p-4 font-mono text-xs text-foreground leading-relaxed max-h-72">
                           <code>{JSON.stringify(liveResult.rows, null, 2)}</code>
                         </pre>
                       )}
                     </>
                   ) : (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800">
+                    <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
                       <strong>Execution Error:</strong> {liveResult.error}
                     </div>
                   )}
@@ -1042,7 +1072,7 @@ export default function CompilerPage() {
                         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                           EXPLAIN Cost Planner:
                         </span>
-                        <pre className="overflow-x-auto rounded-lg bg-[#0d1410] p-3 font-mono text-[11px] text-emerald-300 mt-1">
+                        <pre className="overflow-x-auto rounded-lg border border-border bg-muted/30 dark:bg-[#070b09] p-3 font-mono text-[11px] text-foreground mt-1">
                           <code>{JSON.stringify(explainPlan, null, 2)}</code>
                         </pre>
                       </div>

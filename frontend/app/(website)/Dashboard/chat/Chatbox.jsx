@@ -85,10 +85,10 @@ const FALLBACK_SCHEMA = [
 ]
 
 const BADGE_COLORS = {
-  amber: "bg-amber-50 text-amber-800 border-amber-200/80 group-hover:border-amber-300",
-  emerald: "bg-emerald-50 text-emerald-800 border-emerald-200/80 group-hover:border-emerald-300",
-  blue: "bg-blue-50 text-blue-800 border-blue-200/80 group-hover:border-blue-300",
-  purple: "bg-purple-50 text-purple-800 border-purple-200/80 group-hover:border-purple-300",
+  amber: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/25 group-hover:border-amber-500/50",
+  emerald: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25 group-hover:border-emerald-500/50",
+  blue: "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/25 group-hover:border-sky-500/50",
+  purple: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/25 group-hover:border-purple-500/50",
 }
 
 function generateClarificationChips(text) {
@@ -433,26 +433,26 @@ export default function Chatbox() {
   const perfLabel = perf === "fast" ? "🟢 Fast / Optimal" : perf === "moderate" ? "🟡 Moderate" : "🔴 Heavy / Slow"
 
   return (
-    <main className="relative flex h-[calc(100dvh-3.5rem)] sm:h-[calc(100vh-4rem)] w-full max-w-full overflow-hidden bg-[#f4f6f3]">
+    <main className="relative flex h-[calc(100dvh-3.5rem)] sm:h-[calc(100vh-4rem)] w-full max-w-full overflow-hidden bg-background text-foreground">
 
       {/* ───────────────── CHAT COLUMN ───────────────── */}
       <section className="flex flex-1 flex-col h-full min-w-0 max-w-full overflow-hidden">
 
         {/* ── Top Bar Header ── */}
-        <header className="flex h-13 sm:h-14 shrink-0 items-center justify-between border-b border-[#e1eae3] bg-white/90 px-3 sm:px-6 backdrop-blur-md min-w-0 max-w-full z-10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+        <header className="flex h-13 sm:h-14 shrink-0 items-center justify-between border-b border-border bg-card/85 px-3 sm:px-6 backdrop-blur-md min-w-0 max-w-full z-10 shadow-2xs">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-2.5 py-1 text-emerald-800 shrink-0 shadow-2xs">
+            <div className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-emerald-700 dark:text-emerald-400 shrink-0 shadow-2xs">
               <span className="relative flex size-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full size-2 bg-emerald-500"></span>
               </span>
               <span className="text-[11px] sm:text-[12px] font-bold tracking-tight">Llama 3.1 70B</span>
-              <span className="text-[10px] text-emerald-600/80 font-medium hidden xs:inline">· Studio Engine</span>
+              <span className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 font-medium hidden xs:inline">· Studio Engine</span>
             </div>
 
-            <div className="hidden md:flex items-center gap-1.5 text-[11.5px] text-[#6b7f73] font-medium truncate max-w-[280px]">
-              <Database className="size-3.5 text-[#34c06a] shrink-0" />
-              <span className="truncate">
+            <div className="hidden md:flex items-center gap-1.5 text-[11.5px] text-muted-foreground font-medium truncate max-w-[280px]">
+              <Database className="size-3.5 text-emerald-500 shrink-0" />
+              <span className="truncate font-mono">
                 {dbInfo ? `${dbInfo.host} (${dbInfo.tables_count} tables)` : "Demo Sandbox (5 tables)"}
               </span>
             </div>
@@ -463,9 +463,9 @@ export default function Chatbox() {
               variant="outline"
               size="sm"
               onClick={() => setIsNotebookModalOpen(true)}
-              className="gap-1.5 text-xs font-semibold text-[#1a5c37] h-8 hidden lg:flex border-[#d4e2d8] hover:bg-[#edf5ef] hover:border-[#b8d4bc] shadow-2xs cursor-pointer"
+              className="gap-1.5 text-xs font-semibold h-8 hidden lg:flex border-border hover:bg-muted shadow-2xs cursor-pointer"
             >
-              <Bookmark className="size-3.5 text-[#34c06a]" />
+              <Bookmark className="size-3.5 text-emerald-500" />
               <span>Notebook</span>
             </Button>
 
@@ -474,9 +474,9 @@ export default function Chatbox() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsModalOpen(true)}
-                className="gap-1.5 text-xs font-semibold h-8 px-2.5 sm:px-3 border-[#cde0d2] text-[#1b6b3a] hover:bg-emerald-50 shadow-2xs cursor-pointer"
+                className="gap-1.5 text-xs font-semibold h-8 px-2.5 sm:px-3 border-border hover:bg-muted shadow-2xs cursor-pointer"
               >
-                <Cloud className="size-3.5 text-[#34c06a]" />
+                <Cloud className="size-3.5 text-emerald-500" />
                 <span className="hidden xs:inline">Connect DB</span>
               </Button>
             )}
@@ -486,7 +486,7 @@ export default function Chatbox() {
                 variant="ghost"
                 size="sm"
                 onClick={() => { setMessages([]); setQueryResults({}) }}
-                className="gap-1.5 text-xs h-8 px-2.5 text-[#73887d] hover:text-[#141a17] hover:bg-[#edf4ee] cursor-pointer"
+                className="gap-1.5 text-xs h-8 px-2.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
                 title="Clear conversation"
               >
                 <Trash2 className="size-3.5" />
@@ -523,8 +523,8 @@ export default function Chatbox() {
               <div className="flex flex-col items-center text-center pt-3 sm:pt-8 animate-fade-up">
                 
                 {/* Hero Badge */}
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-white px-3.5 py-1 text-xs font-semibold text-[#1b6b3a] shadow-xs">
-                  <Database className="size-3.5 text-emerald-600" />
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-card px-3.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 shadow-2xs">
+                  <Database className="size-3.5 text-emerald-500" />
                   <span>PostgreSQL Safety &amp; Clarification Engine</span>
                 </div>
 
@@ -544,20 +544,20 @@ export default function Chatbox() {
                 </p>
 
                 {/* Capability Pills */}
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] text-[#55695e]">
-                  <span className="flex items-center gap-1 rounded-md bg-white border border-[#d8e5dc] px-2 py-0.5 shadow-2xs">
-                    <ShieldCheck className="size-3 text-emerald-600" /> Zero-Hallucination
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1 rounded-md bg-card border border-border px-2 py-0.5 shadow-2xs">
+                    <ShieldCheck className="size-3 text-emerald-500" /> Zero-Hallucination
                   </span>
-                  <span className="flex items-center gap-1 rounded-md bg-white border border-[#d8e5dc] px-2 py-0.5 shadow-2xs">
-                    <Check className="size-3 text-emerald-600" /> Typo-Tolerant
+                  <span className="flex items-center gap-1 rounded-md bg-card border border-border px-2 py-0.5 shadow-2xs">
+                    <Check className="size-3 text-emerald-500" /> Typo-Tolerant
                   </span>
-                  <span className="flex items-center gap-1 rounded-md bg-white border border-[#d8e5dc] px-2 py-0.5 shadow-2xs">
-                    <Activity className="size-3 text-blue-600" /> EXPLAIN Cost Guard
+                  <span className="flex items-center gap-1 rounded-md bg-card border border-border px-2 py-0.5 shadow-2xs">
+                    <Activity className="size-3 text-sky-500" /> EXPLAIN Cost Guard
                   </span>
                 </div>
 
                 {/* Bottom Guidance */}
-                <div className="mt-8 text-xs text-[#617469] flex items-center gap-1.5">
+                <div className="mt-8 text-xs text-muted-foreground flex items-center gap-1.5">
                   <Sparkles className="size-3.5 text-amber-500" />
                   <span>Choose a starter workflow below or type your database question</span>
                 </div>
@@ -779,11 +779,11 @@ export default function Chatbox() {
 
                       {/* SQL Block */}
                       {msg.sql_query && (
-                        <div className="mx-3 sm:mx-5 mb-4 rounded-xl overflow-hidden border border-[#1b2b22] shadow-sm">
-                          <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0c1410] px-3.5 sm:px-4 py-2 border-b border-[#1b2b22]">
+                        <div className="mx-3 sm:mx-5 mb-4 rounded-xl overflow-hidden border border-border shadow-2xs">
+                          <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/50 px-3.5 sm:px-4 py-2 border-b border-border">
                             <div className="flex items-center gap-2">
-                              <Terminal className="size-3.5 text-[#34c06a]" />
-                              <span className="font-mono text-[10.5px] sm:text-[11px] font-bold text-[#75ab8f]">
+                              <Terminal className="size-3.5 text-emerald-500" />
+                              <span className="font-mono text-[10.5px] sm:text-[11px] font-bold text-foreground">
                                 SQL · PostgreSQL
                               </span>
                               {msg.risk_level && (
@@ -797,16 +797,16 @@ export default function Chatbox() {
                                 size="sm"
                                 onClick={() => handleExplain(msg.sql_query, idx)}
                                 disabled={explainingIndex === idx}
-                                className="h-7 px-2 text-[11px] font-semibold text-[#8dc4a5] hover:text-white hover:bg-white/10 cursor-pointer"
+                                className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
                               >
-                                {explainingIndex === idx ? <Loader2 className="size-3 animate-spin" /> : <Activity className="size-3 text-blue-400" />}
+                                {explainingIndex === idx ? <Loader2 className="size-3 animate-spin" /> : <Activity className="size-3 text-sky-500" />}
                                 <span>EXPLAIN</span>
                               </Button>
 
                               <Button
                                 onClick={() => handleRun(msg.sql_query, idx, msg)}
                                 disabled={executingIndex === idx}
-                                className="h-7 px-3 text-[11px] font-bold bg-[#1f7a47] hover:bg-[#186038] text-white shadow-xs cursor-pointer"
+                                className="h-7 px-3 text-[11px] font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs cursor-pointer"
                                 size="sm"
                               >
                                 {executingIndex === idx ? (
@@ -816,7 +816,7 @@ export default function Chatbox() {
                                   </>
                                 ) : (
                                   <>
-                                    <Play className="size-3 fill-current" />
+                                    <Play className="size-3 fill-current text-emerald-400" />
                                     <span>{connectionUri ? "Run on DB" : "Run Query"}</span>
                                   </>
                                 )}
@@ -826,11 +826,11 @@ export default function Chatbox() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleCopy(msg.sql_query, idx)}
-                                className="h-7 px-2 text-[11px] font-semibold text-[#8dc4a5] hover:text-white hover:bg-white/10 cursor-pointer"
+                                className="h-7 px-2 text-[11px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
                               >
                                 {copiedIndex === idx ? (
                                   <>
-                                    <Check className="size-3 text-emerald-400" />
+                                    <Check className="size-3 text-emerald-500" />
                                     <span className="hidden xs:inline">Copied</span>
                                   </>
                                 ) : (
@@ -843,7 +843,7 @@ export default function Chatbox() {
                             </div>
                           </div>
 
-                          <pre className="overflow-x-auto px-3.5 sm:px-5 py-3.5 sm:py-4 font-mono text-[12.5px] sm:text-[13px] leading-relaxed text-[#c6ebd4] bg-[#0c1410] max-w-full">
+                          <pre className="overflow-x-auto px-3.5 sm:px-5 py-3.5 sm:py-4 font-mono text-[12.5px] sm:text-[13px] leading-relaxed text-emerald-700 dark:text-emerald-400 bg-muted/30 dark:bg-[#070b09] max-w-full">
                             <code>{msg.sql_query}</code>
                           </pre>
                         </div>
@@ -853,11 +853,11 @@ export default function Chatbox() {
                       {queryResults[idx] && (
                         <div className="px-3 sm:px-5 pb-4 sm:pb-5 space-y-3 overflow-hidden">
                           {queryResults[idx].healingInfo?.was_healed && (
-                            <div className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 sm:p-3.5">
-                              <Zap className="size-4 text-emerald-600 mt-0.5 shrink-0" />
+                            <div className="flex items-start gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 sm:p-3.5">
+                              <Zap className="size-4 text-emerald-500 mt-0.5 shrink-0" />
                               <div>
-                                <p className="text-[12px] font-bold text-emerald-900">Auto-Healed by Critic Agent</p>
-                                <p className="text-[11.5px] text-emerald-800 mt-0.5 leading-snug">{queryResults[idx].healingInfo.diagnosis}</p>
+                                <p className="text-[12px] font-bold text-foreground">Auto-Healed by Critic Agent (SQL Doctor)</p>
+                                <p className="text-[11.5px] text-muted-foreground mt-0.5 leading-snug">{queryResults[idx].healingInfo.diagnosis}</p>
                               </div>
                             </div>
                           )}
@@ -870,30 +870,30 @@ export default function Chatbox() {
                               title={msg.message}
                             />
                           ) : (
-                            <div className="rounded-xl border border-red-200 bg-red-50/90 p-3.5 sm:p-4 text-xs sm:text-[13px] text-red-800 space-y-2.5">
+                            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 sm:p-4 text-xs sm:text-[13px] text-destructive space-y-2.5">
                               <div className="flex items-start gap-2">
-                                <AlertTriangle className="size-4 text-red-600 mt-0.5 shrink-0" />
+                                <AlertTriangle className="size-4 text-destructive mt-0.5 shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-bold text-red-900">Database Execution Notice</p>
-                                  <p className="text-red-700 text-xs mt-0.5 leading-relaxed">{queryResults[idx].error}</p>
+                                  <p className="font-bold text-destructive">Database Execution Notice</p>
+                                  <p className="text-destructive text-xs mt-0.5 leading-relaxed">{queryResults[idx].error}</p>
                                 </div>
                               </div>
-                              <div className="pt-2 border-t border-red-200/70 flex flex-wrap items-center justify-between gap-2">
+                              <div className="pt-2 border-t border-destructive/20 flex flex-wrap items-center justify-between gap-2">
                                 <Button
                                   type="button"
                                   size="sm"
                                   disabled={executingIndex === idx}
                                   onClick={() => handleAutoHeal(msg, idx, queryResults[idx].error)}
-                                  className="h-7 px-3 text-[11px] font-bold bg-[#14231b] hover:bg-[#1f372a] text-[#5de08a] shadow-xs flex items-center gap-1.5 cursor-pointer"
+                                  className="h-7 px-3 text-[11px] font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs flex items-center gap-1.5 cursor-pointer"
                                 >
                                   {executingIndex === idx ? (
                                     <>
-                                      <Loader2 className="size-3 animate-spin text-[#5de08a]" />
+                                      <Loader2 className="size-3 animate-spin text-emerald-400" />
                                       <span>Healing Query…</span>
                                     </>
                                   ) : (
                                     <>
-                                      <Zap className="size-3 text-[#5de08a]" />
+                                      <Zap className="size-3 text-emerald-400" />
                                       <span>Auto-Fix with SQL Doctor</span>
                                     </>
                                   )}
@@ -904,7 +904,7 @@ export default function Chatbox() {
                                     type="button"
                                     size="sm"
                                     onClick={() => handleRun(msg.sql_query, idx, msg, true)}
-                                    className="h-7 px-2.5 text-[11px] font-semibold bg-white border border-red-200 hover:bg-red-50 text-red-700 shadow-2xs cursor-pointer"
+                                    className="h-7 px-2.5 text-[11px] font-semibold bg-card border border-border hover:bg-muted text-foreground shadow-2xs cursor-pointer"
                                   >
                                     Run in Demo Sandbox
                                   </Button>
@@ -1010,7 +1010,7 @@ export default function Chatbox() {
             
             {/* Compact Horizontal Starter Pills */}
             <div id="tour-starter-prompts" className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#799081] shrink-0 flex items-center gap-1 mr-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0 flex items-center gap-1 mr-1">
                 <Sparkles className="size-3 text-amber-500" />
                 <span>Starters:</span>
               </span>
@@ -1020,14 +1020,14 @@ export default function Chatbox() {
                   type="button"
                   disabled={isLoading}
                   onClick={() => !isLoading && (p.isCanvas ? router.push(`/Dashboard/canvas`) : handleSend(p.text))}
-                  className="shrink-0 rounded-full border border-[#dce7e0] bg-white hover:bg-[#edf5ef] hover:text-[#111c16] px-2.5 py-1 text-[11.5px] font-medium text-[#4a5e53] transition shadow-2xs cursor-pointer flex items-center gap-1.5"
+                  className="shrink-0 rounded-full border border-border bg-card hover:bg-muted hover:border-border-hover px-2.5 py-1 text-[11.5px] font-medium text-foreground transition shadow-2xs cursor-pointer flex items-center gap-1.5"
                 >
                   <span>{p.text}</span>
                 </button>
               ))}
             </div>
 
-            <div className="relative rounded-2xl border border-[#d4e2d8] bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.06)] focus-within:border-[#34c06a] focus-within:ring-2 focus-within:ring-[#34c06a]/20 transition-all duration-200">
+            <div className="relative rounded-2xl border border-border bg-card/90 backdrop-blur-md shadow-lg focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20 transition-all duration-200">
               <textarea
                 ref={textareaRef}
                 value={inputText}
@@ -1039,18 +1039,18 @@ export default function Chatbox() {
                   }
                 }}
                 rows={1}
-                placeholder="Ask a data question (e.g., 'give me the list of counterparties' or 'show monthly revenue trend')…"
-                className="w-full resize-none bg-transparent px-4 sm:px-5 pt-3.5 sm:pt-4 pb-2 text-[14px] sm:text-[14.5px] text-[#111c16] outline-none placeholder:text-[#97aba0] max-h-40 sm:max-h-52 leading-relaxed"
+                placeholder="Ask a data question (e.g., 'give me top customers by spend' or 'show monthly revenue trend')…"
+                className="w-full resize-none bg-transparent px-4 sm:px-5 pt-3.5 sm:pt-4 pb-2 text-[14px] sm:text-[14.5px] text-foreground outline-none placeholder:text-muted-foreground/60 max-h-40 sm:max-h-52 leading-relaxed"
               />
 
-              <div className="flex items-center justify-between px-3 sm:px-4 pb-2.5 pt-1 border-t border-[#f0f4f1]">
-                <div className="flex items-center gap-2 text-[10.5px] sm:text-[11.5px] text-[#788e81]">
+              <div className="flex items-center justify-between px-3 sm:px-4 pb-2.5 pt-1 border-t border-border/60">
+                <div className="flex items-center gap-2 text-[10.5px] sm:text-[11.5px] text-muted-foreground">
                   <span className="hidden sm:inline">Enter to send</span>
                   <span className="hidden sm:inline">·</span>
                   <span className="hidden md:inline">Shift+Enter for newline</span>
                   <span className="hidden md:inline">·</span>
-                  <span className="flex items-center gap-1 text-emerald-700 font-medium">
-                    <ShieldCheck className="size-3.5 text-emerald-600" />
+                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                    <ShieldCheck className="size-3.5" />
                     Schema-Grounded &amp; Typo-Tolerant
                   </span>
                 </div>
@@ -1059,10 +1059,10 @@ export default function Chatbox() {
                   type="button"
                   disabled={!inputText.trim() || isLoading}
                   onClick={() => handleSend()}
-                  className="size-8 sm:size-9 rounded-xl bg-[#111c16] hover:bg-[#1e3328] shadow-sm disabled:opacity-30 transition-all shrink-0 cursor-pointer"
+                  className="size-8 sm:size-9 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs disabled:opacity-30 transition-all shrink-0 cursor-pointer"
                   size="icon"
                 >
-                  <ArrowUp className="size-4 text-[#5de08a]" />
+                  <ArrowUp className="size-4 text-emerald-400" />
                 </Button>
               </div>
             </div>
@@ -1079,16 +1079,16 @@ export default function Chatbox() {
             onClick={() => setIsHelperOpen(false)}
           />
 
-          <aside className="fixed inset-y-0 right-0 z-50 w-84 max-w-[88vw] border-l border-[#dce7e0] bg-white flex flex-col h-full shadow-2xl lg:shadow-none lg:static lg:w-80 lg:z-auto lg:shrink-0 animate-fade-in">
-            <div className="px-4 py-3.5 border-b border-[#dce7e0] bg-[#f9faf9] space-y-2.5">
+          <aside className="fixed inset-y-0 right-0 z-50 w-84 max-w-[88vw] border-l border-border bg-card flex flex-col h-full shadow-2xl lg:shadow-none lg:static lg:w-80 lg:z-auto lg:shrink-0 animate-fade-in">
+            <div className="px-4 py-3.5 border-b border-border bg-muted/40 space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="flex size-7.5 items-center justify-center rounded-lg bg-[#111c16] text-[#5de08a] shrink-0">
+                  <div className="flex size-7.5 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0">
                     <Database className="size-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[12.5px] font-bold text-[#111c16] leading-none">Schema Explorer</p>
-                    <p className="text-[10.5px] text-[#718578] mt-0.5 truncate">
+                    <p className="text-[12.5px] font-bold text-foreground leading-none">Schema Explorer</p>
+                    <p className="text-[10.5px] text-muted-foreground mt-0.5 truncate font-mono">
                       {dbInfo ? `${dbInfo.host}` : "Demo Schema"} · {filteredSchema.length} tables
                     </p>
                   </div>
@@ -1103,14 +1103,14 @@ export default function Chatbox() {
                       filteredSchema.forEach(t => { next[t.table_name] = !allCollapsed })
                       setCollapsed(next)
                     }}
-                    className="text-[11px] font-semibold text-[#1f7a47] hover:text-[#145330] transition-colors px-1 cursor-pointer"
+                    className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline transition-colors px-1 cursor-pointer"
                   >
                     {filteredSchema.every(t => collapsed[t.table_name]) ? "Expand All" : "Collapse All"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsHelperOpen(false)}
-                    className="p-1 text-[#718578] hover:text-[#111c16] lg:hidden cursor-pointer"
+                    className="p-1 text-muted-foreground hover:text-foreground lg:hidden cursor-pointer"
                     title="Close Schema Explorer"
                   >
                     <X className="size-4" />
@@ -1119,35 +1119,35 @@ export default function Chatbox() {
               </div>
 
               <div className="relative">
-                <Search className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#8ea396]" />
+                <Search className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="text"
                   value={schemaSearch}
                   onChange={e => setSchemaSearch(e.target.value)}
                   placeholder="Filter tables or columns…"
-                  className="w-full rounded-lg border border-[#d4e2d8] bg-white pl-8 pr-3 py-1.5 text-[12px] text-[#111c16] outline-none placeholder:text-[#97aba0] focus:border-[#34c06a] transition-colors"
+                  className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-[12px] text-foreground outline-none placeholder:text-muted-foreground focus:border-ring transition-colors"
                 />
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {filteredSchema.length === 0 && (
-                <p className="text-center py-8 text-[12px] text-[#8ea396]">No matching tables in schema</p>
+                <p className="text-center py-8 text-[12px] text-muted-foreground">No matching tables in schema</p>
               )}
               {filteredSchema.map(t => {
                 const name = t.table_name || t.table
                 const isCollapsed = !!collapsed[name]
                 return (
-                  <div key={name} className="group/row rounded-xl border border-[#dce7e0] bg-white overflow-hidden shadow-2xs transition-all duration-150 hover:border-[#a8d4b3]">
-                    <div className="flex items-center justify-between px-3 py-2.5 bg-[#f9faf9] border-b border-[#e4ece6]">
+                  <div key={name} className="group/row rounded-xl border border-border bg-card overflow-hidden shadow-2xs transition-all duration-150 hover:border-border-hover">
+                    <div className="flex items-center justify-between px-3 py-2.5 bg-muted/40 border-b border-border">
                       <button
                         type="button"
                         onClick={() => toggleCollapse(name)}
                         className="flex items-center gap-1.5 min-w-0 flex-1 text-left cursor-pointer"
                       >
-                        <Columns className="size-3.5 text-[#34c06a] shrink-0" />
-                        <span className="font-mono text-[12px] font-bold text-[#111c16] truncate">{name}</span>
-                        <span className="rounded bg-[#edf5ef] border border-[#cde2d4] px-1.5 py-0.2 text-[9px] font-bold text-[#1b5c38] shrink-0">
+                        <Columns className="size-3.5 text-emerald-500 shrink-0" />
+                        <span className="font-mono text-[12px] font-bold text-foreground truncate">{name}</span>
+                        <span className="rounded bg-muted border border-border px-1.5 py-0.2 text-[9px] font-bold text-muted-foreground shrink-0">
                           {(t.columns || []).length}
                         </span>
                       </button>
@@ -1157,7 +1157,7 @@ export default function Chatbox() {
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setProfileTable(name); }}
                           title="View sample preview & distributions"
-                          className="flex items-center gap-1 rounded-md bg-white border border-[#c6e5d1] px-1.5 py-0.5 text-[9.5px] font-bold text-[#1b6b3a] hover:bg-[#eef7f1] transition-colors cursor-pointer"
+                          className="flex items-center gap-1 rounded-md bg-card border border-border px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400 hover:bg-muted transition-colors cursor-pointer"
                         >
                           <Eye className="size-2.5" />
                           <span>Sample</span>
@@ -1165,7 +1165,7 @@ export default function Chatbox() {
                         <button
                           type="button"
                           onClick={() => toggleCollapse(name)}
-                          className="p-0.5 text-[#8ea396] hover:text-[#111c16] cursor-pointer"
+                          className="p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
                         >
                           {isCollapsed ? <ChevronDown className="size-3.5" /> : <ChevronUp className="size-3.5" />}
                         </button>
@@ -1173,21 +1173,21 @@ export default function Chatbox() {
                     </div>
 
                     {!isCollapsed && (
-                      <div className="divide-y divide-[#f2f6f3]">
+                      <div className="divide-y divide-border/60">
                         {t.description && (
-                          <p className="px-3 py-1.5 text-[10.5px] text-[#6d8276] bg-[#fcfdfc] italic">{t.description}</p>
+                          <p className="px-3 py-1.5 text-[10.5px] text-muted-foreground italic bg-muted/20">{t.description}</p>
                         )}
                         {(t.columns || []).map((col, ci) => {
                           const colName = typeof col === "string" ? col : col.name
                           const colType = typeof col === "string" ? "TEXT" : col.type
                           return (
-                            <div key={ci} className="flex items-center justify-between px-3 py-1.5 hover:bg-[#f8faf8] transition-colors">
-                              <span className="flex items-center gap-1.5 font-mono text-[11px] font-medium text-[#22362b] truncate max-w-[150px]">
+                            <div key={ci} className="flex items-center justify-between px-3 py-1.5 hover:bg-muted/40 transition-colors">
+                              <span className="flex items-center gap-1.5 font-mono text-[11px] font-medium text-foreground truncate max-w-[150px]">
                                 {col?.is_primary_key && <Key className="size-2.5 text-amber-500 shrink-0" title="Primary Key" />}
-                                {col?.is_foreign_key && <span className="text-[9px] text-blue-600 font-bold shrink-0" title="Foreign Key">FK</span>}
+                                {col?.is_foreign_key && <span className="text-[9px] text-sky-500 font-bold shrink-0" title="Foreign Key">FK</span>}
                                 <span className="truncate">{colName}</span>
                               </span>
-                              <span className="text-[9.5px] font-mono text-[#788e81] bg-[#f0f4f1] px-1.5 py-0.2 rounded shrink-0">
+                              <span className="text-[9.5px] font-mono text-muted-foreground bg-muted px-1.5 py-0.2 rounded shrink-0">
                                 {colType}
                               </span>
                             </div>
@@ -1205,39 +1205,39 @@ export default function Chatbox() {
 
       {/* ─── EXPLAIN Modal ─── */}
       {explainData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md rounded-2xl border border-[#dce7e0] bg-white shadow-2xl animate-scale-in overflow-hidden">
-            <div className="flex items-center justify-between p-5 border-b border-[#e4ece6] bg-[#f9faf9]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="relative w-full max-w-md rounded-2xl border border-border bg-card shadow-2xl animate-scale-in overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-border bg-muted/30">
               <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-[#111c16] text-[#5de08a]">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                   <Activity className="size-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-[14.5px] font-bold text-[#111c16]">EXPLAIN Cost Guard</h3>
-                  <p className="text-[11.5px] text-[#6d8276]">PostgreSQL Execution Planner</p>
+                  <h3 className="text-[14.5px] font-bold text-foreground">EXPLAIN Cost Guard</h3>
+                  <p className="text-[11.5px] text-muted-foreground">PostgreSQL Execution Planner</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setExplainData(null)} className="size-8 text-[#718578] cursor-pointer">
+              <Button variant="ghost" size="icon" onClick={() => setExplainData(null)} className="size-8 text-muted-foreground hover:text-foreground cursor-pointer">
                 <X className="size-4" />
               </Button>
             </div>
 
             <div className="p-5 space-y-4">
-              <div className={`p-3.5 rounded-xl border flex items-center justify-between ${perfClass}`}>
+              <div className={`p-3.5 rounded-xl border border-border bg-muted/30 flex items-center justify-between ${perfClass}`}>
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wide">Category</p>
-                  <p className="text-[13px] font-bold mt-0.5">{perfLabel}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Category</p>
+                  <p className="text-[13px] font-bold mt-0.5 text-foreground">{perfLabel}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[11px] font-bold uppercase tracking-wide">Est. Cost</p>
-                  <p className="text-[14px] font-mono font-extrabold mt-0.5">{explainData?.cost_guard?.total_estimated_cost ?? "N/A"}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Est. Cost</p>
+                  <p className="text-[14px] font-mono font-extrabold mt-0.5 text-foreground">{explainData?.cost_guard?.total_estimated_cost ?? "N/A"}</p>
                 </div>
               </div>
 
               {explainData?.cost_guard?.sequential_scans?.length > 0 && (
-                <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold text-amber-950">
-                    <AlertTriangle className="size-3.5 text-amber-600" />
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-800 dark:text-amber-200 space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-300">
+                    <AlertTriangle className="size-3.5 text-amber-500" />
                     <span>Sequential Scan Warning</span>
                   </div>
                   <p className="leading-relaxed">
@@ -1248,10 +1248,10 @@ export default function Chatbox() {
 
               {explainData?.index_recommendations?.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#718578]">Index Advisor Recommendation</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Index Advisor Recommendation</p>
                   {explainData.index_recommendations.map((rec, i) => (
-                    <div key={i} className="p-2.5 rounded-xl bg-[#0c1410] border border-[#1b2b22] font-mono text-[11px] text-[#c6ebd4] flex items-center justify-between gap-2">
-                      <code className="truncate">{rec.ddl}</code>
+                    <div key={i} className="p-2.5 rounded-xl bg-muted/40 border border-border font-mono text-[11px] text-foreground flex items-center justify-between gap-2">
+                      <code className="truncate text-emerald-600 dark:text-emerald-400">{rec.ddl}</code>
                       <button
                         type="button"
                         onClick={async () => {
@@ -1259,7 +1259,7 @@ export default function Chatbox() {
                           setCopiedIndexRec(true)
                           setTimeout(() => setCopiedIndexRec(false), 1500)
                         }}
-                        className="text-[10px] text-[#5de08a] font-bold shrink-0 hover:underline cursor-pointer"
+                        className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold shrink-0 hover:underline cursor-pointer"
                       >
                         {copiedIndexRec ? "Copied" : "Copy"}
                       </button>
@@ -1269,8 +1269,8 @@ export default function Chatbox() {
               )}
             </div>
 
-            <div className="p-4 border-t border-[#e4ece6] bg-[#f9faf9] flex justify-end">
-              <Button size="sm" onClick={() => setExplainData(null)} className="h-8 px-4 text-xs font-bold bg-[#111c16] hover:bg-[#1e3328] text-white cursor-pointer">
+            <div className="p-4 border-t border-border bg-muted/20 flex justify-end">
+              <Button size="sm" onClick={() => setExplainData(null)} className="h-8 px-4 text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer">
                 Dismiss
               </Button>
             </div>

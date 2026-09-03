@@ -23,6 +23,7 @@ import {
   HardDrive,
   HelpCircle,
   Keyboard,
+  Laptop,
   Layers,
   Loader2,
   Lock,
@@ -42,6 +43,7 @@ import {
   Sliders,
   SlidersHorizontal,
   Sparkles,
+  Sun,
   Table2,
   Terminal,
   Trash2,
@@ -61,8 +63,9 @@ import { API_BASE_URL, settingsApi } from "@/lib/api"
 
 const SECTIONS = [
   {
-    title: "1. Engine & AI",
+    title: "1. General & AI",
     items: [
+      { id: "general", label: "Appearance & Theme", icon: Sun, badge: "Theme" },
       { id: "engine", label: "AI Engine & Doctor", icon: Cpu, badge: "70B NIM" },
       { id: "editor", label: "Studio & Formatting", icon: SlidersHorizontal, badge: null },
     ],
@@ -140,6 +143,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
   }))
 
   const [localPreferences, setLocalPreferences] = useState(() => ({
+    theme: settings.preferences?.theme || "dark",
     model: settings.preferences?.model || "llama-3.1-70b-instruct",
     temperature: settings.preferences?.temperature ?? 0.0,
     clarificationLevel: settings.preferences?.clarificationLevel || "balanced",
@@ -154,6 +158,28 @@ export default function SettingsPanel({ isOpen, onClose }) {
     csvDelimiter: settings.preferences?.csvDelimiter || "comma",
     soundFeedback: settings.preferences?.soundFeedback ?? true,
   }))
+
+  const handleThemeChange = (newTheme) => {
+    setLocalPreferences((p) => ({ ...p, theme: newTheme }))
+    const root = document.documentElement
+    if (newTheme === "dark") {
+      root.classList.add("dark")
+      root.setAttribute("data-theme", "dark")
+    } else if (newTheme === "light") {
+      root.classList.remove("dark")
+      root.setAttribute("data-theme", "light")
+    } else {
+      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+      root.classList.toggle("dark", isDark)
+      root.setAttribute("data-theme", isDark ? "dark" : "light")
+    }
+    try {
+      localStorage.setItem("querycraft-theme", newTheme)
+      localStorage.setItem("querycraft-docs-theme", newTheme)
+    } catch {}
+    savePreferences({ theme: newTheme })
+    showToast(`Theme updated to ${newTheme}`, "success")
+  }
 
   const [localApiBase, setLocalApiBase] = useState(() => settings.apiBase || API_BASE_URL)
   const overlayRef = useRef(null)
@@ -258,29 +284,29 @@ export default function SettingsPanel({ isOpen, onClose }) {
       />
 
       {/* Modal Dialog */}
-      <div className="relative z-10 w-full max-w-4xl max-h-[92dvh] h-[660px] bg-white rounded-2xl border border-[#dfe7df] shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative z-10 w-full max-w-4xl max-h-[92dvh] h-[660px] bg-card text-foreground rounded-2xl border border-border shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* ── Left Navigation Sidebar ── */}
-        <div className="w-full md:w-64 shrink-0 bg-[#f8faf8] border-b md:border-b-0 md:border-r border-[#e3ebe4] flex flex-col">
+        <div className="w-full md:w-64 shrink-0 bg-muted/30 border-b md:border-b-0 md:border-r border-border flex flex-col">
           
           {/* Header */}
-          <div className="p-3.5 sm:p-4 border-b border-[#e3ebe4] flex items-center justify-between md:block">
+          <div className="p-3.5 sm:p-4 border-b border-border flex items-center justify-between md:block">
             <div className="flex items-center gap-2.5">
-              <div className="flex size-8 items-center justify-center rounded-xl bg-[#1a2920] text-[#5de08a] shadow-xs shrink-0">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-emerald-500/100/15 text-emerald-600 dark:text-emerald-400 shadow-xs shrink-0">
                 <Settings2 className="size-4" />
               </div>
               <div className="min-w-0">
-                <h2 className="text-xs sm:text-[14px] font-bold text-[#141a17] leading-none">Studio Settings</h2>
-                <p className="text-[10px] sm:text-[11px] text-[#718578] leading-none mt-0.5 hidden xs:block">
+                <h2 className="text-xs sm:text-[14px] font-bold text-foreground leading-none">Studio Settings</h2>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground leading-none mt-0.5 hidden xs:block">
                   AI &amp; Database Controls
                 </p>
               </div>
             </div>
 
             {/* Cloud Sync Status Indicator */}
-            <div className="flex items-center gap-1.5 md:mt-3 rounded-lg border border-[#d6e5d8] bg-white px-2.5 py-1 shadow-2xs">
-              <span className={`size-2 rounded-full shrink-0 ${isSyncing ? "bg-amber-400 animate-ping" : "bg-[#34c06a]"}`} />
-              <span className="text-[10px] font-medium text-[#4a5e53]">
+            <div className="flex items-center gap-1.5 md:mt-3 rounded-lg border border-border bg-card px-2.5 py-1 shadow-2xs">
+              <span className={`size-2 rounded-full shrink-0 ${isSyncing ? "bg-amber-400 animate-ping" : "bg-emerald-500/100"}`} />
+              <span className="text-[10px] font-medium text-muted-foreground">
                 {isSyncing ? "Syncing..." : "Cloud Synced"}
               </span>
             </div>
@@ -332,17 +358,17 @@ export default function SettingsPanel({ isOpen, onClose }) {
           </nav>
 
           {/* Active Workspace Pill in Footer */}
-          <div className="hidden md:block p-3 border-t border-[#e3ebe4] bg-white">
+          <div className="hidden md:block p-3 border-t border-border bg-card">
             <div className="flex items-center gap-2">
               <div
                 className="size-3 rounded-full shrink-0"
                 style={{ backgroundColor: activeWorkspace?.color || "#3aa363" }}
               />
               <div className="min-w-0 flex-1">
-                <p className="text-[11.5px] font-bold text-[#141a17] truncate">
+                <p className="text-[11.5px] font-bold text-foreground truncate">
                   {activeWorkspace?.name || "Default Workspace"}
                 </p>
-                <p className="text-[10px] text-[#718578] truncate">
+                <p className="text-[10px] text-muted-foreground truncate">
                   {activeWorkspace?.environment || "Production"} · {dbInfo ? `${dbInfo.tables_count} tables` : "No DB"}
                 </p>
               </div>
@@ -351,15 +377,16 @@ export default function SettingsPanel({ isOpen, onClose }) {
         </div>
 
         {/* ── Right Content Pane ── */}
-        <div className="flex-1 flex flex-col bg-white overflow-hidden min-w-0">
+        <div className="flex-1 flex flex-col bg-card overflow-hidden min-w-0">
           
           {/* Top Bar */}
-          <div className="flex items-center justify-between border-b border-[#e3ebe4] px-4 py-3 sm:px-6 sm:py-3.5 bg-white/90 shrink-0">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-6 sm:py-3.5 bg-card/90 shrink-0">
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-[#141a17]">
+              <h3 className="text-sm sm:text-base font-bold text-foreground">
                 {TABS.find((t) => t.id === activeTab)?.label}
               </h3>
-              <p className="text-xs text-[#718578] mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {activeTab === "general" && "Customize theme mode, typography scale, UI density, and audio feedback"}
                 {activeTab === "engine" && "Configure LLM compiler, strictness temperature, and SQL Doctor Critic healing"}
                 {activeTab === "safety" && "Enforce read-only safety, statement execution timeouts, and row limit protection"}
                 {activeTab === "editor" && "Fine-tune SQL keyword casing, export delimiters, and audio feedback"}
@@ -374,7 +401,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
               variant="ghost"
               size="iconSm"
               onClick={onClose}
-              className="text-[#718578] hover:text-[#141a17] hover:bg-[#eef5f0]"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               <X className="size-4" />
             </Button>
@@ -382,8 +409,8 @@ export default function SettingsPanel({ isOpen, onClose }) {
 
           {/* Toast Notification */}
           {toast && (
-            <div className="px-6 py-2 bg-[#edf7f0] border-b border-[#cde5d3] text-xs font-semibold text-[#1f663c] flex items-center gap-2 animate-in fade-in">
-              <CheckCircle2 className="size-3.5 text-[#3ba565]" />
+            <div className="px-6 py-2 bg-emerald-500/100/10 border-b border-emerald-500/20 text-xs font-semibold text-emerald-700 dark:text-emerald-400 dark:text-emerald-400 flex items-center gap-2 animate-in fade-in">
+              <CheckCircle2 className="size-3.5 text-emerald-500" />
               <span>{toast.msg}</span>
             </div>
           )}
@@ -392,17 +419,92 @@ export default function SettingsPanel({ isOpen, onClose }) {
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 custom-scrollbar">
             
             {/* ═════════════════════════════════════════════════════════ */}
+            {/* 0. APPEARANCE & THEME                                     */}
+            {/* ═════════════════════════════════════════════════════════ */}
+            {activeTab === "general" && (
+              <div className="space-y-4">
+                {/* Theme Selector */}
+                <div className="rounded-xl border border-border p-4 bg-card space-y-3">
+                  <div>
+                    <h4 className="text-xs font-bold text-foreground">Theme Mode</h4>
+                    <p className="text-[11px] text-muted-foreground">Select your preferred dashboard visual theme</p>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => handleThemeChange("light")}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-semibold transition cursor-pointer gap-2 ${
+                        localPreferences.theme === "light"
+                          ? "border-emerald-500 bg-emerald-500/100/10 text-foreground font-bold shadow-2xs"
+                          : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      <Sun className="size-5 text-amber-500" />
+                      <span>Light Mode</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleThemeChange("system")}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-semibold transition cursor-pointer gap-2 ${
+                        localPreferences.theme === "system"
+                          ? "border-emerald-500 bg-emerald-500/100/10 text-foreground font-bold shadow-2xs"
+                          : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      <Laptop className="size-5 text-sky-500" />
+                      <span>System Sync</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleThemeChange("dark")}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border text-xs font-semibold transition cursor-pointer gap-2 ${
+                        localPreferences.theme === "dark"
+                          ? "border-emerald-500 bg-emerald-500/100/10 text-foreground font-bold shadow-2xs"
+                          : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      <Moon className="size-5 text-emerald-400" />
+                      <span>Dark Mode</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sound Feedback Toggle */}
+                <div className="rounded-xl border border-border p-4 bg-card flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-foreground">Subtle Sound Feedback</h4>
+                    <p className="text-[11px] text-muted-foreground">Audio confirmation on query execution and SQL Doctor heals</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={localPreferences.soundFeedback}
+                    onChange={(e) => {
+                      const val = e.target.checked
+                      setLocalPreferences((p) => ({ ...p, soundFeedback: val }))
+                      savePreferences({ soundFeedback: val })
+                      showToast(`Audio feedback ${val ? "enabled" : "disabled"}`, "success")
+                    }}
+                    className="size-4 accent-emerald-600 rounded cursor-pointer"
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* ═════════════════════════════════════════════════════════ */}
             {/* 1. AI ENGINE & CRITIC DOCTOR                              */}
             {/* ═════════════════════════════════════════════════════════ */}
             {activeTab === "engine" && (
               <div className="space-y-4">
                 
                 {/* Active Model Selector */}
-                <div className="rounded-xl border border-[#dfe7df] p-4 bg-white space-y-3">
+                <div className="rounded-xl border border-border p-4 bg-card space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-xs font-bold text-[#141a17]">Primary LLM Model</h4>
-                      <p className="text-[11px] text-[#718578]">Grounded query compiler &amp; intent evaluator</p>
+                      <h4 className="text-xs font-bold text-foreground">Primary LLM Model</h4>
+                      <p className="text-[11px] text-muted-foreground">Grounded query compiler &amp; intent evaluator</p>
                     </div>
                     <Badge variant="emerald" className="text-[9px] uppercase font-bold">
                       NVIDIA NIM Hosted
@@ -412,7 +514,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                   <select
                     value={localPreferences.model}
                     onChange={(e) => setLocalPreferences((p) => ({ ...p, model: e.target.value }))}
-                    className="w-full rounded-xl border border-[#dfe7df] bg-[#fbfdfb] px-3 py-2 text-xs font-semibold text-[#141a17] outline-none focus:border-[#3aa363]"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-emerald-500"
                   >
                     <option value="llama-3.1-70b-instruct">meta/llama-3.1-70b-instruct (Recommended · High Accuracy)</option>
                     <option value="llama-3.3-70b-instruct">meta/llama-3.3-70b-instruct (Latest Fast Inference)</option>
@@ -421,15 +523,15 @@ export default function SettingsPanel({ isOpen, onClose }) {
                 </div>
 
                 {/* Determinism / Temperature Slider */}
-                <div className="rounded-xl border border-[#dfe7df] p-4 bg-white space-y-3">
+                <div className="rounded-xl border border-border p-4 bg-card space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-xs font-bold text-[#141a17]">Compilation Strictness (Temperature)</h4>
-                      <p className="text-[11px] text-[#718578]">
+                      <h4 className="text-xs font-bold text-foreground">Compilation Strictness (Temperature)</h4>
+                      <p className="text-[11px] text-muted-foreground">
                         Lower values produce strictly deterministic SQL matching live column names.
                       </p>
                     </div>
-                    <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/25">
                       {localPreferences.temperature.toFixed(1)}
                     </span>
                   </div>
@@ -443,7 +545,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                     onChange={(e) => setLocalPreferences((p) => ({ ...p, temperature: parseFloat(e.target.value) }))}
                     className="w-full accent-emerald-600 cursor-pointer"
                   />
-                  <div className="flex justify-between text-[10px] text-[#718578] font-mono">
+                  <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
                     <span>0.0 (Deterministic SQL)</span>
                     <span>0.2 (Balanced Analytical)</span>
                     <span>0.5 (Creative Exploration)</span>
@@ -452,9 +554,9 @@ export default function SettingsPanel({ isOpen, onClose }) {
 
                 {/* Auto-Healing Critic & Schema Pruning */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-[#dfe7df] p-3.5 bg-white space-y-2">
+                  <div className="rounded-xl border border-border p-3.5 bg-card space-y-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-[#141a17] flex items-center gap-1.5">
+                      <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                         <Zap className="size-3.5 text-emerald-600" />
                         <span>SQL Doctor Auto-Heal</span>
                       </h4>
@@ -465,14 +567,14 @@ export default function SettingsPanel({ isOpen, onClose }) {
                         className="size-4 accent-emerald-600 rounded cursor-pointer"
                       />
                     </div>
-                    <p className="text-[11px] text-[#718578] leading-relaxed">
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
                       Intercepts SQLSTATE execution errors (`42703`, `42P01`, `42803`) and uses Critic Agent to auto-repair queries.
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-[#dfe7df] p-3.5 bg-white space-y-2">
+                  <div className="rounded-xl border border-border p-3.5 bg-card space-y-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-[#141a17] flex items-center gap-1.5">
+                      <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                         <Database className="size-3.5 text-emerald-600" />
                         <span>Dynamic Schema Pruning</span>
                       </h4>
@@ -483,16 +585,16 @@ export default function SettingsPanel({ isOpen, onClose }) {
                         className="size-4 accent-emerald-600 rounded cursor-pointer"
                       />
                     </div>
-                    <p className="text-[11px] text-[#718578] leading-relaxed">
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
                       Prunes irrelevant tables on large 50+ table schemas with token-overlap RAG to prevent LLM context overflow.
                     </p>
                   </div>
                 </div>
 
                 {/* Proactive Clarification Level */}
-                <div className="rounded-xl border border-[#dfe7df] p-4 bg-white space-y-2">
-                  <h4 className="text-xs font-bold text-[#141a17]">Clarification Trigger Sensitivity</h4>
-                  <p className="text-[11px] text-[#718578]">
+                <div className="rounded-xl border border-border p-4 bg-card space-y-2">
+                  <h4 className="text-xs font-bold text-foreground">Clarification Trigger Sensitivity</h4>
+                  <p className="text-[11px] text-muted-foreground">
                     Controls when the engine pauses to ask 1-tap clarifying questions vs compiling immediately.
                   </p>
                   <div className="grid grid-cols-3 gap-2 pt-1">
@@ -507,19 +609,19 @@ export default function SettingsPanel({ isOpen, onClose }) {
                         onClick={() => setLocalPreferences((p) => ({ ...p, clarificationLevel: lvl.id }))}
                         className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
                           localPreferences.clarificationLevel === lvl.id
-                            ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 font-semibold"
-                            : "border-[#dfe7df] bg-[#fbfdfb] text-[#55695d] hover:bg-white"
+                            ? "border-emerald-600 bg-emerald-500/10/70 text-emerald-950 font-semibold"
+                            : "border-border bg-background text-muted-foreground hover:bg-card"
                         }`}
                       >
                         <span className="block text-xs font-bold">{lvl.label}</span>
-                        <span className="block text-[10px] text-[#718578] mt-0.5 leading-tight">{lvl.desc}</span>
+                        <span className="block text-[10px] text-muted-foreground mt-0.5 leading-tight">{lvl.desc}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div className="flex justify-end pt-2">
-                  <Button onClick={handleSavePreferences} className="gap-2 font-bold text-xs bg-[#1f2d24] hover:bg-[#2e4235]">
+                  <Button onClick={handleSavePreferences} className="gap-2 font-bold text-xs bg-primary hover:bg-primary/90 text-primary-foreground">
                     <Save className="size-3.5" />
                     <span>Save AI Settings</span>
                   </Button>
@@ -534,34 +636,34 @@ export default function SettingsPanel({ isOpen, onClose }) {
               <div className="space-y-4">
                 
                 {/* Read-Only Lock Banner */}
-                <div className="rounded-xl border border-emerald-200 bg-[#f0faf3] p-4 space-y-2">
+                <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/100/10 p-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs font-bold text-[#1f663c]">
-                      <ShieldCheck className="size-4 text-[#3ba565]" />
+                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-400 dark:text-emerald-400">
+                      <ShieldCheck className="size-4 text-emerald-500" />
                       <span>Read-Only Transaction Enforcement</span>
                     </div>
                     <Badge variant="emerald" className="text-[9px] uppercase font-bold">
                       Guaranteed Safe
                     </Badge>
                   </div>
-                  <p className="text-xs text-[#2e5d3e] leading-relaxed">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     QueryCraft appends `SET TRANSACTION READ ONLY` to all live PostgreSQL connections. All mutating operations (`DROP`, `DELETE`, `UPDATE`, `INSERT`, `TRUNCATE`) are strictly rejected.
                   </p>
                 </div>
 
                 {/* Execution Statement Timeout & Row Limits */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="rounded-xl border border-[#dfe7df] p-4 bg-white space-y-2">
-                    <label className="block text-xs font-bold text-[#141a17]">
+                  <div className="rounded-xl border border-border p-4 bg-card space-y-2">
+                    <label className="block text-xs font-bold text-foreground">
                       Statement Execution Timeout
                     </label>
-                    <p className="text-[11px] text-[#718578]">
+                    <p className="text-[11px] text-muted-foreground">
                       Cancels runaway scans or heavy queries before locking tables.
                     </p>
                     <select
                       value={localPreferences.statementTimeout}
                       onChange={(e) => setLocalPreferences((p) => ({ ...p, statementTimeout: parseInt(e.target.value) }))}
-                      className="w-full rounded-xl border border-[#dfe7df] bg-[#fbfdfb] px-3 py-2 text-xs font-semibold text-[#141a17] outline-none focus:border-[#3aa363]"
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-emerald-500"
                     >
                       <option value={5000}>5,000 ms (5 seconds)</option>
                       <option value={8000}>8,000 ms (8 seconds · Recommended)</option>
@@ -570,17 +672,17 @@ export default function SettingsPanel({ isOpen, onClose }) {
                     </select>
                   </div>
 
-                  <div className="rounded-xl border border-[#dfe7df] p-4 bg-white space-y-2">
-                    <label className="block text-xs font-bold text-[#141a17]">
+                  <div className="rounded-xl border border-border p-4 bg-card space-y-2">
+                    <label className="block text-xs font-bold text-foreground">
                       Default Safe LIMIT Clamp
                     </label>
-                    <p className="text-[11px] text-[#718578]">
+                    <p className="text-[11px] text-muted-foreground">
                       Appends safe read-only limit to prevent huge memory buffers.
                     </p>
                     <select
                       value={localPreferences.defaultLimit}
                       onChange={(e) => setLocalPreferences((p) => ({ ...p, defaultLimit: parseInt(e.target.value) }))}
-                      className="w-full rounded-xl border border-[#dfe7df] bg-[#fbfdfb] px-3 py-2 text-xs font-semibold text-[#141a17] outline-none focus:border-[#3aa363]"
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-emerald-500"
                     >
                       <option value={25}>25 rows</option>
                       <option value={50}>50 rows (Standard)</option>
@@ -592,11 +694,11 @@ export default function SettingsPanel({ isOpen, onClose }) {
                 </div>
 
                 {/* EXPLAIN Cost Warning Limit */}
-                <div className="rounded-xl border border-[#dfe7df] p-4 bg-white space-y-2">
+                <div className="rounded-xl border border-border p-4 bg-card space-y-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-xs font-bold text-[#141a17]">EXPLAIN Cost Alert Threshold</h4>
-                      <p className="text-[11px] text-[#718578]">
+                      <h4 className="text-xs font-bold text-foreground">EXPLAIN Cost Alert Threshold</h4>
+                      <p className="text-[11px] text-muted-foreground">
                         Warns if PostgreSQL EXPLAIN cost exceeds threshold and suggests CREATE INDEX CONCURRENTLY.
                       </p>
                     </div>
@@ -617,7 +719,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                 </div>
 
                 <div className="flex justify-end pt-2">
-                  <Button onClick={handleSavePreferences} className="gap-2 font-bold text-xs bg-[#1f2d24] hover:bg-[#2e4235]">
+                  <Button onClick={handleSavePreferences} className="gap-2 font-bold text-xs bg-primary hover:bg-primary/90 text-primary-foreground">
                     <Save className="size-3.5" />
                     <span>Save Safety Settings</span>
                   </Button>
@@ -633,17 +735,17 @@ export default function SettingsPanel({ isOpen, onClose }) {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* SQL Keyword Casing */}
-                  <div className="rounded-xl border border-[#dfe7df] p-4 bg-white space-y-2">
-                    <label className="block text-xs font-bold text-[#141a17]">
+                  <div className="rounded-xl border border-border p-4 bg-card space-y-2">
+                    <label className="block text-xs font-bold text-foreground">
                       SQL Keyword Casing
                     </label>
-                    <p className="text-[11px] text-[#718578]">
+                    <p className="text-[11px] text-muted-foreground">
                       Format generated SQL keywords style.
                     </p>
                     <select
                       value={localPreferences.sqlKeywordCasing}
                       onChange={(e) => setLocalPreferences((p) => ({ ...p, sqlKeywordCasing: e.target.value }))}
-                      className="w-full rounded-xl border border-[#dfe7df] bg-[#fbfdfb] px-3 py-2 text-xs font-semibold text-[#141a17] outline-none focus:border-[#3aa363]"
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-emerald-500"
                     >
                       <option value="uppercase">UPPERCASE (SELECT, FROM, WHERE)</option>
                       <option value="lowercase">lowercase (select, from, where)</option>
@@ -651,17 +753,17 @@ export default function SettingsPanel({ isOpen, onClose }) {
                   </div>
 
                   {/* CSV Export Delimiter */}
-                  <div className="rounded-xl border border-[#dfe7df] p-4 bg-white space-y-2">
-                    <label className="block text-xs font-bold text-[#141a17]">
+                  <div className="rounded-xl border border-border p-4 bg-card space-y-2">
+                    <label className="block text-xs font-bold text-foreground">
                       CSV Export Delimiter
                     </label>
-                    <p className="text-[11px] text-[#718578]">
+                    <p className="text-[11px] text-muted-foreground">
                       Format used when clicking Export CSV in charts.
                     </p>
                     <select
                       value={localPreferences.csvDelimiter}
                       onChange={(e) => setLocalPreferences((p) => ({ ...p, csvDelimiter: e.target.value }))}
-                      className="w-full rounded-xl border border-[#dfe7df] bg-[#fbfdfb] px-3 py-2 text-xs font-semibold text-[#141a17] outline-none focus:border-[#3aa363]"
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-emerald-500"
                     >
                       <option value="comma">Comma separated (,) [Standard]</option>
                       <option value="tab">Tab separated (\t) [TSV / Excel]</option>
@@ -671,14 +773,14 @@ export default function SettingsPanel({ isOpen, onClose }) {
                 </div>
 
                 {/* Audio / Sound Feedback */}
-                <div className="rounded-xl border border-[#dfe7df] p-4 bg-white space-y-2">
+                <div className="rounded-xl border border-border p-4 bg-card space-y-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-xs font-bold text-[#141a17] flex items-center gap-1.5">
+                      <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                         <Volume2 className="size-3.5 text-emerald-600" />
                         <span>Haptic Sound Effects</span>
                       </h4>
-                      <p className="text-[11px] text-[#718578]">
+                      <p className="text-[11px] text-muted-foreground">
                         Plays subtle audio feedback when queries execute or auto-heal successfully.
                       </p>
                     </div>
@@ -692,7 +794,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                 </div>
 
                 <div className="flex justify-end pt-2">
-                  <Button onClick={handleSavePreferences} className="gap-2 font-bold text-xs bg-[#1f2d24] hover:bg-[#2e4235]">
+                  <Button onClick={handleSavePreferences} className="gap-2 font-bold text-xs bg-primary hover:bg-primary/90 text-primary-foreground">
                     <Save className="size-3.5" />
                     <span>Save Studio Settings</span>
                   </Button>
@@ -707,10 +809,10 @@ export default function SettingsPanel({ isOpen, onClose }) {
               <div className="space-y-4">
                 
                 {/* Monthly Quota Banner */}
-                <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-[#f0faf3] to-[#e8f6ed] p-5 space-y-3">
+                <div className="rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-[#f0faf3] to-[#e8f6ed] p-5 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-800">
+                      <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                         Monthly AI Compilation Quota
                       </span>
                       <h4 className="text-lg font-extrabold text-[#112419]">
@@ -739,63 +841,63 @@ export default function SettingsPanel({ isOpen, onClose }) {
 
                 {/* Key Usage Statistics Tiles */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-3.5 rounded-xl border border-[#dfe7df] bg-white space-y-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#718578]">
+                  <div className="p-3.5 rounded-xl border border-border bg-card space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       Total Queries
                     </span>
-                    <p className="text-xl font-extrabold text-[#141a17]">{queriesUsed}</p>
-                    <span className="text-[10px] text-emerald-700 font-semibold">100% read-only</span>
+                    <p className="text-xl font-extrabold text-foreground">{queriesUsed}</p>
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">100% read-only</span>
                   </div>
 
-                  <div className="p-3.5 rounded-xl border border-[#dfe7df] bg-white space-y-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#718578]">
+                  <div className="p-3.5 rounded-xl border border-border bg-card space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       Auto-Heals
                     </span>
-                    <p className="text-xl font-extrabold text-[#141a17]">{usage.heals || 5}</p>
+                    <p className="text-xl font-extrabold text-foreground">{usage.heals || 5}</p>
                     <span className="text-[10px] text-amber-700 font-semibold">Critic Doctor</span>
                   </div>
 
-                  <div className="p-3.5 rounded-xl border border-[#dfe7df] bg-white space-y-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#718578]">
+                  <div className="p-3.5 rounded-xl border border-border bg-card space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       Verified Snippets
                     </span>
-                    <p className="text-xl font-extrabold text-[#141a17]">{usage.verified || 12}</p>
+                    <p className="text-xl font-extrabold text-foreground">{usage.verified || 12}</p>
                     <span className="text-[10px] text-blue-700 font-semibold">Few-shot RAG</span>
                   </div>
 
-                  <div className="p-3.5 rounded-xl border border-[#dfe7df] bg-white space-y-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#718578]">
+                  <div className="p-3.5 rounded-xl border border-border bg-card space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                       Live Schemas
                     </span>
-                    <p className="text-xl font-extrabold text-[#141a17]">{dbInfo?.tables_count || 5}</p>
+                    <p className="text-xl font-extrabold text-foreground">{dbInfo?.tables_count || 5}</p>
                     <span className="text-[10px] text-[#2f6643] font-semibold">Introspected</span>
                   </div>
                 </div>
 
                 {/* Engine Activity Velocity */}
-                <div className="rounded-xl border border-[#dfe7df] p-4 bg-white space-y-3">
-                  <h4 className="text-xs font-bold text-[#141a17]">Dialect Usage Distribution</h4>
+                <div className="rounded-xl border border-border p-4 bg-card space-y-3">
+                  <h4 className="text-xs font-bold text-foreground">Dialect Usage Distribution</h4>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center justify-between text-[11.5px] font-medium text-[#324538]">
                       <span className="flex items-center gap-2">
                         <span className="size-2.5 rounded-full bg-[#3ecf8e]" />
                         <span>PostgreSQL (Supabase / Neon / RDS)</span>
                       </span>
-                      <span className="font-mono font-bold text-emerald-800">68%</span>
+                      <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">68%</span>
                     </div>
                     <div className="flex items-center justify-between text-[11.5px] font-medium text-[#324538]">
                       <span className="flex items-center gap-2">
                         <span className="size-2.5 rounded-full bg-[#00ed64]" />
                         <span>MongoDB Atlas (NoSQL Aggregations)</span>
                       </span>
-                      <span className="font-mono font-bold text-emerald-800">22%</span>
+                      <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">22%</span>
                     </div>
                     <div className="flex items-center justify-between text-[11.5px] font-medium text-[#324538]">
                       <span className="flex items-center gap-2">
                         <span className="size-2.5 rounded-full bg-[#00758f]" />
                         <span>MySQL / MariaDB</span>
                       </span>
-                      <span className="font-mono font-bold text-emerald-800">10%</span>
+                      <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">10%</span>
                     </div>
                   </div>
                 </div>
@@ -810,15 +912,15 @@ export default function SettingsPanel({ isOpen, onClose }) {
               <div className="space-y-4">
                 
                 {/* Active Plan Banner */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-[#dfe7df] bg-[#f8faf8]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border bg-muted/30">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-[#141a17]">Developer Free Tier</h4>
+                      <h4 className="text-sm font-bold text-foreground">Developer Free Tier</h4>
                       <Badge variant="emerald" className="text-[9px] uppercase font-bold">
                         Active Plan
                       </Badge>
                     </div>
-                    <p className="text-xs text-[#718578] mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       500 queries/month · Unlimited Live Schemas · Read-Only Sandboxed
                     </p>
                   </div>
@@ -830,19 +932,19 @@ export default function SettingsPanel({ isOpen, onClose }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                   
                   {/* Free Tier */}
-                  <div className="rounded-2xl border-2 border-emerald-500 bg-[#fbfdfb] p-4 space-y-3 shadow-2xs relative">
+                  <div className="rounded-2xl border-2 border-emerald-500 bg-background p-4 space-y-3 shadow-2xs relative">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="text-sm font-bold text-[#141a17]">Developer Free</h4>
-                        <p className="text-xs text-[#718578]">For individual engineers &amp; hackers</p>
+                        <h4 className="text-sm font-bold text-foreground">Developer Free</h4>
+                        <p className="text-xs text-muted-foreground">For individual engineers &amp; hackers</p>
                       </div>
-                      <span className="rounded bg-emerald-100 text-emerald-800 font-bold text-[10px] px-2 py-0.5">
+                      <span className="rounded bg-emerald-100 text-emerald-700 dark:text-emerald-400 font-bold text-[10px] px-2 py-0.5">
                         Current
                       </span>
                     </div>
 
-                    <div className="text-2xl font-black text-[#141a17]">
-                      $0 <span className="text-xs font-normal text-[#718578]">/ month</span>
+                    <div className="text-2xl font-black text-foreground">
+                      $0 <span className="text-xs font-normal text-muted-foreground">/ month</span>
                     </div>
 
                     <ul className="space-y-1.5 text-xs text-[#324538]">
@@ -898,7 +1000,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                     <Button
                       type="button"
                       onClick={() => showToast("Upgrade link triggered. Contacting Stripe checkout...", "success")}
-                      className="w-full mt-2 font-bold text-xs bg-emerald-500 hover:bg-emerald-400 text-black shadow-sm cursor-pointer"
+                      className="w-full mt-2 font-bold text-xs bg-emerald-500/100 hover:bg-emerald-400 text-black shadow-sm cursor-pointer"
                     >
                       <span>Upgrade to Team Pro</span>
                       <ArrowRight className="size-3.5 ml-1" />
@@ -915,12 +1017,12 @@ export default function SettingsPanel({ isOpen, onClose }) {
             {/* ═════════════════════════════════════════════════════════ */}
             {activeTab === "shortcuts" && (
               <div className="space-y-4">
-                <div className="rounded-xl border border-[#dfe7df] p-4 bg-[#f8faf8] space-y-2">
-                  <h4 className="text-xs font-bold text-[#141a17] flex items-center gap-1.5">
+                <div className="rounded-xl border border-border p-4 bg-muted/30 space-y-2">
+                  <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                     <Keyboard className="size-4 text-emerald-600" />
                     <span>Developer Hotkeys</span>
                   </h4>
-                  <p className="text-xs text-[#718578]">
+                  <p className="text-xs text-muted-foreground">
                     Click on any shortcut to re-bind it. Shortcuts sync automatically to the Spotlight Copilot Chrome Extension.
                   </p>
                 </div>
@@ -934,10 +1036,10 @@ export default function SettingsPanel({ isOpen, onClose }) {
                   ].map((sc) => (
                     <div
                       key={sc.id}
-                      className="flex items-center justify-between p-3 rounded-xl border border-[#dfe7df] bg-white hover:border-emerald-500/40 transition"
+                      className="flex items-center justify-between p-3 rounded-xl border border-border bg-card hover:border-emerald-500/40 transition"
                     >
                       <div>
-                        <span className="text-xs font-bold text-[#141a17]">{sc.label}</span>
+                        <span className="text-xs font-bold text-foreground">{sc.label}</span>
                       </div>
                       <kbd className="font-mono text-xs font-bold text-[#1b6b3a] bg-[#eaf5ed] border border-[#c2e2cc] px-2 py-1 rounded-md shadow-2xs">
                         {sc.default}
@@ -955,8 +1057,8 @@ export default function SettingsPanel({ isOpen, onClose }) {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-bold text-[#141a17]">Project Workspaces</h4>
-                    <p className="text-[11px] text-[#718578]">
+                    <h4 className="text-xs font-bold text-foreground">Project Workspaces</h4>
+                    <p className="text-[11px] text-muted-foreground">
                       Organize different databases and credentials per client or project.
                     </p>
                   </div>
@@ -964,7 +1066,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                     type="button"
                     size="sm"
                     onClick={() => setIsWorkspaceModalOpen(true)}
-                    className="gap-1.5 font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white"
+                    className="gap-1.5 font-bold text-xs bg-emerald-600 hover:bg-emerald-500/100 text-white"
                   >
                     <Plus className="size-3.5" />
                     <span>New Workspace</span>
@@ -979,8 +1081,8 @@ export default function SettingsPanel({ isOpen, onClose }) {
                         key={ws.id}
                         className={`flex items-center justify-between p-3.5 rounded-xl border transition ${
                           isSelected
-                            ? "border-emerald-500 bg-emerald-50/50 shadow-2xs"
-                            : "border-[#dfe7df] bg-white hover:border-[#b8d4c1]"
+                            ? "border-emerald-500 bg-emerald-500/10/50 shadow-2xs"
+                            : "border-border bg-card hover:border-[#b8d4c1]"
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
@@ -990,17 +1092,17 @@ export default function SettingsPanel({ isOpen, onClose }) {
                           />
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-xs text-[#141a17] truncate">{ws.name}</span>
-                              <span className="rounded bg-[#edf4ee] border border-[#d6e5d9] px-1.5 py-0.2 text-[9px] font-bold text-[#2e5d3e]">
+                              <span className="font-bold text-xs text-foreground truncate">{ws.name}</span>
+                              <span className="rounded bg-[#edf4ee] border border-[#d6e5d9] px-1.5 py-0.2 text-[9px] font-bold text-muted-foreground">
                                 {ws.environment || "Production"}
                               </span>
                               {isSelected && (
-                                <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded">
+                                <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 px-1.5 py-0.2 rounded">
                                   Active
                                 </span>
                               )}
                             </div>
-                            <p className="text-[11px] font-mono text-[#718578] truncate mt-0.5">
+                            <p className="text-[11px] font-mono text-muted-foreground truncate mt-0.5">
                               {ws.connectionUri ? ws.connectionUri.replace(/:[^:@]+@/, ":••••@") : "No connection string attached"}
                             </p>
                           </div>
@@ -1011,7 +1113,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                             <button
                               type="button"
                               onClick={() => setActiveWorkspaceId(ws.id)}
-                              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 px-2.5 py-1 rounded-lg border border-emerald-200 bg-white hover:bg-emerald-50 transition cursor-pointer"
+                              className="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-500/25 bg-card hover:bg-emerald-500/10 transition cursor-pointer"
                             >
                               Switch To
                             </button>
@@ -1020,7 +1122,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                             <button
                               type="button"
                               onClick={() => deleteWorkspace(ws.id)}
-                              className="p-1.5 text-[#718578] hover:text-red-600 rounded-lg hover:bg-red-50 transition cursor-pointer"
+                              className="p-1.5 text-muted-foreground hover:text-red-600 rounded-lg hover:bg-red-50 transition cursor-pointer"
                               title="Delete Workspace"
                             >
                               <Trash2 className="size-3.5" />
@@ -1041,23 +1143,23 @@ export default function SettingsPanel({ isOpen, onClose }) {
               <div className="space-y-4">
                 
                 {/* Profile Card */}
-                <div className="flex items-center gap-3.5 p-4 rounded-xl border border-[#dfe7df] bg-[#f8faf8]">
+                <div className="flex items-center gap-3.5 p-4 rounded-xl border border-border bg-muted/30">
                   <div className="size-12 rounded-xl bg-gradient-to-br from-[#122e1d] to-[#1f4d30] text-[#5de08a] flex items-center justify-center text-lg font-bold shadow-xs shrink-0">
                     {(localAccount.displayName || "Q").charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-[#141a17] truncate">
+                    <h4 className="text-sm font-bold text-foreground truncate">
                       {localAccount.displayName || "QueryCraft User"}
                     </h4>
-                    <p className="text-xs text-[#718578] truncate">{localAccount.email}</p>
-                    <span className="inline-block text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded mt-1">
+                    <p className="text-xs text-muted-foreground truncate">{localAccount.email}</p>
+                    <span className="inline-block text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100/80 px-2 py-0.5 rounded mt-1">
                       {localAccount.role}
                     </span>
                   </div>
                 </div>
 
                 {/* Form Inputs */}
-                <div className="space-y-3 rounded-xl border border-[#dfe7df] p-4 bg-white">
+                <div className="space-y-3 rounded-xl border border-border p-4 bg-card">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-[#324538]">Display Name</label>
@@ -1065,7 +1167,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                         type="text"
                         value={localAccount.displayName}
                         onChange={(e) => setLocalAccount((p) => ({ ...p, displayName: e.target.value }))}
-                        className="w-full rounded-xl border border-[#dfe7df] bg-[#fbfdfb] px-3 py-2 text-xs text-[#141a17] outline-none focus:border-[#3aa363]"
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground outline-none focus:border-emerald-500"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1074,7 +1176,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                         type="email"
                         value={localAccount.email}
                         onChange={(e) => setLocalAccount((p) => ({ ...p, email: e.target.value }))}
-                        className="w-full rounded-xl border border-[#dfe7df] bg-[#fbfdfb] px-3 py-2 text-xs text-[#141a17] outline-none focus:border-[#3aa363]"
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground outline-none focus:border-emerald-500"
                       />
                     </div>
                   </div>
@@ -1084,7 +1186,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                     <select
                       value={localAccount.role}
                       onChange={(e) => setLocalAccount((p) => ({ ...p, role: e.target.value }))}
-                      className="w-full rounded-xl border border-[#dfe7df] bg-[#fbfdfb] px-3 py-2 text-xs text-[#141a17] outline-none focus:border-[#3aa363]"
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground outline-none focus:border-emerald-500"
                     >
                       {ROLES.map((r) => (
                         <option key={r} value={r}>{r}</option>
@@ -1099,7 +1201,7 @@ export default function SettingsPanel({ isOpen, onClose }) {
                         saveAccount(localAccount)
                         showToast("Profile updated & saved", "success")
                       }}
-                      className="gap-2 font-bold text-xs bg-[#1f2d24] hover:bg-[#2e4235]"
+                      className="gap-2 font-bold text-xs bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                       <Save className="size-3.5" />
                       <span>Save Profile</span>

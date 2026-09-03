@@ -85,17 +85,17 @@ export default function CostGuardDashboard() {
   return (
     <div className="w-full flex flex-col gap-6 text-foreground">
       {/* ── TOP BANNER & TELEMETRY BAR ── */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card/80 p-5 shadow-xs backdrop-blur-md">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card/85 p-5 shadow-2xs backdrop-blur-md">
         <div className="flex items-center gap-3.5">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-md shadow-emerald-950/30">
+          <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 shadow-2xs">
             <Zap className="size-5.5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground">
-                Pre-Flight Cost Guard <span className="text-emerald-500 font-mono text-sm">(AI Firewall)</span>
+                Pre-Flight Cost Guard <span className="text-emerald-600 dark:text-emerald-400 font-mono text-sm">(AI Firewall)</span>
               </h2>
-              <span className="rounded-full bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase text-emerald-500 tracking-wider">
+              <span className="rounded-full bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">
                 AST Plan Guard
               </span>
             </div>
@@ -105,16 +105,16 @@ export default function CostGuardDashboard() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs font-mono">
-          <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 text-emerald-400">
-            <Terminal className="size-3.5 text-emerald-400" />
+        <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+          <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
+            <Terminal className="size-3.5 text-emerald-500" />
             <span>MCP stdio (Cursor / Claude / Gemini)</span>
           </div>
-          <div className="flex items-center gap-2 rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-muted-foreground">
+          <div className="flex items-center gap-2 rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-muted-foreground font-medium">
             <Database className="size-3.5 text-emerald-500" />
             <span>PostgreSQL EXPLAIN</span>
           </div>
-          <div className="flex items-center gap-2 rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-muted-foreground">
+          <div className="flex items-center gap-2 rounded-lg bg-muted/60 border border-border px-3 py-1.5 text-muted-foreground font-medium">
             <Flame className="size-3.5 text-amber-500" />
             <span>Budget: &lt; {costThreshold} Cost</span>
           </div>
@@ -124,7 +124,7 @@ export default function CostGuardDashboard() {
       {/* ── SPLIT SCREEN WORKBENCH ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* ── LEFT PANEL: QUERY INPUT ── */}
-        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
               <Terminal className="size-3.5 text-emerald-500" />
@@ -140,7 +140,7 @@ export default function CostGuardDashboard() {
                 key={idx}
                 type="button"
                 onClick={() => setRawSql(p.sql)}
-                className="rounded-md bg-muted/70 hover:bg-muted border border-border px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors cursor-pointer"
+                className="rounded-lg bg-muted/60 hover:bg-muted border border-border px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors cursor-pointer"
               >
                 {p.name}
               </button>
@@ -148,13 +148,13 @@ export default function CostGuardDashboard() {
           </div>
 
           {/* Code Textarea */}
-          <div className="relative rounded-xl border border-border bg-[#070b09] overflow-hidden focus-within:border-emerald-500/60 focus-within:ring-1 focus-within:ring-emerald-500/40 transition-all shadow-inner">
+          <div className="relative rounded-xl border border-border bg-muted/30 dark:bg-[#070b09] overflow-hidden focus-within:border-emerald-500/60 focus-within:ring-1 focus-within:ring-emerald-500/40 transition-all shadow-inner">
             <textarea
               rows={12}
               value={rawSql}
               onChange={(e) => setRawSql(e.target.value)}
               placeholder="Paste raw SQL (e.g. SELECT * FROM orders WHERE ...)"
-              className="w-full bg-transparent p-4 font-mono text-xs sm:text-[13px] leading-relaxed text-[#d4e4db] placeholder-[#384a40] outline-none resize-none"
+              className="w-full bg-transparent p-4 font-mono text-xs sm:text-[13px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 outline-none resize-none"
               spellCheck={false}
             />
           </div>
@@ -167,7 +167,7 @@ export default function CostGuardDashboard() {
                 type="number"
                 value={costThreshold}
                 onChange={(e) => setCostThreshold(e.target.value)}
-                className="w-16 rounded border border-border bg-background px-1.5 py-0.5 text-xs text-foreground font-mono outline-none"
+                className="w-16 rounded-md border border-border bg-background px-2 py-0.5 text-xs text-foreground font-mono outline-none"
               />
             </div>
 
@@ -175,7 +175,7 @@ export default function CostGuardDashboard() {
               type="button"
               disabled={isLoading || !rawSql.trim()}
               onClick={() => guardMutation.mutate(rawSql)}
-              className="h-10 px-4 gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-950/40 cursor-pointer"
+              className="h-9 px-4 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs sm:text-sm rounded-xl shadow-2xs cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -184,7 +184,7 @@ export default function CostGuardDashboard() {
                 </>
               ) : (
                 <>
-                  <Zap className="size-4 fill-current text-white" />
+                  <Zap className="size-4 fill-current text-emerald-400" />
                   <span>Pre-Flight Guard (⌘↵)</span>
                 </>
               )}
@@ -193,7 +193,7 @@ export default function CostGuardDashboard() {
         </div>
 
         {/* ── RIGHT PANEL: BEFORE & AFTER DIFF & TELEMETRY ── */}
-        <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-2xs">
           {/* Header & Status Badges */}
           <div className="flex items-center justify-between flex-wrap gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -203,19 +203,19 @@ export default function CostGuardDashboard() {
             {result && (
               <div className="flex items-center gap-2">
                 {result.action_type === "blocked_needs_index" || result.status === "blocked_needs_index" ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 border border-red-500/40 px-3 py-1 text-xs font-bold font-mono text-red-500 animate-pulse">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/15 border border-destructive/40 px-3 py-1 text-xs font-bold font-mono text-destructive animate-pulse">
                     <ShieldAlert className="size-3.5" />
                     Query Blocked — Missing Index
                   </span>
                 ) : result.is_safe ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-bold font-mono text-emerald-500">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400">
                     <ShieldCheck className="size-3.5" />
                     {result.status === "healed" || result.action_type === "rewritten"
-                      ? `Safe - Cost Reduced (-${result.cost_comparison.cost_reduction_pct}%)`
+                      ? `Safe - Cost Reduced (-${result.cost_comparison?.cost_reduction_pct || 0}%)`
                       : "Safe - Plan Verified"}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 border border-red-500/30 px-3 py-1 text-xs font-bold font-mono text-red-500">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 border border-destructive/30 px-3 py-1 text-xs font-bold font-mono text-destructive">
                     <ShieldAlert className="size-3.5" />
                     Unsafe - High Compute Cost
                   </span>
@@ -228,7 +228,7 @@ export default function CostGuardDashboard() {
           {!result && !isLoading && !isError && (
             <div className="flex flex-col items-center justify-center py-20 text-center gap-3 border border-dashed border-border rounded-xl bg-muted/20">
               <Activity className="size-8 text-muted-foreground" />
-              <p className="text-xs font-medium text-muted-foreground max-w-xs">
+              <p className="text-xs font-medium text-muted-foreground max-w-xs leading-relaxed">
                 Enter your SQL query on the left and run Pre-Flight Guard. The engine evaluates PostgreSQL EXPLAIN compute cost and heals bottlenecks.
               </p>
             </div>
@@ -246,7 +246,7 @@ export default function CostGuardDashboard() {
 
           {/* Error State */}
           {isError && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-xs text-red-600 dark:text-red-400">
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-xs text-destructive">
               <p className="font-bold">Execution Inspection Failed:</p>
               <p className="mt-1 font-mono text-[11px]">
                 {guardMutation.error?.response?.data?.detail || guardMutation.error.message}
@@ -258,41 +258,41 @@ export default function CostGuardDashboard() {
           {result && (
             <div className="flex flex-col gap-4">
               {/* Metrics HUD Card */}
-              <div className="grid grid-cols-3 gap-2.5 rounded-xl border border-border bg-[#070b09] p-3.5 text-center shadow-inner">
+              <div className="grid grid-cols-3 gap-2.5 rounded-xl border border-border bg-muted/30 dark:bg-[#070b09] p-3.5 text-center shadow-inner">
                 <div className="flex flex-col">
                   <span className="text-[10px] uppercase font-bold text-muted-foreground">Baseline Cost</span>
                   <span className="font-mono text-sm sm:text-base font-bold text-foreground">
-                    {result.cost_comparison.initial_cost.toFixed(1)}
+                    {result.cost_comparison?.initial_cost ? result.cost_comparison.initial_cost.toFixed(1) : "0.0"}
                   </span>
                 </div>
                 <div className="flex flex-col border-x border-border/80">
                   <span className="text-[10px] uppercase font-bold text-muted-foreground">Optimized Cost</span>
                   <span
                     className={`font-mono text-sm sm:text-base font-bold ${
-                      result.action_type === "blocked_needs_index" ? "text-red-400" : "text-emerald-500"
+                      result.action_type === "blocked_needs_index" ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"
                     }`}
                   >
                     {result.action_type === "blocked_needs_index"
-                      ? `${result.cost_comparison.initial_cost.toFixed(1)} (Blocked)`
-                      : result.cost_comparison.final_cost.toFixed(1)}
+                      ? `${result.cost_comparison?.initial_cost ? result.cost_comparison.initial_cost.toFixed(1) : "0.0"} (Blocked)`
+                      : result.cost_comparison?.final_cost ? result.cost_comparison.final_cost.toFixed(1) : "0.0"}
                   </span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[10px] uppercase font-bold text-muted-foreground">Scan Method</span>
                   <span
                     className={`font-mono text-xs sm:text-sm font-bold ${
-                      result.cost_comparison.initial_has_seq_scan ? "text-amber-500" : "text-emerald-500"
+                      result.cost_comparison?.initial_has_seq_scan ? "text-amber-500" : "text-emerald-600 dark:text-emerald-400"
                     }`}
                   >
-                    {result.cost_comparison.initial_has_seq_scan ? "Seq Scan (500k Rows)" : "Index Scan"}
+                    {result.cost_comparison?.initial_has_seq_scan ? "Seq Scan (500k Rows)" : "Index Scan"}
                   </span>
                 </div>
               </div>
 
               {/* Blocked Needs Index Warning Banner */}
               {(result.action_type === "blocked_needs_index" || result.status === "blocked_needs_index") && (
-                <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-xs flex flex-col gap-2">
-                  <div className="flex items-center gap-2 text-red-500 font-bold">
+                <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-xs flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-destructive font-bold">
                     <ShieldAlert className="size-4 shrink-0" />
                     <span>Production Execution Blocked: Missing Index</span>
                   </div>
@@ -300,12 +300,12 @@ export default function CostGuardDashboard() {
                     Query execution was halted to prevent a dangerous full sequential scan. Please send this missing index report to your Data Engineering team:
                   </p>
                   {result.suggested_index && (
-                    <div className="flex items-center justify-between rounded-lg border border-red-500/20 bg-[#090505] p-2.5 font-mono text-[11px] text-red-300">
+                    <div className="flex items-center justify-between rounded-lg border border-destructive/20 bg-muted/50 p-2.5 font-mono text-[11px] text-destructive">
                       <code>{result.suggested_index}</code>
                       <button
                         type="button"
                         onClick={() => handleCopy(result.suggested_index)}
-                        className="ml-2 shrink-0 text-red-400 hover:text-red-200 underline cursor-pointer"
+                        className="ml-2 shrink-0 underline cursor-pointer hover:opacity-80 font-bold"
                       >
                         {copied ? "Copied" : "Copy DDL"}
                       </button>
@@ -341,7 +341,7 @@ export default function CostGuardDashboard() {
                 </div>
               </div>
 
-              {/* Before & After Diff Box (Preserves User SELECT Query) */}
+              {/* Before & After Diff Box */}
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -357,10 +357,10 @@ export default function CostGuardDashboard() {
                   </button>
                 </div>
 
-                <div className="rounded-xl border border-border bg-[#050806] p-4 overflow-x-auto shadow-inner">
+                <div className="rounded-xl border border-border bg-muted/30 dark:bg-[#050806] p-4 overflow-x-auto shadow-inner">
                   <pre
                     className={`font-mono text-xs leading-relaxed whitespace-pre-wrap ${
-                      result.action_type === "blocked_needs_index" ? "text-[#a0b0a8]" : "text-emerald-400"
+                      result.action_type === "blocked_needs_index" ? "text-muted-foreground" : "text-emerald-600 dark:text-emerald-400"
                     }`}
                   >
                     <code>{result.optimized_query}</code>
@@ -379,7 +379,7 @@ export default function CostGuardDashboard() {
                   {showPlanJson ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
                 </button>
                 {showPlanJson && (
-                  <pre className="mt-2 max-h-48 overflow-y-auto rounded-lg border border-border bg-[#040605] p-3 font-mono text-[10px] text-muted-foreground">
+                  <pre className="mt-2 max-h-48 overflow-y-auto rounded-lg border border-border bg-muted/40 dark:bg-[#040605] p-3 font-mono text-[10px] text-muted-foreground">
                     {JSON.stringify(result.explain_plan, null, 2)}
                   </pre>
                 )}

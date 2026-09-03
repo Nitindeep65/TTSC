@@ -137,22 +137,22 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-[--border] bg-white shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[92dvh]">
+      <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[92dvh]">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[--border] p-4 sm:p-5 shrink-0">
+        <div className="flex items-center justify-between border-b border-border p-4 sm:p-5 shrink-0 bg-muted/30">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
+            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shadow-xs">
               <Bookmark className="size-4.5 sm:size-5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-bold text-[#17241c] truncate">Saved Query Notebook</h2>
+                <h2 className="text-sm sm:text-base font-bold text-foreground truncate">Saved Query Notebook</h2>
                 <Badge variant="emerald" className="text-[9px] uppercase font-bold shrink-0">
                   Cloud
                 </Badge>
               </div>
-              <p className="text-[11px] sm:text-xs text-[#607266] truncate">
+              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
                 Syncs with Chrome Extension &amp; team workspace.
               </p>
             </div>
@@ -164,7 +164,7 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
               variant={isAdding ? "secondary" : "outline"}
               size="sm"
               onClick={() => setIsAdding((p) => !p)}
-              className="gap-1.5 text-xs font-semibold h-8"
+              className="gap-1.5 text-xs font-semibold h-8 cursor-pointer"
             >
               <Plus className="size-3.5" />
               <span className="hidden xs:inline">{isAdding ? "Cancel" : "Add Snippet"}</span>
@@ -175,7 +175,7 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="text-[#738478] size-8 p-0"
+              className="text-muted-foreground hover:text-foreground size-8 p-0 cursor-pointer"
             >
               <X className="size-4" />
             </Button>
@@ -183,28 +183,28 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
         </div>
 
         {/* Search & Tags Row */}
-        <div className="px-4 sm:px-6 py-3 border-b border-[--border] space-y-2.5 shrink-0">
+        <div className="px-4 sm:px-6 py-3 border-b border-border space-y-2.5 shrink-0 bg-muted/10">
           <div className="relative">
-            <Search className="size-4 text-[#8a9e93] absolute left-3 top-2.5" />
+            <Search className="size-4 text-muted-foreground absolute left-3 top-2.5" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search saved notebooks by keyword or SQL snippet…"
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-[--border] text-xs text-[#17241c] outline-none placeholder:text-[#a0b2a7] focus:border-[#34c06a]"
+              className="w-full pl-9 pr-4 py-2 rounded-xl border border-border bg-background text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-ring transition-colors"
             />
           </div>
 
           {allTags.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] font-semibold text-[#8a9e93] mr-1">Tags:</span>
+              <span className="text-[11px] font-semibold text-muted-foreground mr-1">Tags:</span>
               <button
                 type="button"
                 onClick={() => setSelectedTag(null)}
-                className={`rounded-md px-2 py-0.5 text-[10.5px] font-semibold transition ${
+                className={`rounded-md px-2 py-0.5 text-[10.5px] font-semibold transition cursor-pointer ${
                   selectedTag === null
-                    ? "bg-[#1f2d24] text-white"
-                    : "bg-[#edf4ef] text-[#415549] hover:bg-[#dfeade]"
+                    ? "bg-primary text-primary-foreground shadow-2xs"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
                 }`}
               >
                 All ({queries.length})
@@ -214,10 +214,10 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
                   key={t}
                   type="button"
                   onClick={() => setSelectedTag(selectedTag === t ? null : t)}
-                  className={`rounded-md px-2 py-0.5 text-[10.5px] font-semibold transition ${
+                  className={`rounded-md px-2 py-0.5 text-[10.5px] font-semibold transition cursor-pointer ${
                     selectedTag === t
-                      ? "bg-[#1f2d24] text-white"
-                      : "bg-[#edf4ef] text-[#415549] hover:bg-[#dfeade]"
+                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {t}
@@ -232,64 +232,64 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
 
           {/* Add Snippet Form */}
           {isAdding && (
-            <form onSubmit={handleCreate} className="rounded-xl border border-[#cde5d4] bg-[#f4faf6] p-4 space-y-3 mb-4">
-              <span className="text-xs font-bold text-[#1b6b3a] uppercase tracking-wide block">
+            <form onSubmit={handleCreate} className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4 space-y-3 mb-4">
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide block">
                 Add New Query Snippet
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-[#354c3e] block mb-1">Snippet Title</label>
+                  <label className="text-[11px] font-bold text-foreground block mb-1">Snippet Title</label>
                   <input
                     type="text"
                     required
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     placeholder="e.g. Daily Revenue by Payment Method"
-                    className="w-full rounded-lg border border-[--border] bg-white px-3 py-1.5 text-xs text-[#17241c] outline-none"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-[#354c3e] block mb-1">Tags (comma separated)</label>
+                  <label className="text-[11px] font-bold text-foreground block mb-1">Tags (comma separated)</label>
                   <input
                     type="text"
                     value={newTags}
                     onChange={(e) => setNewTags(e.target.value)}
                     placeholder="#finance, #daily-ops"
-                    className="w-full rounded-lg border border-[--border] bg-white px-3 py-1.5 text-xs text-[#17241c] outline-none"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-[#354c3e] block mb-1">Natural Language Description</label>
+                <label className="text-[11px] font-bold text-foreground block mb-1">Natural Language Description</label>
                 <input
                   type="text"
                   required
                   value={newPrompt}
                   onChange={(e) => setNewPrompt(e.target.value)}
                   placeholder="e.g. Show sum of revenue grouped by payment method for completed orders"
-                  className="w-full rounded-lg border border-[--border] bg-white px-3 py-1.5 text-xs text-[#17241c] outline-none"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-[#354c3e] block mb-1">PostgreSQL Query (SELECT)</label>
+                <label className="text-[11px] font-bold text-foreground block mb-1">PostgreSQL Query (SELECT)</label>
                 <textarea
                   required
                   rows={3}
                   value={newSql}
                   onChange={(e) => setNewSql(e.target.value)}
                   placeholder="SELECT payment_method, SUM(amount) FROM payments WHERE status = 'succeeded' GROUP BY payment_method;"
-                  className="w-full font-mono rounded-lg border border-[--border] bg-[#0d1613] text-[#c4e6d2] p-3 text-xs outline-none"
+                  className="w-full font-mono rounded-lg border border-border bg-muted/40 text-emerald-700 dark:text-emerald-400 p-3 text-xs outline-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-[#cde5d4]">
+              <div className="flex justify-end gap-2 pt-2 border-t border-border">
                 <Button
                   type="submit"
                   size="sm"
                   disabled={isSaving}
-                  className="gap-1.5 font-semibold"
+                  className="gap-1.5 font-semibold bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                 >
                   {isSaving ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
                   <span>Save Snippet</span>
@@ -299,14 +299,14 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
           )}
 
           {loading && (
-            <div className="py-12 text-center text-xs text-[#6e8074] flex flex-col items-center gap-2">
-              <Loader2 className="size-5 animate-spin text-[#34c06a]" />
+            <div className="py-12 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
+              <Loader2 className="size-5 animate-spin text-emerald-500" />
               <span>Loading saved query notebooks…</span>
             </div>
           )}
 
           {!loading && filtered.length === 0 && (
-            <div className="py-12 text-center text-xs text-[#8a9e93]">
+            <div className="py-12 text-center text-xs text-muted-foreground">
               No saved query snippets match your filter.
             </div>
           )}
@@ -315,15 +315,15 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
             filtered.map((q) => (
               <div
                 key={q.id}
-                className="rounded-xl border border-[--border] bg-white p-4 space-y-2.5 shadow-2xs hover:border-[#b8d4bc] transition-all group"
+                className="rounded-xl border border-border bg-card p-4 space-y-2.5 shadow-2xs hover:border-border-hover transition-all group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-xs text-[#17241c]">{q.title}</span>
+                    <span className="font-bold text-xs text-foreground">{q.title}</span>
                     {(q.tags || []).map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-md bg-[#edf5ef] border border-[#d6ebd9] px-1.5 py-0.5 text-[9.5px] font-semibold text-[#1b6b3a]"
+                        className="rounded-md bg-emerald-500/10 border border-emerald-500/25 px-1.5 py-0.5 text-[9.5px] font-semibold text-emerald-700 dark:text-emerald-400"
                       >
                         {tag}
                       </span>
@@ -335,9 +335,9 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
                       variant="ghost"
                       size="sm"
                       onClick={() => handleCopy(q.sql_query, q.id)}
-                      className="h-7 text-xs text-[#607266] gap-1 hover:text-[#17241c]"
+                      className="h-7 text-xs text-muted-foreground gap-1 hover:text-foreground cursor-pointer"
                     >
-                      {copiedId === q.id ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
+                      {copiedId === q.id ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
                       <span className="text-[11px]">{copiedId === q.id ? "Copied" : "Copy"}</span>
                     </Button>
 
@@ -348,7 +348,7 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
                           onSelectQuery(q.sql_query, q.user_prompt)
                           onClose()
                         }}
-                        className="h-7 text-xs bg-[#1f7a47] hover:bg-[#186038] text-white gap-1"
+                        className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90 gap-1 cursor-pointer"
                       >
                         <Play className="size-3" />
                         <span className="text-[11px]">Load in Chat</span>
@@ -358,7 +358,7 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
                     <button
                       type="button"
                       onClick={() => handleDelete(q.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-[#8b9b90] hover:text-red-600 transition"
+                      className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition cursor-pointer"
                       title="Delete from Notebook"
                     >
                       <Trash2 className="size-3.5" />
@@ -366,9 +366,9 @@ export default function QueryNotebookModal({ isOpen, onClose, onSelectQuery, act
                   </div>
                 </div>
 
-                <p className="text-xs text-[#607266] leading-relaxed">{q.user_prompt}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{q.user_prompt}</p>
 
-                <pre className="overflow-x-auto rounded-lg bg-[#0d1613] p-3 font-mono text-[11px] text-[#c4e6d2]">
+                <pre className="overflow-x-auto rounded-lg border border-border bg-muted/30 dark:bg-[#070b09] p-3 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">
                   <code>{q.sql_query}</code>
                 </pre>
               </div>

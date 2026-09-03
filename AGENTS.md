@@ -12,6 +12,7 @@
 >      - `⌘K` — **Raycast/Linear-Style Command Palette** for instant navigation
 >   2. **High-Fidelity Interactive Landing Page (`/`)**:
 >      - Live interactive 3-scenario terminal emulator (`querycraft check`, `querycraft ask`, `querycraft doctor`)
+>      - **Developer Workflow 4-Stage Interactive Pipeline** (`DeveloperWorkflowSection.jsx`) with animated state transitions, auto-play progression timer, live catalog visualizer, interactive 1-tap clarification chips, and SQL Doctor auto-heal simulation
 >      - 5-Pillar safety & architecture showcase, interactive CLI installer tabs, and developer testimonials
 >   3. **Model Context Protocol (MCP) Server**: Native `stdio` JSON-RPC 2.0 server with 6 tools for Cursor, Claude Desktop, Google Antigravity / Gemini, Windsurf, and custom agent swarms.
 >   4. **QueryCraft CLI (`querycraft`)**: Standalone terminal executable (`ask`, `check`, `doctor`, `query`, `schema`, `connect`, `setup`, `auth`, `workspaces`, `ai`).
@@ -222,6 +223,8 @@ TTS/
 │   │   │   │   └── SettingsPanel.jsx           # User preferences & shortcut configurator
 │   │   │   ├── shell/
 │   │   │   │   └── CommandPalette.jsx          # Raycast/Linear-style global ⌘K command modal
+│   │   │   ├── workflow/
+│   │   │   │   └── DeveloperWorkflowSection.jsx# Interactive 4-stage safety pipeline with animated transitions
 │   │   │   └── workspace/
 │   │   │       ├── CreateWorkspaceModal.jsx    # Multi-workspace creation modal
 │   │   │       ├── QueryNotebookModal.jsx      # Tagged SQL snippet notebook
@@ -326,20 +329,38 @@ TTS/
 - **Backend API**: [`/api/docs-copilot/route.js`](file:///Users/nitindeep/Developer/TTS/frontend/app/api/docs-copilot/route.js)
 - **Capabilities**: Grounded conversational assistant embedded on the website and docs pages. Answers CLI usage, MCP setup, risk tiers, and database connectivity questions using Llama 3.1 70B with strict deterministic safety boundaries.
 
-### 3.8. Overhauled Dashboard Studios
-- **Layout Shell** ([`Dashboard/layout.jsx`](file:///Users/nitindeep/Developer/TTS/frontend/app/%28website%29/Dashboard/layout.jsx)):
-  - Hotkey switcher: `⌘1` Chat, `⌘2` Cost Guard, `⌘3` Compiler, `⌘K` Command Palette.
-  - Database status context pill: Live engine badge (`POSTGRESQL`, `SUPABASE`, `NEON`), table count, host name.
-  - Header links: CLI Docs (`/docs/cli`), Settings, Onboarding Tour.
+### 3.8. Overhauled Dashboard Studios & Universal Theme Engine
+- **Universal Light / Dark / System Theme System**:
+  - Persistent segmented theme switcher in Header (`layout.jsx`), Settings Panel (`SettingsPanel.jsx`), and CLI Docs (`/docs/cli`).
+  - Seamlessly updates `document.documentElement` (`.dark` class and `data-theme`), synchronizes with user preferences (`settingsContext`), and persists across sessions via `localStorage` (`querycraft-theme` and `querycraft-docs-theme`).
+  - Dark mode features deep neutral obsidian surfaces (`#09090b` / `#111113`) with subtle borders (`#27272a`), while Light mode features crisp, airy slate canvases with emerald brand accents.
+- **Interactive Database Telemetry Control (`DatabaseStatusControl`)**:
+  - Replaces static badge with an interactive popover displaying live connection metrics: Target Engine (`POSTGRESQL`, `SUPABASE`, `NEON`), Host, Grounded Catalog Table Count, SSL Status, and 1-click quick actions (*Re-introspect Schema*, *Disconnect Database*).
+- **Layout Shell & Navigation** ([`Dashboard/layout.jsx`](file:///Users/nitindeep/Developer/TTS/frontend/app/%28website%29/Dashboard/layout.jsx)):
+  - Hotkey switcher: `⌘1` SQL Doctor & Clarification Chat, `⌘2` Pre-Flight Cost Guard AI Firewall, `⌘3` SQL Compiler Sandbox, `⌘K` Command Palette.
+  - Header actions: Direct link to CLI Docs (`/docs/cli`), Settings dialog trigger (`⌘,`), theme switcher, and modernized user avatar dropdown.
+- **Sidebar & Schema Explorer** ([`Dashboard/slidebar.jsx`](file:///Users/nitindeep/Developer/TTS/frontend/app/%28website%29/Dashboard/slidebar.jsx)):
+  - Built with semantic Tailwind tokens (`bg-sidebar`, `text-sidebar-foreground`, `border-sidebar-border`).
+  - Real-time schema table search filter, table count badges, primary key (`PK`) & foreign key (`FK`) badges, monospace column data types, 1-click sample data profiler trigger (`Eye`), and DDL copy with instant feedback.
+  - New Developer group linking directly to CLI Docs (`/docs/cli`) and Command Discovery (`⌘K`).
+- **SQL Doctor & Clarification Chat Studio** ([`Chatbox.jsx`](file:///Users/nitindeep/Developer/TTS/frontend/app/%28website%29/Dashboard/chat/Chatbox.jsx)):
+  - Full Light/Dark support with high-contrast message bubbles, 1-tap clarification chips, and floating input dock.
+  - SQL Doctor critic diagnosis card with root-cause explanations and 1-click query repair.
+  - Slide-out Schema Explorer drawer with live filter and profiling triggers.
 - **SQL Compiler Sandbox** ([`Dashboard/page.jsx`](file:///Users/nitindeep/Developer/TTS/frontend/app/%28website%29/Dashboard/page.jsx)):
   - Multi-tab query editor (`Query 1`, `Query 2`) with add/close tabs.
   - 1-click **Export CSV** download and **Copy Data** (JSON/TSV).
   - 1-click **Format SQL** query standardizer.
+  - Enhanced Data Table: 1-click cell copy with `Copied ✓` feedback, right-aligned numeric data in monospace font, and formatted `NULL` value badges.
   - 3-mode Results Pane: `Table` (resizable columns, execution ms), `Safety & Plan` (EXPLAIN cost analysis + `RiskBadge` + index advisor), `JSON`.
 - **Pre-Flight Cost Guard Studio** ([`CostGuardDashboard.jsx`](file:///Users/nitindeep/Developer/TTS/frontend/components/guard/CostGuardDashboard.jsx)):
-  - Semantic Tailwind theme tokens (`bg-card`, `border-border`, `text-foreground`).
-  - Baseline cost vs remediated cost comparison with cost reduction percentage badge.
-  - Automated index suggestion card with 1-click copy.
+  - Split-screen HUD with baseline compute cost vs remediated cost comparison and percentage savings indicator.
+  - 3-Tier risk badge classification (`LOW RISK`, `MEDIUM RISK`, `HIGH RISK`).
+  - Automated `CREATE INDEX CONCURRENTLY` suggestion card with 1-click DDL copy.
+- **Settings & Supporting Modals**:
+  - `SettingsPanel.jsx`: Two-column architecture featuring an **Appearance & Theme** tab with segmented Light/System/Dark mode selection, UI density controls, and audio feedback toggles.
+  - `WorkspaceSwitcher.jsx`: Popover switcher with search filter and environment status chips (`Production`, `Staging`, `Development`).
+  - `CreateWorkspaceModal.jsx`, `QueryNotebookModal.jsx`, and `TableDataProfilerModal.jsx`: Modernized with semantic design tokens and high-contrast accessibility.
 
 ---
 

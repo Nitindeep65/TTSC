@@ -14,13 +14,16 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/Sidebar"
 import {
+  BookOpen,
   Check,
   ChevronDown,
   ChevronRight,
+  Command,
   Copy,
   Database,
   Eye,
   History,
+  Key,
   Layers,
   LogOut,
   MessageSquareText,
@@ -47,7 +50,7 @@ const DEFAULT_RECENTS = [
   { query: "SELECT * FROM orders WHERE status = 'completed' LIMIT 50;", time: "3h ago", type: "SQL" },
 ]
 
-export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
+export function AppSidebar({ onOpenSettings, onSelectRecent }) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuth()
@@ -164,7 +167,7 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
       <Sidebar className="border-r border-border bg-sidebar text-sidebar-foreground flex flex-col">
         
         {/* ── Brand Header & Workspace ── */}
-        <SidebarHeader className="border-b border-border bg-card px-3.5 py-3 space-y-2.5">
+        <SidebarHeader className="border-b border-border bg-card/60 px-3.5 py-3 space-y-2.5">
           <div className="flex items-center justify-between">
             <Link href="/" className="group flex items-center gap-2.5">
               <span className="flex size-7.5 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs transition-transform duration-150 group-hover:scale-105">
@@ -175,14 +178,14 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                   QueryCraft
                 </span>
                 <span className="block mt-0.5 text-[9.5px] text-muted-foreground font-medium leading-none">
-                  Enterprise SQL &amp; NoSQL
+                  PostgreSQL Safety Engine
                 </span>
               </div>
             </Link>
 
             {/* Live DB indicator dot */}
             {dbInfo && (
-              <span className="flex items-center gap-1 text-[9.5px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded-md">
+              <span className="flex items-center gap-1 text-[9.5px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md">
                 <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Connected</span>
               </span>
@@ -194,19 +197,19 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
             <button
               type="button"
               onClick={() => setIsWorkspaceDropdownOpen(!isWorkspaceDropdownOpen)}
-              className="w-full flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/60 hover:bg-muted border border-border transition text-left cursor-pointer shadow-2xs"
+              className="w-full flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/40 hover:bg-muted border border-border transition text-left cursor-pointer shadow-2xs"
             >
               <div className="flex items-center gap-2 min-w-0">
                 <div
                   className="size-2.5 rounded-full shrink-0 ring-1 ring-border"
-                  style={{ backgroundColor: activeWorkspace?.color || "#3aa363" }}
+                  style={{ backgroundColor: activeWorkspace?.color || "#10b981" }}
                 />
                 <div className="min-w-0">
                   <p className="text-[11.5px] font-bold text-foreground truncate leading-tight">
                     {activeWorkspace?.name || "Default Workspace"}
                   </p>
                   <p className="text-[9.5px] text-muted-foreground truncate leading-tight mt-0.5">
-                    {activeWorkspace?.environment || "Production"} Project
+                    {activeWorkspace?.environment || "Production"} Tier
                   </p>
                 </div>
               </div>
@@ -232,20 +235,20 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                           setActiveWorkspaceId(ws.id)
                           setIsWorkspaceDropdownOpen(false)
                         }}
-                        className={`flex items-center justify-between w-full px-2 py-1.5 rounded-lg text-left text-xs transition ${
+                        className={`flex items-center justify-between w-full px-2 py-1.5 rounded-lg text-left text-xs transition cursor-pointer ${
                           isSelected
                             ? "bg-accent text-accent-foreground font-bold"
-                            : "text-foreground hover:bg-accent"
+                            : "text-foreground hover:bg-muted"
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <span
                             className="size-2 rounded-full shrink-0"
-                            style={{ backgroundColor: ws.color || "#3aa363" }}
+                            style={{ backgroundColor: ws.color || "#10b981" }}
                           />
                           <span className="truncate">{ws.name}</span>
                         </div>
-                        {isSelected && <Check className="size-3 text-emerald-600 shrink-0" />}
+                        {isSelected && <Check className="size-3 text-emerald-600 dark:text-emerald-400 shrink-0" />}
                       </button>
                     )
                   })}
@@ -258,7 +261,7 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                       setIsWorkspaceDropdownOpen(false)
                       setIsWorkspaceModalOpen(true)
                     }}
-                    className="w-full flex items-center justify-center gap-1.5 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-50 rounded-lg transition"
+                    className="w-full flex items-center justify-center gap-1.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition cursor-pointer"
                   >
                     <Plus className="size-3" />
                     <span>New Workspace</span>
@@ -269,7 +272,7 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
           </div>
 
           {/* ── Two Primary Tabs: Navigation vs Schema Explorer ── */}
-          <div className="grid grid-cols-2 gap-1 p-0.5 rounded-lg bg-muted/70 border border-border text-xs font-semibold">
+          <div className="grid grid-cols-2 gap-1 p-0.5 rounded-lg bg-muted/50 border border-border text-xs font-semibold">
             <button
               type="button"
               onClick={() => setActiveTab("nav")}
@@ -319,7 +322,7 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                   className="w-full justify-center gap-2 h-8 text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs rounded-lg cursor-pointer"
                 >
                   <Plus className="size-3.5 text-emerald-400" />
-                  <span>New Query</span>
+                  <span>New SQL Query</span>
                 </Button>
               </Link>
 
@@ -337,12 +340,12 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                         isActive={pathname === "/Dashboard/chat"}
                         className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
                           pathname === "/Dashboard/chat"
-                            ? "bg-accent text-accent-foreground font-bold shadow-2xs"
+                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-bold border-l-2 border-emerald-500 shadow-2xs"
                             : "text-foreground hover:bg-muted/70"
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <MessageSquareText className="size-4 text-emerald-600 shrink-0" />
+                          <MessageSquareText className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <span className="truncate">SQL Doctor &amp; Chat</span>
                         </div>
                         <kbd className="font-mono text-[9px] text-muted-foreground">⌘1</kbd>
@@ -356,12 +359,12 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                         isActive={pathname === "/Dashboard/guard"}
                         className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
                           pathname === "/Dashboard/guard"
-                            ? "bg-accent text-accent-foreground font-bold shadow-2xs"
+                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-bold border-l-2 border-emerald-500 shadow-2xs"
                             : "text-foreground hover:bg-muted/70"
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <ShieldCheck className="size-4 text-emerald-600 shrink-0" />
+                          <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <span className="truncate">Pre-Flight Cost Guard</span>
                         </div>
                         <kbd className="font-mono text-[9px] text-muted-foreground">⌘2</kbd>
@@ -375,12 +378,12 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                         isActive={pathname === "/Dashboard"}
                         className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
                           pathname === "/Dashboard"
-                            ? "bg-accent text-accent-foreground font-bold shadow-2xs"
+                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-bold border-l-2 border-emerald-500 shadow-2xs"
                             : "text-foreground hover:bg-muted/70"
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <Terminal className="size-4 text-emerald-600 shrink-0" />
+                          <Terminal className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <span className="truncate">SQL Compiler</span>
                         </div>
                         <kbd className="font-mono text-[9px] text-muted-foreground">⌘3</kbd>
@@ -390,7 +393,7 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                 </SidebarGroupContent>
               </SidebarGroup>
 
-              {/* Recents Query History */}
+              {/* Group 2: RECENT QUERIES */}
               <SidebarGroup className="p-0">
                 <SidebarGroupLabel className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
                   <span className="flex items-center gap-1">
@@ -427,7 +430,7 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                           title="Copy Query"
                         >
                           {copiedIndex === idx ? (
-                            <Check className="size-3 text-emerald-600" />
+                            <Check className="size-3 text-emerald-600 dark:text-emerald-400" />
                           ) : (
                             <Copy className="size-3" />
                           )}
@@ -437,11 +440,34 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                   </div>
                 </SidebarGroupContent>
               </SidebarGroup>
+
+              {/* Group 3: DEVELOPER TOOLS */}
+              <SidebarGroup className="p-0">
+                <SidebarGroupLabel className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Developer
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu className="gap-0.5">
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        render={<Link href="/docs/cli" />}
+                        className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/70 transition"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <BookOpen className="size-4 text-emerald-500" />
+                          <span>CLI Documentation</span>
+                        </div>
+                        <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 rounded font-bold">v2.0</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
             </>
           )}
 
           {/* ========================================================================= */}
-          {/* TAB 2: SCHEMA EXPLORER (DEDICATED SEARCHABLE DATA DICTIONARY)             */}
+          {/* TAB 2: SCHEMA EXPLORER                                                    */}
           {/* ========================================================================= */}
           {activeTab === "schema" && (
             <div className="space-y-2.5">
@@ -449,7 +475,7 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                 <>
                   {/* Schema Status & Export DDL Header */}
                   <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-border">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                       <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       Live Introspected
                     </span>
@@ -503,7 +529,7 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                             className="flex items-center justify-between p-2 hover:bg-muted/50 transition cursor-pointer"
                           >
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <Table2 className="size-3.5 text-emerald-600 shrink-0" />
+                              <Table2 className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                               <span className="font-mono text-xs font-semibold text-foreground truncate" title={tableName}>
                                 {tableName}
                               </span>
@@ -522,7 +548,7 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                                   setProfileTable(tableName)
                                 }}
                                 title="Inspect 5-row sample preview & distinct distribution"
-                                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
                               >
                                 <Eye className="size-3" />
                               </button>
@@ -532,10 +558,10 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                                 type="button"
                                 onClick={(e) => handleCopyText(e, tableName, `tbl-${tableName}`)}
                                 title="Copy table name"
-                                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition"
+                                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
                               >
                                 {copiedColumn === `tbl-${tableName}` ? (
-                                  <Check className="size-3 text-emerald-600" />
+                                  <Check className="size-3 text-emerald-600 dark:text-emerald-400" />
                                 ) : (
                                   <Copy className="size-3" />
                                 )}
@@ -558,6 +584,8 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                                 columns.map((col, cIdx) => {
                                   const colName = col.column_name || col.name || col
                                   const colType = col.data_type || col.type || "VARCHAR"
+                                  const isPk = col.is_primary_key || col.primary_key
+                                  const isFk = col.is_foreign_key || col.foreign_key
                                   const colKey = `${tableName}-${colName}`
 
                                   return (
@@ -567,15 +595,27 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                                       className="flex items-center justify-between rounded px-1.5 py-0.5 text-[10.5px] hover:bg-muted transition cursor-pointer"
                                       title="Click to copy column name"
                                     >
-                                      <span className="font-mono text-foreground truncate pr-2">
-                                        {colName}
-                                      </span>
+                                      <div className="flex items-center gap-1.5 truncate pr-2">
+                                        <span className="font-mono text-foreground truncate">
+                                          {colName}
+                                        </span>
+                                        {isPk && (
+                                          <span className="text-[8px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 px-1 py-0.2 rounded">
+                                            PK
+                                          </span>
+                                        )}
+                                        {isFk && (
+                                          <span className="text-[8px] font-mono font-bold bg-sky-500/15 text-sky-600 dark:text-sky-400 px-1 py-0.2 rounded">
+                                            FK
+                                          </span>
+                                        )}
+                                      </div>
                                       <div className="flex items-center gap-1.5 shrink-0">
                                         <span className="text-[8.5px] font-mono text-muted-foreground uppercase bg-muted/80 px-1 py-0.2 rounded">
                                           {colType}
                                         </span>
                                         {copiedColumn === colKey && (
-                                          <Check className="size-2.5 text-emerald-600" />
+                                          <Check className="size-2.5 text-emerald-600 dark:text-emerald-400" />
                                         )}
                                       </div>
                                     </div>
@@ -628,13 +668,13 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
         </SidebarContent>
 
         {/* ── Sidebar Footer: Status & Settings ── */}
-        <SidebarFooter className="border-t border-border bg-card px-3 py-2.5 space-y-2">
+        <SidebarFooter className="border-t border-border bg-card/60 px-3 py-2.5 space-y-2">
           {/* Active DB Switch / Manage Pill */}
           {dbInfo ? (
-            <div className="flex items-center justify-between gap-1.5 p-1.5 rounded-lg bg-emerald-50/60 border border-emerald-200/80 text-xs">
+            <div className="flex items-center justify-between gap-1.5 p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="size-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
-                <span className="font-mono text-[11px] font-semibold text-emerald-900 truncate" title={dbInfo.host}>
+                <span className="font-mono text-[11px] font-semibold text-foreground truncate" title={dbInfo.host}>
                   {dbInfo.database || dbInfo.host}
                 </span>
               </div>
@@ -642,14 +682,14 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(true)}
-                  className="px-1.5 py-0.5 text-[10px] font-semibold text-emerald-800 hover:bg-emerald-100/80 rounded transition"
+                  className="px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 rounded transition cursor-pointer"
                 >
                   Manage
                 </button>
                 <button
                   type="button"
                   onClick={disconnectDatabase}
-                  className="p-1 text-red-600 hover:bg-red-100 rounded transition"
+                  className="p-1 text-destructive hover:bg-destructive/15 rounded transition cursor-pointer"
                   title="Disconnect Database"
                 >
                   <Unplug className="size-3" />
@@ -678,7 +718,7 @@ export function AppSidebar({ onOpenSettings, onOpenMetrics, onSelectRecent }) {
           {/* User Account / Logout */}
           <div className="pt-1.5 border-t border-border">
             {user ? (
-              <div className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-muted/40 border border-border">
+              <div className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-muted/30 border border-border">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="size-6 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-bold text-[10px] shrink-0">
                     {userInitials}

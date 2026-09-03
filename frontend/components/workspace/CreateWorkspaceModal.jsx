@@ -18,13 +18,12 @@ import {
 } from "lucide-react"
 import { useDatabase } from "@/lib/databaseContext"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 
 const envOptions = [
-  { label: "Production", color: "bg-emerald-500", text: "text-emerald-700" },
-  { label: "Staging", color: "bg-amber-500", text: "text-amber-700" },
-  { label: "Development", color: "bg-blue-500", text: "text-blue-700" },
-  { label: "Analytics", color: "bg-purple-500", text: "text-purple-700" },
+  { label: "Production", color: "bg-emerald-500", text: "text-emerald-700 dark:text-emerald-400" },
+  { label: "Staging", color: "bg-amber-500", text: "text-amber-700 dark:text-amber-400" },
+  { label: "Development", color: "bg-sky-500", text: "text-sky-700 dark:text-sky-400" },
+  { label: "Analytics", color: "bg-purple-500", text: "text-purple-700 dark:text-purple-400" },
 ]
 
 export default function CreateWorkspaceModal() {
@@ -51,10 +50,13 @@ export default function CreateWorkspaceModal() {
       await createWorkspace({
         name: name.trim(),
         environment,
-        connectionUri: connectionUri.trim(),
+        connection_uri: connectionUri.trim() || undefined,
       })
       setName("")
       setConnectionUri("")
+      setIsWorkspaceModalOpen(false)
+    } catch {
+      alert("Failed to create workspace. Please check your inputs.")
     } finally {
       setIsSubmitting(false)
     }
@@ -66,17 +68,17 @@ export default function CreateWorkspaceModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg max-h-[92dvh] flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-2xl animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-lg max-h-[92dvh] flex flex-col overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-2xl animate-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-border p-4 sm:p-5 shrink-0">
+        <div className="flex items-center justify-between border-b border-border p-4 sm:p-5 shrink-0 bg-muted/30">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-[#1f2d24] text-[#71c897] shadow-xs">
+            <div className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shadow-xs">
               <FolderPlus className="size-4.5 sm:size-5" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm sm:text-base font-bold text-[#17241c] truncate">Create New Workspace</h2>
-              <p className="text-[11px] sm:text-xs text-[#607266] truncate">
+              <h2 className="text-sm sm:text-base font-bold text-foreground truncate">Create New Workspace</h2>
+              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
                 Isolate schemas, queries, and databases per project
               </p>
             </div>
@@ -87,7 +89,7 @@ export default function CreateWorkspaceModal() {
             variant="ghost"
             size="iconSm"
             onClick={() => setIsWorkspaceModalOpen(false)}
-            className="text-[#738478] shrink-0"
+            className="text-muted-foreground hover:text-foreground shrink-0"
           >
             <X className="size-4" />
           </Button>
@@ -98,8 +100,8 @@ export default function CreateWorkspaceModal() {
           
           {/* Workspace Name */}
           <div>
-            <label className="block text-xs font-bold text-[#2a3e31] uppercase tracking-wider mb-1.5">
-              Workspace / Project Name <span className="text-red-500">*</span>
+            <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1.5">
+              Workspace / Project Name <span className="text-destructive">*</span>
             </label>
             <input
               type="text"
@@ -107,13 +109,13 @@ export default function CreateWorkspaceModal() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Fintech RDS, Analytics Staging, SaaS Production"
-              className="w-full rounded-xl border border-input bg-white px-3.5 py-2 text-xs text-[#17241c] outline-none placeholder:text-[#9aa79e] focus:border-[#4ca873] focus:ring-3 focus:ring-[#4ca873]/10"
+              className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20 transition-all"
             />
           </div>
 
           {/* Environment Tag */}
           <div>
-            <label className="block text-xs font-bold text-[#2a3e31] uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1.5">
               Environment Type
             </label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -122,10 +124,10 @@ export default function CreateWorkspaceModal() {
                   key={opt.label}
                   type="button"
                   onClick={() => setEnvironment(opt.label)}
-                  className={`flex items-center gap-1.5 rounded-xl border p-2 text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-1.5 rounded-xl border p-2 text-xs font-semibold transition-all cursor-pointer ${
                     environment === opt.label
-                      ? "border-[#28734d] bg-[#edf6f0] text-[#1c6037] shadow-2xs"
-                      : "border-border bg-white text-[#526458] hover:bg-[#f3f7f4]"
+                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 shadow-2xs font-bold"
+                      : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   <span className={`size-2 rounded-full ${opt.color}`} />
@@ -138,10 +140,10 @@ export default function CreateWorkspaceModal() {
           {/* Optional Database Connection URI */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-bold text-[#2a3e31] uppercase tracking-wider">
+              <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
                 Cloud Database URI (Optional)
               </label>
-              <span className="text-[10px] text-[#718377]">Can connect later</span>
+              <span className="text-[10px] text-muted-foreground">Can connect later</span>
             </div>
 
             <div className="relative">
@@ -150,12 +152,12 @@ export default function CreateWorkspaceModal() {
                 value={connectionUri}
                 onChange={(e) => setConnectionUri(e.target.value)}
                 placeholder="postgresql://user:password@host:5432/dbname"
-                className="w-full rounded-xl border border-input bg-white px-3.5 py-2 pr-10 font-mono text-xs text-[#17241c] outline-none placeholder:text-[#9aa79e] focus:border-[#4ca873] focus:ring-3 focus:ring-[#4ca873]/10"
+                className="w-full rounded-xl border border-border bg-background px-3.5 py-2 pr-10 font-mono text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20 transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7e8f83] hover:text-[#1f2d24]"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 {showPassword ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
               </button>
@@ -163,25 +165,25 @@ export default function CreateWorkspaceModal() {
 
             {/* Presets */}
             <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]">
-              <span className="text-[#718277] font-medium">Quick presets:</span>
+              <span className="text-muted-foreground font-medium">Quick presets:</span>
               <button
                 type="button"
                 onClick={() => applyPreset("postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres")}
-                className="rounded bg-[#f0f5f1] px-2 py-0.5 font-semibold text-[#206642] hover:bg-[#dcefe1]"
+                className="rounded-md border border-border bg-muted/60 px-2 py-0.5 font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
               >
                 + Supabase
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset("postgresql://[USER]:[PASSWORD]@ep-[ID].region.aws.neon.tech/neondb?sslmode=require")}
-                className="rounded bg-[#f0f5f1] px-2 py-0.5 font-semibold text-[#206642] hover:bg-[#dcefe1]"
+                className="rounded-md border border-border bg-muted/60 px-2 py-0.5 font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
               >
                 + Neon
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset("postgresql://[USER]:[PASSWORD]@[ENDPOINT].rds.amazonaws.com:5432/[DBNAME]")}
-                className="rounded bg-[#f0f5f1] px-2 py-0.5 font-semibold text-[#206642] hover:bg-[#dcefe1]"
+                className="rounded-md border border-border bg-muted/60 px-2 py-0.5 font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
               >
                 + AWS RDS
               </button>
@@ -195,6 +197,7 @@ export default function CreateWorkspaceModal() {
               variant="outline"
               size="sm"
               onClick={() => setIsWorkspaceModalOpen(false)}
+              className="border-border hover:bg-muted"
             >
               Cancel
             </Button>
@@ -204,7 +207,7 @@ export default function CreateWorkspaceModal() {
               variant="default"
               size="sm"
               disabled={!name.trim() || isSubmitting}
-              className="gap-2"
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold"
             >
               {isSubmitting ? (
                 <>

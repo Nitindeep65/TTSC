@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect, useMemo } from "react"
 import {
   Check,
   ChevronDown,
@@ -9,26 +9,24 @@ import {
   FolderKanban,
   FolderPlus,
   Layers,
-  MoreVertical,
   Plus,
-  Radio,
-  Server,
+  Search,
   Trash2,
 } from "lucide-react"
 import { useDatabase } from "@/lib/databaseContext"
-import { Badge } from "@/components/ui/badge"
 
 export default function WorkspaceSwitcher({ className = "" }) {
   const {
-    workspaces,
+    workspaces = [],
     activeWorkspaceId,
-    activeWorkspace,
+    activeWorkspace = {},
     setActiveWorkspaceId,
     deleteWorkspace,
     setIsWorkspaceModalOpen,
   } = useDatabase()
 
   const [isOpen, setIsOpen] = useState(false)
+  const [filterQuery, setFilterQuery] = useState("")
   const dropdownRef = useRef(null)
 
   // Close dropdown on outside click
@@ -45,76 +43,100 @@ export default function WorkspaceSwitcher({ className = "" }) {
   const getEnvConfig = (env) => {
     switch (env) {
       case "Production":
-        return { dot: "bg-emerald-500", text: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" }
+        return { dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" }
       case "Staging":
-        return { dot: "bg-amber-500", text: "text-amber-700", bg: "bg-amber-50 border-amber-200" }
+        return { dot: "bg-amber-500", text: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" }
       case "Development":
-        return { dot: "bg-blue-500", text: "text-blue-700", bg: "bg-blue-50 border-blue-200" }
+        return { dot: "bg-sky-500", text: "text-sky-600 dark:text-sky-400", bg: "bg-sky-500/10 border-sky-500/20" }
       default:
-        return { dot: "bg-gray-400", text: "text-gray-700", bg: "bg-gray-50 border-gray-200" }
+        return { dot: "bg-slate-400", text: "text-muted-foreground", bg: "bg-muted border-border" }
     }
   }
 
   const activeEnv = getEnvConfig(activeWorkspace.environment || "Production")
 
+  const filteredWorkspaces = useMemo(() => {
+    if (!filterQuery.trim()) return workspaces
+    const q = filterQuery.toLowerCase()
+    return workspaces.filter(
+      (w) =>
+        (w.name || "").toLowerCase().includes(q) ||
+        (w.environment || "").toLowerCase().includes(q)
+    )
+  }, [workspaces, filterQuery])
+
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       
-      {/* ── Professional Workspace Trigger Button ── */}
+      {/* ── Premium Workspace Trigger Button ── */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
-        className={`group flex items-center gap-1.5 sm:gap-2.5 rounded-xl border px-2 sm:px-3 py-1 sm:py-1.5 transition-all duration-150 active:scale-[0.98] max-w-[130px] xs:max-w-[170px] sm:max-w-[210px] ${
+        className={`group flex items-center gap-2 rounded-xl border px-2.5 sm:px-3 py-1.5 transition-all duration-150 active:scale-[0.98] max-w-[140px] xs:max-w-[180px] sm:max-w-[220px] ${
           isOpen
-            ? "border-[#34c06a] bg-white shadow-sm ring-2 ring-[#34c06a]/15"
-            : "border-border/80 bg-white/95 shadow-2xs hover:border-[#34c06a]/50 hover:bg-white hover:shadow-sm"
+            ? "border-emerald-500/40 bg-card shadow-sm ring-2 ring-emerald-500/15"
+            : "border-border bg-card/75 hover:bg-muted/60 hover:border-border-hover shadow-2xs"
         }`}
       >
         {/* Workspace Icon Tile */}
-        <div className="flex size-5 sm:size-6 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#1b3324] to-[#122218] text-[#4ade80] shadow-2xs transition-transform duration-150 group-hover:scale-105">
-          <FolderKanban className="size-3 sm:size-3.5" />
+        <div className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shadow-2xs transition-transform duration-150 group-hover:scale-105">
+          <FolderKanban className="size-3.5" />
         </div>
 
         {/* Title & Metadata */}
         <div className="flex flex-col text-left min-w-0 flex-1">
           <div className="flex items-center gap-1 min-w-0">
-            <span suppressHydrationWarning className="truncate text-[11.5px] sm:text-[12.5px] font-bold text-[#141a17] leading-tight">
-              {activeWorkspace.name}
+            <span suppressHydrationWarning className="truncate text-xs font-bold text-foreground leading-tight">
+              {activeWorkspace.name || "Default Workspace"}
             </span>
           </div>
 
-          <div className="flex items-center gap-1 text-[8.5px] sm:text-[9.5px] font-medium leading-tight">
+          <div className="flex items-center gap-1.5 text-[9.5px] font-medium leading-tight mt-0.5">
             <span className={`size-1.5 rounded-full shrink-0 ${activeEnv.dot}`} />
-            <span suppressHydrationWarning className="text-[#5e7467] font-semibold truncate">
+            <span suppressHydrationWarning className="text-muted-foreground font-semibold truncate">
               {activeWorkspace.environment || "Production"}
             </span>
           </div>
         </div>
 
-        {/* Animated Chevron */}
-        <ChevronDown className={`size-3 sm:size-3.5 text-[#738a7c] shrink-0 ml-0.5 transition-transform duration-200 ${
-          isOpen ? "rotate-180 text-[#1b6b3a]" : "group-hover:text-[#141a17]"
+        {/* Chevron */}
+        <ChevronDown className={`size-3.5 text-muted-foreground shrink-0 ml-0.5 transition-transform duration-200 ${
+          isOpen ? "rotate-180 text-emerald-500" : "group-hover:text-foreground"
         }`} />
       </button>
 
-      {/* ── Elevated Dropdown Menu ── */}
+      {/* ── Elevated Command-Style Dropdown Menu ── */}
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 rounded-2xl border border-border/80 bg-white p-2.5 shadow-[0_16px_40px_-12px_rgba(20,35,25,0.2)] backdrop-blur-md animate-in fade-in zoom-in-95 duration-150 space-y-1.5">
+        <div className="absolute left-0 top-full z-50 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 rounded-2xl border border-border bg-popover p-2 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-150 space-y-1.5">
           
           {/* Dropdown Header */}
-          <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[#edf3ee]">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#799081]">
-              Workspaces &amp; Projects
+          <div className="flex items-center justify-between px-2 py-1 border-b border-border">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              Workspaces &amp; Environments
             </span>
-            <span className="rounded-full bg-[#edf6f0] border border-[#cbe1d2] px-2 py-0.2 text-[9px] font-bold text-[#1b6b3a]">
+            <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
               {workspaces.length} active
             </span>
           </div>
 
+          {/* Search Filter for Workspaces */}
+          {workspaces.length > 2 && (
+            <div className="relative px-1">
+              <Search className="absolute left-3 top-2.5 size-3 text-muted-foreground" />
+              <input
+                type="text"
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                placeholder="Search workspaces..."
+                className="w-full rounded-lg border border-border bg-card pl-7 pr-3 py-1 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-emerald-500"
+              />
+            </div>
+          )}
+
           {/* List of Workspaces */}
-          <div className="max-h-64 overflow-y-auto space-y-1 py-1">
-            {workspaces.map((ws) => {
+          <div className="max-h-60 overflow-y-auto space-y-1 py-1">
+            {filteredWorkspaces.map((ws) => {
               const isActive = ws.id === activeWorkspaceId
               const envCfg = getEnvConfig(ws.environment || "Production")
 
@@ -123,8 +145,8 @@ export default function WorkspaceSwitcher({ className = "" }) {
                   key={ws.id}
                   className={`group flex items-center justify-between rounded-xl p-2 transition-all ${
                     isActive
-                      ? "bg-gradient-to-r from-[#edf8f1] to-[#e6f4eb] border border-[#b8dec4] shadow-2xs"
-                      : "hover:bg-[#f3f7f4] border border-transparent"
+                      ? "bg-emerald-500/10 border border-emerald-500/30 text-foreground"
+                      : "hover:bg-muted/50 border border-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <button
@@ -133,32 +155,30 @@ export default function WorkspaceSwitcher({ className = "" }) {
                       setActiveWorkspaceId(ws.id)
                       setIsOpen(false)
                     }}
-                    className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
+                    className="flex items-center gap-2.5 flex-1 min-w-0 text-left cursor-pointer"
                   >
                     <div className={`flex size-7 shrink-0 items-center justify-center rounded-lg shadow-2xs ${
                       isActive
-                        ? "bg-[#18291f] text-[#4ade80]"
-                        : "bg-[#e7f0e9] text-[#455c4d] group-hover:bg-[#dbe9de]"
+                        ? "bg-emerald-600 text-white"
+                        : "bg-muted text-muted-foreground group-hover:text-foreground"
                     }`}>
                       <FolderKanban className="size-3.5" />
                     </div>
 
                     <div className="truncate min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className={`truncate text-[12px] font-bold leading-tight ${
-                          isActive ? "text-[#144229]" : "text-[#1d2d23]"
-                        }`}>
+                        <span className="truncate text-xs font-bold leading-tight text-foreground">
                           {ws.name}
                         </span>
-                        {isActive && <Check className="size-3 text-[#1b6b3a] shrink-0 stroke-[2.5]" />}
+                        {isActive && <Check className="size-3 text-emerald-500 shrink-0 stroke-[2.5]" />}
                       </div>
 
                       <div className="flex items-center gap-1.5 mt-1 text-[9.5px]">
                         <span className={`rounded px-1.5 py-0.2 font-bold uppercase tracking-tight border text-[8.5px] ${envCfg.bg} ${envCfg.text}`}>
                           {ws.environment || "Production"}
                         </span>
-                        <span className="text-[#96ab9e]">•</span>
-                        <span className="text-[#647c6e] font-mono truncate">
+                        <span className="text-muted-foreground/60">•</span>
+                        <span className="text-muted-foreground font-mono truncate">
                           {ws.dbInfo ? `${ws.dbInfo.tables_count} tables` : "No cloud DB"}
                         </span>
                       </div>
@@ -175,7 +195,7 @@ export default function WorkspaceSwitcher({ className = "" }) {
                           deleteWorkspace(ws.id)
                         }
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1.5 text-[#8b9b90] hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                      className="opacity-0 group-hover:opacity-100 p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition"
                       title="Delete Workspace"
                     >
                       <Trash2 className="size-3.5" />
@@ -187,16 +207,16 @@ export default function WorkspaceSwitcher({ className = "" }) {
           </div>
 
           {/* Bottom Action: Create Workspace */}
-          <div className="border-t border-[#edf3ee] pt-1.5 px-0.5">
+          <div className="border-t border-border pt-1.5 px-0.5">
             <button
               type="button"
               onClick={() => {
                 setIsOpen(false)
                 setIsWorkspaceModalOpen(true)
               }}
-              className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#a8d4b8] bg-[#f5fbf7] py-2 text-xs font-bold text-[#1a6337] hover:bg-[#eaf6ee] hover:border-[#34c06a] transition-all shadow-3xs group"
+              className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-border hover:border-emerald-500/50 bg-muted/30 hover:bg-muted/60 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 transition-all shadow-3xs group cursor-pointer"
             >
-              <span className="flex size-4.5 items-center justify-center rounded-md bg-[#18291f] text-[#4ade80] group-hover:scale-110 transition-transform">
+              <span className="flex size-4.5 items-center justify-center rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
                 <Plus className="size-3" />
               </span>
               <span>Create New Workspace</span>
