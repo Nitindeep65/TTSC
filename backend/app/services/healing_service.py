@@ -2,7 +2,6 @@ import os
 import json
 import logging
 from typing import Dict, Any, Optional, Tuple
-from app.Models.schema import HealedQueryInfo, ExtractedSQLData
 
 logger = logging.getLogger(__name__)
 

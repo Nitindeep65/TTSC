@@ -1,7 +1,6 @@
 import re
-import json
 import logging
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from app.Models.schema import ExplainPlanResponse

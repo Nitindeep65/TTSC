@@ -10,5 +10,17 @@
     "cli_token": "a3ba8eb7ee42405f8b6dc674aef0321eef3d50f2a655446c9669e75ad905201d",
     "created_at": "2026-08-31T18:10:37.756996",
     "expires_at": "2026-09-30T18:10:37.756996"
+  },
+  "7c52356fbea340d8ae9ad9ebb8da118cf3f1501dfa7641899183d9ef6e97426d": {
+    "email": "nitindeep65@gmail.com",
+    "cli_token": "7c52356fbea340d8ae9ad9ebb8da118cf3f1501dfa7641899183d9ef6e97426d",
+    "created_at": "2026-09-03T12:14:42.029544",
+    "expires_at": "2026-10-03T12:14:42.029544"
+  },
+  "7118304de07d4a43b6031f61a9f6b0a1005f053702b5463ba01954e3dc1bc9e2": {
+    "email": "nitindeep65@gmail.com",
+    "cli_token": "7118304de07d4a43b6031f61a9f6b0a1005f053702b5463ba01954e3dc1bc9e2",
+    "created_at": "2026-09-03T12:27:14.338585",
+    "expires_at": "2026-10-03T12:27:14.338585"
   }
 }

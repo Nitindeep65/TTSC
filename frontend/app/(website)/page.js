@@ -3,13 +3,10 @@
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import {
-  Activity,
   AlertTriangle,
   ArrowRight,
   Check,
   CheckCircle2,
-  ChevronRight,
-  Code2,
   Copy,
   Cpu,
   Database,
@@ -21,7 +18,6 @@ import {
   Menu,
   Play,
   RefreshCw,
-  Search,
   Server,
   ShieldAlert,
   ShieldCheck,

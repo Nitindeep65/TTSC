@@ -6,17 +6,11 @@ into a resilient, self-healing, multi-agent query generation & optimization loop
 """
 
 import os
-import json
 import logging
 from typing import TypedDict, List, Dict, Any, Optional
 
 from langgraph.graph import StateGraph, START, END
 
-from app.Models.schema import (
-    ExtractedSQLData,
-    ClarificationResponse,
-    HealedQueryInfo,
-)
 from app.services.llm_services import (
     get_llm_client,
     detect_visual_intent,
@@ -29,7 +23,6 @@ from app.services.llm_services import (
 from app.services.db_service import (
     introspect_cloud_database,
     execute_read_only_query,
-    parse_connection_info,
 )
 from app.services.explain_service import run_explain_plan
 from app.services.healing_service import heal_sql_with_critic

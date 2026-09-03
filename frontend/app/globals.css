@@ -123,8 +123,6 @@
   /* Section backgrounds — for alternating rhythm */
   --section-1: #ffffff;
   --section-2: #f8fafc;
-  --section-dark: #0f172a;
-  --section-dark-card: #1e293b;
 
   /* Emerald semantic tokens */
   --emerald-50: #ecfdf5;
@@ -640,53 +638,6 @@
   transform: scale(0.98);
 }
 
-/* =========================================================================
-   14. LANDING PAGE SECTION CHROME
-   ========================================================================= */
-
-/* Dark section — used for ProblemSection and CTA */
-.section-dark {
-  background-color: #0f172a;
-  color: #f8fafc;
-}
-
-/* Subtle grid overlay — used for backgrounds */
-.grid-overlay-light {
-  background-image:
-    linear-gradient(to right, #e2e8f0 1px, transparent 1px),
-    linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
-  background-size: 4rem 4rem;
-}
-
-.grid-overlay-dark {
-  background-image:
-    linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 3rem 3rem;
-}
-
-/* Gradient fade mask for grid overlays */
-.fade-mask-radial {
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 55%, transparent 100%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 55%, transparent 100%);
-}
-
-/* =========================================================================
-   15. NAVBAR SCROLL STATE
-   ========================================================================= */
-
-.navbar-scrolled {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 1px 0 0 var(--border), 0 4px 16px -4px rgba(15, 23, 42, 0.06);
-}
-
-.navbar-top {
-  background: transparent;
-  backdrop-filter: none;
-  box-shadow: none;
-}
 
 /* =========================================================================
    16. BENTO GRID UTILITIES

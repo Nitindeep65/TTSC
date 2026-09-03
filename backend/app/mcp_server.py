@@ -17,9 +17,8 @@ import json
 import logging
 import asyncio
 import urllib.request
-import urllib.parse
 from datetime import datetime
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, List, Dict, Any
 
 # All logs MUST go to stderr because stdout is reserved exclusively for MCP JSON-RPC 2.0 frames
 logging.basicConfig(

@@ -1,4 +1,3 @@
-import os
 from fastapi import FastAPI
 # MVP: dashboard and semantic routers are disabled for the MVP scope
 # from app.routers import clarification, database, semantic, memory, settings, dashboard, guard, workspaces

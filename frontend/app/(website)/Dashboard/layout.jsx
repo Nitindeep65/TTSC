@@ -17,16 +17,12 @@ import {
   MessageSquareText,
   Settings,
   ShieldCheck,
-  Sparkles,
   Terminal,
-  Wand2,
   Zap,
   Search,
   User,
   LogOut,
-  ChevronDown,
   BookOpen,
-  Command as CommandIcon,
 } from "lucide-react"
 import { DatabaseProvider, useDatabase } from "@/lib/databaseContext"
 import { SettingsProvider, useSettings } from "@/lib/settingsContext"

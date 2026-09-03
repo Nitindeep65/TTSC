@@ -5,10 +5,10 @@ import Link from "next/link"
 import {
   Terminal, LogIn, LogOut, User, Database,
   Copy, Check, Download, Zap, Shield, Key,
-  BookOpen, Menu, X, Search, Sparkles, Cpu,
-  CheckCircle2, ArrowRight, ArrowLeft, ExternalLink, Hash,
-  ChevronRight, Layers, Table, Play, Compass,
-  Sliders, FileCode, CheckCheck, RefreshCw, AlertTriangle
+  Menu, X, Search, Sparkles, Cpu,
+  CheckCircle2, ArrowRight, ArrowLeft,
+  ChevronRight, Layers, Table, Compass,
+  FileCode, CheckCheck, RefreshCw
 } from "lucide-react"
 import DocsAiCopilot from "@/components/docs/DocsAiCopilot"
 

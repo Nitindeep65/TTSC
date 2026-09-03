@@ -5,7 +5,7 @@ import urllib.parse
 from typing import Dict, List, Any, Optional, Tuple
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from app.Models.schema import TableInfo, ColumnInfo, SchemaInfoResponse, HealedQueryInfo
+from app.Models.schema import TableInfo, ColumnInfo, HealedQueryInfo
 
 logger = logging.getLogger(__name__)
 
